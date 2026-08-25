@@ -1,0 +1,31 @@
+# templates/hermes-api.service — systemd unit for the API bridge
+#
+# Copy to /etc/systemd/system/hermes-api.service
+# Enable: sudo systemctl enable hermes-api && sudo systemctl start hermes-api
+
+[Unit]
+Description=Hermes Agent API Bridge
+After=network.target ollama.service
+Wants=ollama.service
+
+[Service]
+Type=simple
+User=hermes
+Group=hermes
+WorkingDirectory=/opt/hermes-server
+Environment=HERMES_API_CONFIG=/opt/hermes-server/config/server.yaml
+
+ExecStart=/opt/hermes-server/.venv/bin/uvicorn api.main:app \
+    --host 0.0.0.0 \
+    --port 8000 \
+    --workers 4
+
+Restart=always
+RestartSec=5
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hermes-api
+
+[Install]
+WantedBy=multi-user.target

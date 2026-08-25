@@ -1,0 +1,27 @@
+{
+  "name": "graph-flow",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "files": [
+    "SKILL.md",
+    "scripts/graph_state.py",
+    "references",
+    "extensions",
+    "package.json",
+    "tsconfig.json"
+  ],
+  "scripts": {
+    "test": "node --test --experimental-strip-types tests/graph-flow-ui.test.mjs tests/adapter-contract.test.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "pi": {
+    "skills": ["./"],
+    "extensions": ["./extensions/graph-flow-ui/index.ts"]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-tui": "*"
+  }
+}

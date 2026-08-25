@@ -1,0 +1,13 @@
+{
+  "name": "data-to-okf",
+  "version": "1.0.0",
+  "description": "Agent Skill: convert any folder into an OKF v0.2 knowledge bundle",
+  "license": "Apache-2.0",
+  "repository": "github:rajivmehtaflex/data-to-okf",
+  "bin": {
+    "data-to-okf": "bin/cli.js"
+  },
+  "engines": {
+    "node": ">=16.7"
+  }
+}

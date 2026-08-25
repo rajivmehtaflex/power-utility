@@ -1,0 +1,27 @@
+# tests/fixtures/base-config.yaml
+# Simulates a freshly created profile's config.yaml
+model:
+  default: test-model
+  provider: test-provider
+agent:
+  max_turns: 90
+  tool_use_enforcement: auto
+  verify_on_stop: auto
+toolsets:
+  - hermes-cli
+memory:
+  memory_enabled: true
+  user_profile_enabled: true
+  memory_char_limit: 2200
+terminal:
+  backend: local
+  cwd: .
+  timeout: 180
+security:
+  redact_secrets: true
+delegation:
+  max_concurrent_children: 6
+  max_spawn_depth: 1
+kanban:
+  dispatch_in_gateway: true
+  failure_limit: 2

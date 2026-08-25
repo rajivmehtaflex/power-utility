@@ -1,0 +1,44 @@
+# tests/fixtures/registry-with-overrides.yaml
+# Registry with realistic config_overrides for testing the full provisioning flow.
+version: 1
+mode: provision-approved
+max_auto_created_profiles: 4
+base_profile: default
+
+roles:
+  reviewer:
+    description: "Reviews outputs against acceptance criteria."
+    capabilities: "Quality assurance, validation, defect reporting."
+    skills: [requesting-code-review]
+    auto_create: true
+    config_overrides:
+      agent:
+        max_turns: 20
+        tool_use_enforcement: strict
+        verify_on_stop: always
+      memory:
+        memory_enabled: false
+        user_profile_enabled: false
+      security:
+        redact_secrets: true
+      delegation:
+        max_spawn_depth: 0
+        max_concurrent_children: 0
+      kanban:
+        failure_limit: 5
+
+  analyst:
+    description: "Interprets data and identifies trends."
+    capabilities: "Statistical analysis, trend identification, data visualization."
+    skills: []
+    auto_create: true
+    config_overrides:
+      agent:
+        max_turns: 60
+        reasoning_effort: high
+      memory:
+        memory_enabled: true
+        user_profile_enabled: false
+      terminal:
+        cwd: ~/Documents/Dev
+        timeout: 600

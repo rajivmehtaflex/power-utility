@@ -1,0 +1,11 @@
+[project]
+name = "modal-web-terminal"
+version = "0.1.0"
+description = "Browser-based terminal (xterm.js + FastAPI PTY bridge) deployed on Modal"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "modal>=1.5",
+    "python-dotenv>=1.0",
+    "uvicorn>=0.30",
+]

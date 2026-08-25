@@ -1,0 +1,1144 @@
+{
+  "generated": "2026-08-25T11:24:27+00:00",
+  "spec": "https://agentskills.io/specification.md",
+  "skills": [
+    {
+      "name": "data-to-okf",
+      "source": "agents-shared",
+      "source_path": "/Users/rajivmehtapy/.agents/skills/data-to-okf",
+      "category": null,
+      "dest": "agents-shared/data-to-okf",
+      "description": "Converts any local folder of mixed documents (docx, pdf, xlsx, duckdb, csv, images, text) into a Google Open Knowledge Format (OKF) v0.2 knowledge bundle of markdown concept files with point-in-place file:// resource links, so AI agents can navigate it deterministically instead of grepping raw files. Use this whenever the user wants to \"bundle\", \"index\", or make a folder \"AI-readable\"/\"agent-consumable\", wants to build a knowledge base from a messy folder of client docs/meeting notes/exports, or explicitly mentions OKF, knowledge bundling, or Hermes-consumable folders.",
+      "original_fields": {
+        "license": "Apache-2.0",
+        "compatibility": "Requires Python 3.9+ with python-docx, openpyxl, pyyaml, and pypdf installed; the duckdb CLI on PATH for .duckdb schema introspection (only needed if the source folder contains a .duckdb file).",
+        "metadata_author": "rajivmehtapy",
+        "metadata_version": "1.0"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "release-notes",
+      "source": "agents-shared",
+      "source_path": "/Users/rajivmehtapy/.agents/skills/release-notes",
+      "category": null,
+      "dest": "agents-shared/release-notes",
+      "description": ">-",
+      "original_fields": {},
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "graph-flow",
+      "source": "dev-workspace",
+      "source_path": "/Users/rajivmehtapy/Documents/Dev/Skills/graph-flow",
+      "category": null,
+      "dest": "dev-workspace/graph-flow",
+      "description": "Use when coordinating a repository implementation from a goal through approved, durable, dependency-aware work across one or more agents, human gates, repair loops, or restart recovery.",
+      "original_fields": {
+        "compatibility": "Python 3.10+; native multi-agent task handles are optional and enable parallel execution and restart inspection."
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "intent-first-action-boundaries",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/assistant-behavior/intent-first-action-boundaries",
+      "category": "assistant-behavior",
+      "dest": "profile/assistant-behavior/intent-first-action-boundaries",
+      "description": "Use for question-vs-action intent routing.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "intent-routing, conversational-discipline, user-control, approvals, side-effects",
+        "metadata_hermes_related_skills": "plan, systematic-debugging"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "hermes-agent-api-bridge",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/autonomous-ai-agents/hermes-agent-api-bridge",
+      "category": "autonomous-ai-agents",
+      "dest": "profile/autonomous-ai-agents/hermes-agent-api-bridge",
+      "description": "Bridge Hermes Agent to external apps via subprocess or HTTP.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "hermes, api, bridge, subprocess, fastapi, ollama, integration, http",
+        "metadata_hermes_related_skills": "hermes-agent, web-service-launch"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "pi-operator",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/autonomous-ai-agents/pi-operator",
+      "category": "autonomous-ai-agents",
+      "dest": "profile/autonomous-ai-agents/pi-operator",
+      "description": "Operate and verify the Pi coding-agent CLI safely.",
+      "original_fields": {
+        "version": "0.1.0",
+        "author": "Hermes",
+        "license": "MIT",
+        "platforms": "macos, linux",
+        "metadata_hermes_tags": "Pi, CLI, CodingAgent, Sessions, Packages"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "subagent-orchestration",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/autonomous-ai-agents/subagent-orchestration",
+      "category": "autonomous-ai-agents",
+      "dest": "profile/autonomous-ai-agents/subagent-orchestration",
+      "description": "Decompose implementation plans into parallel-safe task waves and dispatch them via delegate_task to maximize Hermes subagent concurrency. Covers wave decomposition, dependency graphs, module API contracts, and dispatch patterns.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "subagents, parallel, delegation, orchestration, waves, delegate-task, concurrency",
+        "metadata_hermes_related_skills": "plan, simplify-code"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "html-artifact",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/creative/html-artifact",
+      "category": "creative",
+      "dest": "profile/creative/html-artifact",
+      "description": "Build self-contained HTML files to explain, plan, or review.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Anthropic (html-effectiveness gallery, MIT), adapted for Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "html, artifact, explainer, plan, report, code-review, diagram, svg, design, prototype, editor",
+        "metadata_hermes_related_skills": "claude-design, popular-web-designs, design-md, excalidraw, p5js"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "interactive-3d-web",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/creative/interactive-3d-web",
+      "category": "creative",
+      "dest": "profile/creative/interactive-3d-web",
+      "description": "Build self-contained interactive 3D scenes with Three.js: orbit controls, translucent materials, lighting rigs, procedural environment maps. Single HTML file from CDN, no build step.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "3d, threejs, webgl, interactive, orbit, visualization, creative",
+        "metadata_hermes_related_skills": "svg-illustration, html-artifact, claude-design"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "procedural-3d-composite-scenes",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/creative/procedural-3d-composite-scenes",
+      "category": "creative",
+      "dest": "profile/creative/procedural-3d-composite-scenes",
+      "description": "Design, debug, verify, and parallelize Three.js scenes that combine organic characters with mechanical vehicles or props.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "macos, linux, windows",
+        "metadata_hermes_tags": "threejs, geometry, procedural-modeling, composite-scenes, coordinate-systems, visual-qa, subagents",
+        "metadata_hermes_related_skills": "interactive-3d-web, subagent-orchestration"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "jupyter-live-kernel",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/data-science/jupyter-live-kernel",
+      "category": "data-science",
+      "dest": "profile/data-science/jupyter-live-kernel",
+      "description": "Iterative Python via live Jupyter kernel (hamelnb).",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "jupyter, notebook, repl, data-science, exploration, iterative",
+        "metadata_hermes_category": "data-science"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "knowledge-bundle",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/data-science/knowledge-bundle",
+      "category": "data-science",
+      "dest": "profile/data-science/knowledge-bundle",
+      "description": "Research knowledge bundles and query database schemas.",
+      "original_fields": {},
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "cli-tool-installation",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/devops/cli-tool-installation",
+      "category": "devops",
+      "dest": "profile/devops/cli-tool-installation",
+      "description": "Install, verify, and expose command-line tools on the user's machine, including PATH setup, shell reloads, and user-local installs from brew, pipx, pip --user, and uv.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "macos, linux",
+        "metadata_hermes_tags": "cli, install, path, shell, brew, pipx, uv, python, user-local",
+        "metadata_hermes_related_skills": "system-update"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "colab-cli-authentication",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/devops/colab-cli-authentication",
+      "category": "devops",
+      "dest": "profile/devops/colab-cli-authentication",
+      "description": "Use for Colab CLI OAuth2/ADC authentication lifecycle.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "metadata_hermes_tags": "colab, oauth2, adc, authentication, pkce",
+        "metadata_hermes_related_skills": "colab-operator, colab-ssh-setup"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "colab-operator",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/devops/colab-operator",
+      "category": "devops",
+      "dest": "profile/devops/colab-operator",
+      "description": "Operate Google Colab sessions via the `colab` CLI.",
+      "original_fields": {},
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "colab-ssh-setup",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/devops/colab-ssh-setup",
+      "category": "devops",
+      "dest": "profile/devops/colab-ssh-setup",
+      "description": "\\\"Use when setting up Colab SSH for VSCode via colab CLI.\\\"",
+      "original_fields": {},
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "hermes-home-maintenance",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/devops/hermes-home-maintenance",
+      "category": "devops",
+      "dest": "profile/devops/hermes-home-maintenance",
+      "description": "Audit and clean ~/.hermes safely by separating core state from caches, logs, and rebuildable artifacts.",
+      "original_fields": {
+        "version": "0.1.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "macos, linux",
+        "metadata_hermes_tags": "hermes, home, cleanup, audit, disk-usage, maintenance"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "hermes-worker-provisioning",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/devops/hermes-worker-provisioning",
+      "category": "devops",
+      "dest": "profile/devops/hermes-worker-provisioning",
+      "description": "Use when provisioning Hermes worker profiles.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "hermes, kanban, profiles, provisioning, verification, terminal, worker"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "hermes-workspace-management",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/devops/hermes-workspace-management",
+      "category": "devops",
+      "dest": "profile/devops/hermes-workspace-management",
+      "description": "Manage and clean up Hermes Desktop Project workspaces.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "hermes, projects, workspace, maintenance, cleanup"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "kanban-orchestrator",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/devops/kanban-orchestrator",
+      "category": "devops",
+      "dest": "profile/devops/kanban-orchestrator",
+      "description": "Decomposition playbook + anti-temptation rules for an orchestrator profile routing work through Kanban. The \"don't do the work yourself\" rule and the basic lifecycle are auto-injected into every kanban worker's system prompt; this skill is the deeper playbook when you're specifically playing the orchestrator role.",
+      "original_fields": {
+        "version": "3.0.0",
+        "platforms": "linux, macos, windows",
+        "environments": "kanban",
+        "metadata_hermes_tags": "kanban, multi-agent, orchestration, routing",
+        "metadata_hermes_related_skills": "kanban-worker"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "kanban-profile-manager",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/devops/kanban-profile-manager",
+      "category": "devops",
+      "dest": "profile/devops/kanban-profile-manager",
+      "description": "Use when managing Kanban profile reuse or provisioning.",
+      "original_fields": {
+        "version": "3.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "kanban, profiles, lifecycle, provisioning, routing, idempotency",
+        "metadata_hermes_related_skills": "kanban-orchestrator, kanban-worker"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "kanban-worker",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/devops/kanban-worker",
+      "category": "devops",
+      "dest": "profile/devops/kanban-worker",
+      "description": "Pitfalls, examples, and edge cases for Hermes Kanban workers. The lifecycle itself is auto-injected into every worker's system prompt as KANBAN_GUIDANCE (from agent/prompt_builder.py); this skill is what you load when you want deeper detail on specific scenarios.",
+      "original_fields": {
+        "version": "2.0.0",
+        "platforms": "linux, macos, windows",
+        "environments": "kanban",
+        "metadata_hermes_tags": "kanban, multi-agent, collaboration, workflow, pitfalls",
+        "metadata_hermes_related_skills": "kanban-orchestrator"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "modal-deploy",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/devops/modal-deploy",
+      "category": "devops",
+      "dest": "profile/devops/modal-deploy",
+      "description": "Deploy GPU-enabled applications to Modal with pre-check workflow, optimization patterns, GPU pricing, WebSocket PTY best practices, and smart deployment scripts. Use when deploying to Modal cloud, configuring GPU resources (T4 through B200), checking GPU availability, optimizing Modal deployments, building WebSocket PTY terminal bridges, or estimating Modal pricing.",
+      "original_fields": {
+        "license": "MIT",
+        "compatibility": "Works with Claude Code, Codex, Antigravity, and Hermes Agent. Requires Python 3.12+, uv package manager, and Modal CLI.",
+        "allowed-tools": "Bash Read Write Edit",
+        "metadata_author": "Hermes Agent",
+        "metadata_version": "3.4.0",
+        "metadata_tags": "modal,gpu,deployment,cloud,devops,pre-check,optimization,websocket,pty"
+      },
+      "spec_compliant": true,
+      "warnings": [
+        "warning: SKILL.md has 1225 lines (>500 recommended)"
+      ]
+    },
+    {
+      "name": "python-version-management",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/devops/python-version-management",
+      "category": "devops",
+      "dest": "profile/devops/python-version-management",
+      "description": "Force Python versions via uv for cloud compatibility.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "python, uv, venv, compatibility, devops, cloud-deploy"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "system-update",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/devops/system-update",
+      "category": "devops",
+      "dest": "profile/devops/system-update",
+      "description": "Use when the user asks to update/upgrade system packages and CLI tools — Homebrew, npm globals, Claude Code, Codex CLI, agy, pi, prime-agent, and ori. Runs them sequentially as a single chain and reports results.",
+      "original_fields": {
+        "version": "1.2.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "metadata_hermes_tags": "system, update, upgrade, homebrew, npm, cli-tools, maintenance",
+        "metadata_hermes_related_skills": ""
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "web-service-launch",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/devops/web-service-launch",
+      "category": "devops",
+      "dest": "profile/devops/web-service-launch",
+      "description": "Launch a web service (e.g., Chainlit, FastAPI) on a specific port, handling port conflicts, dependencies, and verification.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos, windows",
+        "metadata_devops_tags": "web-service, launch, port, dependency, troubleshooting"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "gh-cli-ops",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/github/gh-cli-ops",
+      "category": "github",
+      "dest": "profile/github/gh-cli-ops",
+      "description": "Use for any gh CLI or GitHub-via-terminal task; routes refs.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "GitHub, gh-cli, CLI, Automation",
+        "metadata_hermes_related_skills": "github-auth, github-pr-workflow, github-code-review, github-issues, github-repo-management, github-codespace-ssh, codebase-inspection"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "github-codespace-ssh",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/github/github-codespace-ssh",
+      "category": "github",
+      "dest": "profile/github/github-codespace-ssh",
+      "description": "Manage and SSH into GitHub Codespaces via gh CLI.",
+      "original_fields": {
+        "version": "0.1.0",
+        "author": "Hermes",
+        "platforms": "macos, linux, windows",
+        "metadata_hermes_tags": "GitHub, Codespaces, SSH, VSCode, gh-cli"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "hermes-model-management",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/hermes/hermes-model-management",
+      "category": "hermes",
+      "dest": "profile/hermes/hermes-model-management",
+      "description": "Add, find, and use models in Hermes that are NOT in the interactive provider picker (OpenRouter especially, but applies to any provider). Covers the critical picker-vs-runtime gap: the picker shows a curated subset while the runtime accepts any valid model ID.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos, windows"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "hermes-token-usage",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/hermes/hermes-token-usage",
+      "category": "hermes",
+      "dest": "profile/hermes/hermes-token-usage",
+      "description": "Query Hermes's token, cost, and model-usage telemetry. Two paths: SQLite state.db for historical/model-wise reports, and live gateway RPC (session.usage, session.context_breakdown, usage.bars) for real-time in-app widgets. Use for any usage report, token count, cost breakdown, or building a live usage UI.",
+      "original_fields": {},
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "local-model-endpoints",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/hermes/local-model-endpoints",
+      "category": "hermes",
+      "dest": "profile/hermes/local-model-endpoints",
+      "description": "Hermes picker omits local Ollama models `ollama ls` shows.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "macos, linux, windows"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "okf-visualization",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/knowledge-management/okf-visualization",
+      "category": "knowledge-management",
+      "dest": "profile/knowledge-management/okf-visualization",
+      "description": "Visualize an OKF knowledge bundle; use npx okapi-okf first.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "okf, knowledge-graph, visualization, markdown, okapi"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "heartmula",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/media/heartmula",
+      "category": "media",
+      "dest": "profile/media/heartmula",
+      "description": "HeartMuLa: Suno-like song generation from lyrics + tags.",
+      "original_fields": {
+        "version": "1.0.0",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "music, audio, generation, ai, heartmula, heartcodec, lyrics, songs",
+        "metadata_hermes_related_skills": "audiocraft"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "browser-preview-ops",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/browser-preview-ops",
+      "category": "misc",
+      "dest": "profile/misc/browser-preview-ops",
+      "description": "Use when opening or verifying any web page in Hermes.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "metadata_hermes_tags": "browser, preview, open-preview, browserbase, google, verification",
+        "metadata_hermes_related_skills": "hermes-web-research, get-info"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "hermes-desktop-plugins",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/hermes-desktop-plugins",
+      "category": "misc",
+      "dest": "profile/misc/hermes-desktop-plugins",
+      "description": "Write desktop app plugins that add UI panes and commands.",
+      "original_fields": {
+        "version": "1.0.0",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "desktop, plugins, ui, extension",
+        "metadata_hermes_category": "productivity",
+        "metadata_hermes_related_skills": ""
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "hermes-themes",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/hermes-themes",
+      "category": "misc",
+      "dest": "profile/misc/hermes-themes",
+      "description": "Author a Hermes color theme that skins every surface.",
+      "original_fields": {
+        "version": "1.0.0",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "theme, skin, appearance, cli, tui, desktop, self-config",
+        "metadata_hermes_related_skills": ""
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "svg-illustration",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/svg-illustration",
+      "category": "misc",
+      "dest": "profile/misc/svg-illustration",
+      "description": "Create hand-coded SVG illustrations (characters, scenes, icons) as standalone .svg files. No HTML wrappers, no decorative artifacts unless requested.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "svg, illustration, graphics, vector, creative, icons, characters",
+        "metadata_hermes_related_skills": "architecture-diagram, claude-design, html-artifact"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "yuanbao",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/yuanbao",
+      "category": "misc",
+      "dest": "profile/misc/yuanbao",
+      "description": "Yuanbao (元宝) groups: @mention users, query info/members.",
+      "original_fields": {
+        "version": "1.0.0",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "yuanbao, mention, at, group, members, 元宝, 派, 艾特",
+        "metadata_hermes_related_skills": ""
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "audiocraft",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/mlops/models/audiocraft",
+      "category": "mlops",
+      "dest": "profile/mlops/models/audiocraft",
+      "description": "AudioCraft: MusicGen text-to-music, AudioGen text-to-sound.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Orchestra Research",
+        "license": "MIT",
+        "dependencies": "audiocraft, torch>=2.0.0, transformers>=4.30.0",
+        "platforms": "linux, macos",
+        "metadata_hermes_tags": "Multimodal, Audio Generation, Text-to-Music, Text-to-Audio, MusicGen"
+      },
+      "spec_compliant": true,
+      "warnings": [
+        "warning: SKILL.md has 566 lines (>500 recommended)"
+      ]
+    },
+    {
+      "name": "colab-llm-inference",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/mlops/colab-llm-inference",
+      "category": "mlops",
+      "dest": "profile/mlops/colab-llm-inference",
+      "description": "Use when running LLM inference on Colab GPUs.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Curator",
+        "tags": "colab, gpu, llm, inference, quantization, vram"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "llm-agent-lifecycle",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/mlops/llm-agent-lifecycle",
+      "category": "mlops",
+      "dest": "profile/mlops/llm-agent-lifecycle",
+      "description": "Unsloth GRPO training, HF export and vLLM serving lifecycle.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "metadata_hermes_tags": "unsloth, grpo, lora, huggingface, vllm, cuda, agent-training"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "llm-cpu-calculator",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/mlops/llm-cpu-calculator",
+      "category": "mlops",
+      "dest": "profile/mlops/llm-cpu-calculator",
+      "description": "Estimate CPU and RAM needs for plain-English LLM workloads.",
+      "original_fields": {
+        "version": "0.2.0",
+        "author": "Rajiv Mehta, Hermes Agent",
+        "license": "MIT",
+        "platforms": "macos, linux",
+        "metadata_hermes_tags": "llm, cpu, ram, model-sizing, speculative-decoding",
+        "metadata_hermes_related_skills": ""
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "pi-model-specialization-orchestration",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/mlops/pi-model-specialization-orchestration",
+      "category": "mlops",
+      "dest": "profile/mlops/pi-model-specialization-orchestration",
+      "description": "Use when orchestrating staged local-model specialization.",
+      "original_fields": {
+        "version": "0.1.0",
+        "author": "Rajiv Mehta, Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos",
+        "metadata_hermes_tags": "Pi, model-specialization, distillation, GRPO, orchestration, resumability",
+        "metadata_hermes_related_skills": "pi-extension-authoring, project-feature-maintenance, modal-deploy"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "remote-gpu-model-specialization",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/mlops/remote-gpu-model-specialization",
+      "category": "mlops",
+      "dest": "profile/mlops/remote-gpu-model-specialization",
+      "description": "Use for SSH GPU model specialization workflows.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos",
+        "metadata_hermes_tags": "SSH, GPU, distillation, SFT, GRPO, HF, resumability, Pi",
+        "metadata_hermes_related_skills": "mlops/pi-model-specialization-orchestration, mlops/llm-agent-lifecycle, devops/cli-tool-installation"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "segment-anything",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/mlops/models/segment-anything",
+      "category": "mlops",
+      "dest": "profile/mlops/models/segment-anything",
+      "description": "SAM: zero-shot image segmentation via points, boxes, masks.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Orchestra Research",
+        "license": "MIT",
+        "dependencies": "segment-anything, transformers>=4.30.0, torch>=1.7.0",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "Multimodal, Image Segmentation, Computer Vision, SAM, Zero-Shot"
+      },
+      "spec_compliant": true,
+      "warnings": [
+        "warning: SKILL.md has 504 lines (>500 recommended)"
+      ]
+    },
+    {
+      "name": "workflow-contract-gap-analysis",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/mlops/workflow-contract-gap-analysis",
+      "category": "mlops",
+      "dest": "profile/mlops/workflow-contract-gap-analysis",
+      "description": "Use when comparing setup and downstream pipeline workflows.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "workflow, gap-analysis, environment, GPU, distillation, Modal, SSH, gates, reproducibility",
+        "metadata_hermes_related_skills": "remote-gpu-model-specialization, pi-model-specialization-orchestration, project-feature-maintenance, cli-tool-installation"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "command-output-tables",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/productivity/command-output-tables",
+      "category": "productivity",
+      "dest": "profile/productivity/command-output-tables",
+      "description": "Render command output (e.g. ls -alr) as a lossless table.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "document-generation",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/productivity/document-generation",
+      "category": "productivity",
+      "dest": "profile/productivity/document-generation",
+      "description": "Generate and verify professionally formatted PDF, DOCX, and Excel documents from markdown, structured data, or code.",
+      "original_fields": {
+        "version": "1.0.0",
+        "license": "MIT",
+        "metadata_hermes_tags": "pdf, docx, docx-js, word, excel, xlsx, reportlab, openpyxl, documents, reports, export",
+        "metadata_hermes_related_skills": "docx, powerpoint, ocr-and-documents, nano-pdf"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "petdex",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/productivity/petdex",
+      "category": "productivity",
+      "dest": "profile/productivity/petdex",
+      "description": "Install and select animated petdex mascots for Hermes.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "petdex, mascot, display, cli, tui, desktop",
+        "metadata_hermes_category": "productivity",
+        "metadata_hermes_homepage": "https://petdex.dev"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "tui-widgets",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/productivity/tui-widgets",
+      "category": "productivity",
+      "dest": "profile/productivity/tui-widgets",
+      "description": "Author live widget apps for the Hermes TUI dock.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "metadata_hermes_tags": "tui, widgets, sdk, ui",
+        "metadata_hermes_category": "productivity"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "evaluation-prompt-design",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/research/evaluation-prompt-design",
+      "category": "research",
+      "dest": "profile/research/evaluation-prompt-design",
+      "description": "Design, categorize, refine, and publish structured test prompts for comparing AI models (MoA vs closed-source, frontier vs open, etc.). Covers physics simulation prompts, complex SVG/art prompts, code generation prompts, and multi-turn corrections.",
+      "original_fields": {
+        "title": "Model Evaluation Prompt Design",
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "metadata_hermes_tags": "evaluation, benchmarking, prompt-engineering, svg, gist, moa, model-comparison",
+        "metadata_hermes_category": "research",
+        "metadata_hermes_related_skills": "get-info, svg-illustration, github-issues, github-repo-management"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "get-info",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/research/get-info",
+      "category": "research",
+      "dest": "profile/research/get-info",
+      "description": "Use when the user asks for news, information, or research on any topic within a specific time window. Searches the Exa MCP server (web_search_exa) and returns results in a clean tabular format with Date, Title, and Content columns. Accepts two parameters: topic and timespan.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "metadata_hermes_tags": "news, research, exa, mcp, web-search, information",
+        "metadata_hermes_related_skills": ""
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "hermes-web-research",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/research/hermes-web-research",
+      "category": "research",
+      "dest": "profile/research/hermes-web-research",
+      "description": "Exa MCP backstops research engines with no web backend.",
+      "original_fields": {
+        "version": "1.0.0",
+        "argument-hint": "last30days / get-info reports web unreachable",
+        "category": "research"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "polymarket",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/research/polymarket",
+      "category": "research",
+      "dest": "profile/research/polymarket",
+      "description": "Query Polymarket: markets, prices, orderbooks, history.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent + Teknium",
+        "tags": "polymarket, prediction-markets, market-data, trading",
+        "platforms": "linux, macos, windows"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "technical-source-comparison",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/research/technical-source-comparison",
+      "category": "research",
+      "dest": "profile/research/technical-source-comparison",
+      "description": "Research current technical announcements, APIs, runtimes, and provider behavior using primary sources, then produce before/after comparisons with explicit route-specific caveats and practical architecture implications.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "metadata_hermes_tags": "research, technical, comparison, primary-sources, APIs, runtimes, deployment",
+        "metadata_hermes_related_skills": "get-info"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "agent-skills-discovery",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/software-development/agent-skills-discovery",
+      "category": "software-development",
+      "dest": "profile/software-development/agent-skills-discovery",
+      "description": "Discover and install Agent Skills via npx and gh skill.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "metadata_hermes_tags": "skills, agent-skills, discovery, gh-skill, npx-skills, exa, runpod",
+        "metadata_hermes_related_skills": "cross-agent-skills, agent-skills-publishing, github-repo-management"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "agent-skills-publishing",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/software-development/agent-skills-publishing",
+      "category": "software-development",
+      "dest": "profile/software-development/agent-skills-publishing",
+      "description": "Use when adapting or publishing a Hermes skill for the cross-agent Agent Skills ecosystem (agentskills.io). Covers frontmatter migration, repo naming, npx skills add workflow, and making skills work with Claude Code, Codex, Antigravity, Cursor, and 60+ other agents.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "metadata_hermes_tags": "skills, publishing, agentskills, cross-agent, claude-code, codex, antigravity",
+        "metadata_hermes_related_skills": "hermes-agent-skill-authoring"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "chrome-prompt-api-pitfalls",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/software-development/chrome-prompt-api-pitfalls",
+      "category": "software-development",
+      "dest": "profile/software-development/chrome-prompt-api-pitfalls",
+      "description": "Use for Chrome Prompt API, Pyodide WASM, or COEP apps.",
+      "original_fields": {},
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "code-explainer",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/software-development/code-explainer",
+      "category": "software-development",
+      "dest": "profile/software-development/code-explainer",
+      "description": "Use when building interactive codebase explainers.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "code-explanation, architecture, visualizer, html-artifact, source-grounded",
+        "metadata_hermes_related_skills": "codebase-exploration, html-artifact, project-feature-maintenance, dogfood"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "codebase-exploration",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/software-development/codebase-exploration",
+      "category": "software-development",
+      "dest": "profile/software-development/codebase-exploration",
+      "description": "Explore codebases with CodeGraph: symbols, calls, impact.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "codegraph, code-intelligence, code-navigation, symbol-analysis, call-graph, impact-analysis, code-exploration",
+        "metadata_hermes_related_skills": "codebase-inspection, spike, systematic-debugging, project-feature-maintenance",
+        "prerequisites_commands": "codegraph"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "cross-agent-skills",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/software-development/cross-agent-skills",
+      "category": "software-development",
+      "dest": "profile/software-development/cross-agent-skills",
+      "description": "Use when adapting, publishing, or installing skills across multiple AI coding agents (Claude Code, Codex, Antigravity, Hermes). Covers the Agent Skills open specification (agentskills.io), npx skills add CLI, frontmatter restructuring, and repo naming rules for cross-agent compatibility.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "metadata_hermes_tags": "skills, agent-skills, cross-agent, claude-code, codex, antigravity, npx, publishing",
+        "metadata_hermes_related_skills": "hermes-agent-skill-authoring, modal-deploy"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "git-workspace-init",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/software-development/git-workspace-init",
+      "category": "software-development",
+      "dest": "profile/software-development/git-workspace-init",
+      "description": "Make a root git repo over nested repos; skip gitlink traps.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "hermes-desktop-session-telemetry",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/software-development/hermes-desktop-session-telemetry",
+      "category": "software-development",
+      "dest": "profile/software-development/hermes-desktop-session-telemetry",
+      "description": "Use for session telemetry widgets. Seed from session.info.",
+      "original_fields": {
+        "version": "1.0.0",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "hermes, desktop, plugins, statusbar, telemetry, sessions, ui",
+        "metadata_hermes_category": "software-development",
+        "metadata_hermes_related_skills": "hermes-desktop-plugins, hermes-token-usage"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "pi-extension-authoring",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/software-development/pi-extension-authoring",
+      "category": "software-development",
+      "dest": "profile/software-development/pi-extension-authoring",
+      "description": "Use when authoring TypeScript Pi extensions.",
+      "original_fields": {
+        "version": "0.1.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos",
+        "metadata_hermes_tags": "Pi, extension, TypeScript, ExtensionAPI, tools, prompts",
+        "metadata_hermes_related_skills": "pi-operator, pi-extension-explorer"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "pi-extension-explorer",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/software-development/pi-extension-explorer",
+      "category": "software-development",
+      "dest": "profile/software-development/pi-extension-explorer",
+      "description": "Explore Pi ecosystem repos with CodeGraph and Mermaid.",
+      "original_fields": {
+        "version": "0.1.0",
+        "author": "Rajiv Mehta (rajivmehtapy), Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "Pi, ecosystem, CodeGraph, Mermaid, code-exploration",
+        "metadata_hermes_related_skills": "codebase-exploration, github-repo-management"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "pi-orchestrated-remote-workflows",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/software-development/pi-orchestrated-remote-workflows",
+      "category": "software-development",
+      "dest": "profile/software-development/pi-orchestrated-remote-workflows",
+      "description": "Use for Pi extensions coordinating resumable remote phases.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "Pi, orchestration, remote-jobs, resumability, checkpoints, Git-LFS, TUI, dry-run",
+        "metadata_hermes_related_skills": "pi-extension-authoring, test-driven-development, project-feature-maintenance, modal-deploy"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "prepare-python-folder",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/software-development/prepare-python-folder",
+      "category": "software-development",
+      "dest": "profile/software-development/prepare-python-folder",
+      "description": "Sets up a new Python project directory using uv.",
+      "original_fields": {},
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "project-feature-maintenance",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/software-development/project-feature-maintenance",
+      "category": "software-development",
+      "dest": "profile/software-development/project-feature-maintenance",
+      "description": "Study, plan, harden, and verify project/workspace features with scoped files, derived knowledge, retention policies, and regression tests.",
+      "original_fields": {
+        "version": "1.0.0",
+        "author": "Hermes Agent",
+        "license": "MIT",
+        "platforms": "linux, macos, windows",
+        "metadata_hermes_tags": "projects, workspaces, file-isolation, knowledge-scoping, data-retention, regression-testing",
+        "metadata_hermes_related_skills": "plan, test-driven-development, systematic-debugging, requesting-code-review"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "pyscript-pyodide-worker",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.hermes/skills/software-development/pyscript-pyodide-worker",
+      "category": "software-development",
+      "dest": "profile/software-development/pyscript-pyodide-worker",
+      "description": "Pyodide WASM apps in Web Workers. Use for Python-in-browser.",
+      "original_fields": {
+        "metadata_hermes_tags": "pyscript, pyodide, wasm, web-worker, browser"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    }
+  ]
+}

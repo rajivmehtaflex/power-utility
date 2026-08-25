@@ -1,0 +1,139 @@
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Main as main.py (fcp-data-processor)
+    participant GDriveSync as g-drive-binding/main.py
+    participant Normalize as normalize_ledgers.py
+    participant GDriveMount as Google Drive (rclone mount)
+    participant S3 as AWS S3 (data.fcplus.co.uk)
+    participant Chainlit as g-fcp-da-chainlit (init_db.py)
+
+    Note over Main, Chainlit: FCP Data Processor - Google Drive Operations Flow
+
+    %% ==================== FULL INGESTION FLOW ====================
+    rect rgb(240, 248, 255)
+    note right of Main: FULL INGESTION PIPELINE (run_full_ingestion)
+    
+    Main->>Main: load_dotenv(), load_config()
+    Main->>Main: create_s3_client()
+    Main->>Main: get_xero_duckdb_path()
+    Main->>Main: run_xero_sync() -> DuckDB created
+    Main->>Main: upload_xero_duckdb() -> S3
+    
+    Main->>GDriveSync: run_gdrive_sync(root_dir, GDRIVE_PARQUET_DIR)
+    Note over Main, GDriveSync: subprocess: uv run python main.py<br/>env: GDRIVE_PARQUET_DIR=/tmp/fcp-parquet
+    
+    GDriveSync->>Normalize: normalize_all(mount_path, parquet_dir, skip_rows)
+    Note over GDriveSync, Normalize: mount_path = GDRIVE_MOUNT_PATH<br/>parquet_dir = /tmp/fcp-parquet
+    
+    Normalize->>GDriveMount: find_xlsx_files(mount_path) -> [file1.xlsx, file2.xlsx...]
+    GDriveMount-->>Normalize: List of .xlsx files (recursive glob)
+    
+    loop For each .xlsx file
+        Normalize->>Normalize: normalize_xlsx(xlsx_path, out_dir, skip_rows)
+        Note over Normalize: 1. openpyxl load_workbook()<br/>2. Skip metadata rows (NORMALIZE_SKIP_ROWS)<br/>3. Read header row -> standardize headers<br/>4. Parse data rows -> DataFrame<br/>5. Write .parquet to parquet_dir<br/>6. Return Path to .parquet file
+    end
+    
+    Normalize-->>GDriveSync: List[Path] to parquet files
+    GDriveSync->>GDriveSync: Print each parquet path to stdout
+    GDriveSync-->>Main: stdout with parquet file paths (one per line)
+    
+    Main->>Main: upload_gdrive_outputs(s3_client, gdrive_stdout, S3_BUCKET, today)
+    Note over Main: Parse stdout lines -> validate .parquet exist<br/>Upload each to s3://ledgers/{company}/{today}/{file}.parquet
+    
+    Main->>Chainlit: run_chainlit_bootstrap(root_dir, xero_duckdb_path)
+    Note over Main, Chainlit: subprocess: uv run python init_db.py<br/>env: XERO_DUCKDB_PATH
+    
+    Chainlit->>Chainlit: Refresh DuckDB views from updated DB
+    Chainlit-->>Main: Bootstrap complete
+    end
+
+    %% ==================== GDRIVE-ONLY FLOW ====================
+    rect rgb(255, 248, 240)
+    note right of Main: GDRIVE-ONLY PIPELINE (gdrive_only_flow)
+    
+    Main->>Main: load_dotenv()
+    Main->>Main: get_xero_duckdb_path()
+    Main->>Main: GDRIVE_MOUNT_PATH validation
+    Note over Main: Raise if GDRIVE_MOUNT_PATH not set or not exists
+    
+    Main->>GDriveSync: run_gdrive_sync(root_dir, GDRIVE_PARQUET_DIR)
+    
+    GDriveSync->>Normalize: normalize_all(mount_path, parquet_dir, skip_rows)
+    Normalize->>GDriveMount: find_xlsx_files() -> .xlsx files
+    loop For each .xlsx
+        Normalize->>Normalize: normalize_xlsx() -> .parquet
+    end
+    
+    Normalize-->>GDriveSync: List[Path] parquet files
+    GDriveSync->>GDriveSync: Print parquet paths to stdout
+    GDriveSync-->>Main: stdout with parquet paths
+    
+    Main->>Main: stage_gdrive_source_files(GDRIVE_MOUNT_PATH, data_dir)
+    Note over Main: Copy supported files (.pdf, .docx, .pptx, .xlsx)<br/>from mount_path -> data_dir preserving structure
+    
+    Main->>Chainlit: run_chainlit_bootstrap(root_dir, xero_duckdb_path, xero_data_dir=data_dir)
+    Chainlit-->>Main: DuckDB views refreshed
+    end
+
+    %% ==================== FINISH FLOW ====================
+    rect rgb(240, 255, 240)
+    note right of Main: FINISH FLOW (finish_flow) - Uses existing Xero DuckDB
+    
+    Main->>Main: load_dotenv(), create_s3_client()
+    Main->>Main: upload_xero_duckdb() -> S3
+    Main->>GDriveSync: run_gdrive_sync()
+    GDriveSync->>Normalize: normalize_all() -> parquet files
+    Normalize-->>GDriveSync: List[Path]
+    GDriveSync-->>Main: stdout parquet paths
+    Main->>Main: upload_gdrive_outputs() -> S3
+    end
+
+    %% ==================== MOUNT/UNMOUNT OPERATIONS ====================
+    rect rgb(245, 245, 255)
+    note right of GDriveMount: GOOGLE DRIVE MOUNT OPERATIONS (gdrive-manager.sh)
+    
+    alt Mount via gdrive_sync.mount()
+        Main->>GDriveMount: gdrive_sync.mount(mount_path)
+        GDriveMount->>GDriveMount: bash gdrive-manager.sh mount<br/>env: MOUNT_PATH=mount_path
+        Note over GDriveMount: rclone mount remote: mount_path<br/>--vfs-cache-mode writes --daemon
+        GDriveMount-->>Main: Mounted successfully
+    end
+    
+    alt Mount Shared Folder
+        Main->>GDriveMount: gdrive_sync.mount_shared(folder_id, mount_path)
+        GDriveMount->>GDriveMount: bash gdrive-manager.sh mount-shared<br/>mount_path folder_id
+        Note over GDriveMount: rclone mount remote:folder_id mount_path
+        GDriveMount-->>Main: Shared folder mounted
+    end
+    
+    alt Unmount
+        Main->>GDriveMount: gdrive_sync.unmount(mount_path)
+        GDriveMount->>GDriveMount: bash gdrive-manager.sh unmount<br/>mount_path
+        Note over GDriveMount: fusermount -u mount_path
+        GDriveMount-->>Main: Unmounted
+    end
+    
+    alt Check Mount Status
+        Main->>GDriveMount: gdrive_sync.is_mounted(mount_path)
+        GDriveMount->>GDriveMount: mountpoint -q mount_path
+        GDriveMount-->>Main: True/False
+    end
+    end
+
+    %% ==================== NORMALIZATION DETAILS ====================
+    rect rgb(255, 255, 240)
+    note right of Normalize: LEDGER NORMALIZATION (normalize_ledgers.py)
+    
+    Normalize->>Normalize: find_xlsx_files(root) -> List[Path]
+    Note over Normalize: Path(root).rglob("*.xlsx") - recursive
+    
+    Normalize->>Normalize: normalize_all(in_dir, out_dir, skip_rows)
+    loop For each xlsx
+        Normalize->>Normalize: normalize_xlsx(xlsx_path, out_dir, skip_rows)
+        Note over Normalize: 1. openpyxl.load_workbook()<br/>2. ws = wb.active<br/>3. Skip first N rows (metadata)<br/>4. Row N = headers -> _standardize_headers()<br/>   - lowercase, snake_case, strip special chars<br/>5. Rows N+1.. = data -> list of lists<br/>6. pd.DataFrame(data, columns=headers)<br/>7. out_path = out_dir / (xlsx_name + .parquet)<br/>8. out_path.parent.mkdir(parents=True, exist_ok=True)<br/>9. df.to_parquet(out_path, index=False)<br/>10. Return out_path
+    end
+    
+    Normalize-->>Normalize: List[Path] to parquet files
+    end
+```

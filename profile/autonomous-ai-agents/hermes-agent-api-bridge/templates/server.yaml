@@ -1,0 +1,25 @@
+# templates/server.yaml — API Server Configuration
+#
+# Copy to config/server.yaml and customize.
+# The API bridge reads this via HERMES_API_CONFIG env var
+# (default: /opt/hermes-server/config/server.yaml).
+
+server:
+  host: "0.0.0.0"           # Listen on all interfaces (LAN access)
+  port: 8000
+  workers: 4                 # Uvicorn workers (parallel requests)
+
+auth:
+  enabled: true
+  token: "CHANGE-ME-TO-A-LONG-RANDOM-STRING"
+
+hermes:
+  binary: "hermes"           # Path to hermes binary
+  max_turns: 30              # Max tool-calling iterations
+  timeout: 600               # Per-request timeout (seconds)
+  max_concurrent: 4          # Max parallel Hermes subprocesses
+
+files:
+  upload_dir: "/opt/hermes-server/data/uploads"
+  output_dir: "/opt/hermes-server/data/outputs"
+  max_size_mb: 100

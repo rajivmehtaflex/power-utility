@@ -1,0 +1,57 @@
+# tests/fixtures/sample-registry.yaml
+# Minimal test fixture — 3 roles, not tied to any domain.
+# Includes config_overrides for testing the full v3.0 provisioning flow.
+version: 1
+mode: provision-approved
+max_auto_created_profiles: 4
+base_profile: default
+
+roles:
+  researcher:
+    description: "Finds and summarizes information."
+    capabilities: "Web search, document analysis, market research, summarizing findings, source verification."
+    base_profile: default
+    skills: []
+    auto_create: true
+    config_overrides:
+      agent:
+        max_turns: 40
+        reasoning_effort: high
+      memory:
+        memory_enabled: true
+        user_profile_enabled: false
+      terminal:
+        timeout: 300
+
+  analyst:
+    description: "Interprets data and identifies trends."
+    capabilities: "Statistical analysis, trend identification, data visualization, financial modeling, spreadsheet analysis."
+    base_profile: default
+    skills: []
+    auto_create: true
+    config_overrides:
+      agent:
+        max_turns: 60
+        verify_on_stop: always
+      memory:
+        memory_enabled: true
+      terminal:
+        cwd: ~/Documents/Dev
+        timeout: 600
+
+  reviewer:
+    description: "Reviews outputs against acceptance criteria."
+    capabilities: "Quality assurance, output validation, defect reporting, acceptance criteria checking, compliance review."
+    base_profile: default
+    skills: []
+    auto_create: true
+    config_overrides:
+      agent:
+        max_turns: 20
+        tool_use_enforcement: strict
+      memory:
+        memory_enabled: false
+        user_profile_enabled: false
+      delegation:
+        max_spawn_depth: 0
+        max_concurrent_children: 0

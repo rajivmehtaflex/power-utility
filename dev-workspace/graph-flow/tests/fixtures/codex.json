@@ -1,0 +1,25 @@
+{
+  "adapter": "codex",
+  "role_mapping": {
+    "explorer": {"native": "built-in explorer threads", "dispatches": true},
+    "default": {"native": "default threads for bounded coordination or review", "dispatches": true},
+    "worker": {"native": "worker threads for isolated implementation", "dispatches": true},
+    "reviewer": {"native": "default threads for independent review", "dispatches": true},
+    "human": {"native": "Codex panel approval gate", "dispatches": false}
+  },
+  "envelope": {
+    "dispatch": {
+      "run_id": "adapter-contract", "node": "implement", "kind": "implementation", "attempt": 1,
+      "allowed_outcomes": ["done", "failed"], "depends_on": [], "depends_on_any": [],
+      "input_results": {}, "feedback": [], "prompt": "Implement the isolated change.", "state_path": "/tmp/state.json"
+    },
+    "role": "worker", "objective": "Implement the isolated change.", "repository": "/repo", "worktree": "/repo/.worktrees/implement",
+    "paths": ["src/feature.py"], "exclusive_ownership": {"access": "write", "resources": ["src/feature.py"], "paths": ["src/feature.py"]},
+    "prohibited_scope": ["graph state mutation or recursive dispatch"], "acceptance_criteria": ["The focused verification passes."],
+    "verification_commands": ["python3 -m unittest"], "result_contract": "Return the JSON object below as the whole result."
+  },
+  "handle_lifecycle": {"launch": "register before start or claim then attach", "operations": {"inspect": true, "wait": true, "steer": true, "stop": true, "complete": true}},
+  "capability": {"primary": "full", "degraded": "managed"},
+  "headless_fallback": {"projection": "status --format json", "accepts_typed_json": true, "emits_reducer_projection": true, "renders_human_gates": true},
+  "controls": {"graph_approval": "approve", "runtime_approval": "approve --node <id> --result <file>", "input": "respond --request-id <id> --answer <typed-json>", "pause": "pause then tick drains active handles to paused", "resume": "resume only from paused", "stop": "stop-request then stop-confirm with terminal handle evidence"}
+}

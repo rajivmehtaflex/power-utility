@@ -1,0 +1,45 @@
+# templates/docker-compose.yml — Full stack: Ollama + Hermes API bridge
+#
+# Start: docker-compose up -d
+# Stop:  docker-compose down
+#
+# Pull a model: docker-compose exec ollama ollama pull qwen3.5:14b
+
+version: "3.8"
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    # Uncomment for NVIDIA GPU support
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+    restart: unless-stopped
+
+  hermes-api:
+    build: .
+    container_name: hermes-api
+    ports:
+      - "0.0.0.0:8000:8000"
+    depends_on:
+      - ollama
+    environment:
+      - HERMES_API_CONFIG=/app/config/server.yaml
+      - OLLAMA_HOST=http://ollama:11434
+    volumes:
+      - hermes-data:/root/.hermes
+      - ./data:/app/data
+    restart: unless-stopped
+
+volumes:
+  ollama-models:
+  hermes-data:

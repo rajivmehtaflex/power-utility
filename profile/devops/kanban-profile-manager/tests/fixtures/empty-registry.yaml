@@ -1,0 +1,7 @@
+# tests/fixtures/empty-registry.yaml
+# Edge case: zero roles defined.
+version: 1
+mode: reuse-only
+max_auto_created_profiles: 4
+base_profile: default
+roles: {}
