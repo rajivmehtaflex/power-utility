@@ -1,6 +1,6 @@
 # Skill Collections — Cross-Agent Mono-Repo
 
-Spec: https://agentskills.io/specification.md · 69 skills · synced 2026-08-25
+Spec: https://agentskills.io/specification.md · 70 skills · synced 2026-08-25
 
 Normalized copies of every user-added skill. Live sources
 (~/.hermes/skills, ~/.agents/skills, ~/Documents/Dev/Skills) are never modified;
@@ -12,7 +12,7 @@ The [skills CLI](https://github.com/vercel-labs/skills) auto-detects installed
 agents (Claude Code, Codex, Cursor, Copilot, OpenCode, …) or takes `--agent`:
 
 ```bash
-# Install ALL 69 skills (auto-detect agents, interactive pick)
+# Install ALL 70 skills (auto-detect agents, interactive pick)
 npx skills add rajivmehtaflex/power-utility
 
 # List available skills without installing
@@ -159,4 +159,5 @@ are never modified — only these copies are normalized.
 | `pi-orchestrated-remote-workflows` | profile | software-development | yes | Use for Pi extensions coordinating resumable remote phases. |
 | `prepare-python-folder` | profile | software-development | yes | Sets up a new Python project directory using uv. |
 | `project-feature-maintenance` | profile | software-development | yes | Study, plan, harden, and verify project/workspace features with scoped files, de |
+| `prime-agent-docs` | profile | software-development | yes | Prime Agent docs: RLM subagents, daemon, SDK, ACP/RPC, extensions. |
 | `pyscript-pyodide-worker` | profile | software-development | yes | Pyodide WASM apps in Web Workers. Use for Python-in-browser. |

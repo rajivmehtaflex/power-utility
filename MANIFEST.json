@@ -399,7 +399,7 @@
       "source_path": "/Users/rajivmehtapy/.hermes/skills/devops/system-update",
       "category": "devops",
       "dest": "profile/devops/system-update",
-      "description": "Use when the user asks to update/upgrade system packages and CLI tools — Homebrew, npm globals, Claude Code, Codex CLI, agy, pi, prime-agent, and ori. Runs them sequentially as a single chain and reports results.",
+      "description": "Use when the user asks to update/upgrade system packages and CLI tools \u2014 Homebrew, npm globals, Claude Code, Codex CLI, agy, pi, prime-agent, and ori. Runs them sequentially as a single chain and reports results.",
       "original_fields": {
         "version": "1.2.0",
         "author": "Hermes Agent",
@@ -611,11 +611,11 @@
       "source_path": "/Users/rajivmehtapy/.hermes/skills/yuanbao",
       "category": "misc",
       "dest": "profile/misc/yuanbao",
-      "description": "Yuanbao (元宝) groups: @mention users, query info/members.",
+      "description": "Yuanbao (\u5143\u5b9d) groups: @mention users, query info/members.",
       "original_fields": {
         "version": "1.0.0",
         "platforms": "linux, macos, windows",
-        "metadata_hermes_tags": "yuanbao, mention, at, group, members, 元宝, 派, 艾特",
+        "metadata_hermes_tags": "yuanbao, mention, at, group, members, \u5143\u5b9d, \u6d3e, \u827e\u7279",
         "metadata_hermes_related_skills": ""
       },
       "spec_compliant": true,
@@ -1136,6 +1136,22 @@
       "description": "Pyodide WASM apps in Web Workers. Use for Python-in-browser.",
       "original_fields": {
         "metadata_hermes_tags": "pyscript, pyodide, wasm, web-worker, browser"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "prime-agent-docs",
+      "source": "profile",
+      "source_path": "profile/software-development/prime-agent-docs",
+      "category": "software-development",
+      "dest": "profile/software-development/prime-agent-docs",
+      "description": "Complete reference and documentation for Prime Agent (RLM-native coding and research agent harness). Use when developing with, configuring, embedding, or extending Prime Agent, including CLI usage, RLM programming model, subagents, daemon runtime, extensions, Python skills, MCP integrations, SDK, ACP/RPC modes, providers, models, and session management.",
+      "original_fields": {
+        "license": "Apache-2.0",
+        "metadata_author": "Prime Intellect",
+        "metadata_project": "prime-agent",
+        "metadata_type": "reference"
       },
       "spec_compliant": true,
       "warnings": []

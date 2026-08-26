@@ -6,4 +6,4 @@ WARN profile/profile/devops/modal-deploy: warning: SKILL.md has 1225 lines (>500
 WARN profile/profile/mlops/models/audiocraft: warning: SKILL.md has 566 lines (>500 recommended)
 WARN profile/profile/mlops/models/segment-anything: warning: SKILL.md has 504 lines (>500 recommended)
 
-Total: 69 skills; 69 spec-compliant; 0 failed
+Total: 70 skills; 70 spec-compliant; 0 failed
