@@ -538,6 +538,17 @@
       "warnings": []
     },
     {
+      "name": "1-minute-video-gen",
+      "source": "profile",
+      "source_path": "/Users/rajivmehtapy/.codex/skills/1-minute-video-gen",
+      "category": "media",
+      "dest": "profile/media/1-minute-video-gen",
+      "description": "Generate duration-aware videos through OpenRouter's asynchronous video API using five approved short-clip models. Use when a coding agent needs to create a longer video with prompt review, resolution/audio controls, and frame-continuous segment assembly.",
+      "original_fields": {},
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
       "name": "browser-preview-ops",
       "source": "profile",
       "source_path": "/Users/rajivmehtapy/.hermes/skills/browser-preview-ops",

@@ -1,6 +1,8 @@
 # Skill Collections — Cross-Agent Mono-Repo
 
-Spec: https://agentskills.io/specification.md · 70 skills · synced 2026-08-25
+Spec: https://agentskills.io/specification.md · 71 skills · synced 2026-08-31
+
+[![skills.sh](https://skills.sh/b/rajivmehtaflex/power-utility)](https://skills.sh/rajivmehtaflex/power-utility)
 
 Normalized copies of every user-added skill. Live sources
 (~/.hermes/skills, ~/.agents/skills, ~/Documents/Dev/Skills) are never modified;
@@ -12,7 +14,7 @@ The [skills CLI](https://github.com/vercel-labs/skills) auto-detects installed
 agents (Claude Code, Codex, Cursor, Copilot, OpenCode, …) or takes `--agent`:
 
 ```bash
-# Install ALL 70 skills (auto-detect agents, interactive pick)
+# Install ALL 71 skills (auto-detect agents, interactive pick)
 npx skills add rajivmehtaflex/power-utility
 
 # List available skills without installing
@@ -20,6 +22,9 @@ npx skills add rajivmehtaflex/power-utility --list
 
 # Install ONE specific skill
 npx skills add rajivmehtaflex/power-utility --skill get-info
+
+# Install the 1-minute video generation skill
+npx skills add rajivmehtaflex/power-utility --skill 1-minute-video-gen
 
 # Install SEVERAL skills
 npx skills add rajivmehtaflex/power-utility --skill modal-deploy --skill gh-cli-ops
@@ -124,6 +129,7 @@ are never modified — only these copies are normalized.
 | `local-model-endpoints` | profile | hermes | yes | Hermes picker omits local Ollama models `ollama ls` shows. |
 | `okf-visualization` | profile | knowledge-management | yes | Visualize an OKF knowledge bundle; use npx okapi-okf first. |
 | `heartmula` | profile | media | yes | HeartMuLa: Suno-like song generation from lyrics + tags. |
+| `1-minute-video-gen` | profile | media | yes | Generate duration-aware videos through OpenRouter with prompt review, resolution/audio controls, and frame-continuous segment assembly. |
 | `browser-preview-ops` | profile | misc | yes | Use when opening or verifying any web page in Hermes. |
 | `hermes-desktop-plugins` | profile | misc | yes | Write desktop app plugins that add UI panes and commands. |
 | `hermes-themes` | profile | misc | yes | Author a Hermes color theme that skins every surface. |
