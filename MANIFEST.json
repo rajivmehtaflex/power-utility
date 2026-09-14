@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-25T11:24:27+00:00",
+  "generated": "2026-09-14T00:00:00+00:00",
   "spec": "https://agentskills.io/specification.md",
   "skills": [
     {
@@ -109,6 +109,20 @@
         "platforms": "linux, macos, windows",
         "metadata_hermes_tags": "subagents, parallel, delegation, orchestration, waves, delegate-task, concurrency",
         "metadata_hermes_related_skills": "plan, simplify-code"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "dynamic-orchestrator",
+      "source": "profile",
+      "source_path": "profile/autonomous-ai-agents/dynamic-orchestrator",
+      "category": "autonomous-ai-agents",
+      "dest": "profile/autonomous-ai-agents/dynamic-orchestrator",
+      "description": "Coordinate substantive implementation work with real subagents using adaptive assignments, lead-mediated handoffs, review, and verified reporting. Use when a task needs delegated implementation, adaptive ownership, agent handoffs, independent review, or correction loops.",
+      "original_fields": {
+        "compatibility": "Requires an agent runtime with real subagent spawning, result retrieval, follow-up, and lifecycle controls; otherwise report that delegated workflow is unavailable and use only an explicitly authorized lead-only path.",
+        "metadata_version": "1.0.0"
       },
       "spec_compliant": true,
       "warnings": []

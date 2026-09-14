@@ -1,6 +1,6 @@
 # Skill Collections — Cross-Agent Mono-Repo
 
-Spec: https://agentskills.io/specification.md · 71 skills · synced 2026-08-31
+Spec: https://agentskills.io/specification.md · 72 skills · synced 2026-09-14
 
 [![skills.sh](https://skills.sh/b/rajivmehtaflex/power-utility)](https://skills.sh/rajivmehtaflex/power-utility)
 
@@ -14,7 +14,7 @@ The [skills CLI](https://github.com/vercel-labs/skills) auto-detects installed
 agents (Claude Code, Codex, Cursor, Copilot, OpenCode, …) or takes `--agent`:
 
 ```bash
-# Install ALL 71 skills (auto-detect agents, interactive pick)
+# Install ALL 72 skills (auto-detect agents, interactive pick)
 npx skills add rajivmehtaflex/power-utility
 
 # List available skills without installing
@@ -28,6 +28,9 @@ npx skills add rajivmehtaflex/power-utility --skill 1-minute-video-gen
 
 # Install SEVERAL skills
 npx skills add rajivmehtaflex/power-utility --skill modal-deploy --skill gh-cli-ops
+
+# Install dynamic-orchestrator for Codex globally
+npx skills add rajivmehtaflex/power-utility --skill dynamic-orchestrator --agent codex --global --copy -y
 
 # Install ALL skills to a specific agent
 npx skills add rajivmehtaflex/power-utility --all --agent claude-code
@@ -103,6 +106,7 @@ are never modified — only these copies are normalized.
 | `hermes-agent-api-bridge` | profile | autonomous-ai-agents | yes | Bridge Hermes Agent to external apps via subprocess or HTTP. |
 | `pi-operator` | profile | autonomous-ai-agents | yes | Operate and verify the Pi coding-agent CLI safely. |
 | `subagent-orchestration` | profile | autonomous-ai-agents | yes | Decompose implementation plans into parallel-safe task waves and dispatch them v |
+| `dynamic-orchestrator` | profile | autonomous-ai-agents | yes | Coordinate substantive implementation work with real subagents using adaptive assignments, lead-mediated handoffs, review, and verified reporting. |
 | `html-artifact` | profile | creative | yes | Build self-contained HTML files to explain, plan, or review. |
 | `interactive-3d-web` | profile | creative | yes | Build self-contained interactive 3D scenes with Three.js: orbit controls, transl |
 | `procedural-3d-composite-scenes` | profile | creative | yes | Design, debug, verify, and parallelize Three.js scenes that combine organic char |
