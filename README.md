@@ -54,6 +54,28 @@ npx skills update rajivmehtaflex/power-utility
 npx skills remove get-info
 ```
 
+## Use `dynamic-orchestrator`
+
+Invoke the skill explicitly with a substantive implementation request:
+
+```text
+$dynamic-orchestrator
+
+Add CSV export to the reporting module.
+
+Goal: users can export the currently filtered report as a CSV file.
+Acceptance criteria:
+- preserve the active filters and column order;
+- handle empty results with a valid header-only CSV;
+- add focused tests for filtered and empty reports;
+- run the relevant test suite and report the exact verification output.
+
+First inspect the repository and decide whether delegation is useful. If you
+delegate, keep file ownership disjoint, route all findings through the lead,
+and use a separate reviewer before reporting completion. If the runtime has no
+real subagent controls, state that limitation instead of simulating agents.
+```
+
 ### Variant parameters at a glance
 
 | Variant | Flag(s) | Example |
