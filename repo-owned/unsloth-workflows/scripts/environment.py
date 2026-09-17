@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 import platform
 import shutil
 import subprocess
@@ -38,6 +37,31 @@ def doctor(project: Path) -> dict[str, Any]:
     }
 
 
+def environment_health(python: Path) -> dict[str, Any]:
+    if not python.is_file():
+        return {"healthy": False, "error": f"managed Python is missing: {python}"}
+    probe = (
+        "import importlib.metadata as m, json, sys, torch, unsloth; "
+        "assert torch.cuda.is_available(), 'CUDA is unavailable'; "
+        "value = (torch.ones(1, device='cuda') + 1).item(); "
+        "print('UNSLOTH_HEALTH=' + json.dumps({'python': sys.version.split()[0], 'pip': m.version('pip'), "
+        "'unsloth': m.version('unsloth'), 'torch': torch.__version__, 'cuda': torch.version.cuda, "
+        "'device_count': torch.cuda.device_count(), 'probe': value}))"
+    )
+    code, output = _run([str(python), "-c", probe])
+    if code != 0:
+        return {"healthy": False, "error": output or "environment probe failed"}
+    check_code, check_output = _run([str(python), "-m", "pip", "check"])
+    if check_code != 0:
+        return {"healthy": False, "error": check_output or "pip dependency check failed"}
+    try:
+        payload = next(line.removeprefix("UNSLOTH_HEALTH=") for line in output.splitlines() if line.startswith("UNSLOTH_HEALTH="))
+        details = json.loads(payload)
+    except (StopIteration, json.JSONDecodeError):
+        return {"healthy": False, "error": f"invalid environment probe output: {output}"}
+    return {"healthy": True, "details": details}
+
+
 def setup_plan(project: Path) -> dict[str, Any]:
     env = project / ".unsloth" / "venv"
     python = env / "bin" / "python"
@@ -67,6 +91,10 @@ def setup(project: Path, dry_run: bool = False) -> dict[str, Any]:
         }
     if not sys.platform.startswith("linux"):
         raise RuntimeError("Unsloth execution setup requires Linux with NVIDIA drivers")
+    gpu = doctor(project)
+    if not gpu.get("gpu_available"):
+        detail = "; ".join(gpu.get("gpu") or [])
+        raise RuntimeError(f"NVIDIA GPU is required before setup{': ' + detail if detail else ''}")
     plan = setup_plan(project)
     if dry_run:
         return {"dry_run": True, **plan}
@@ -83,8 +111,21 @@ def setup(project: Path, dry_run: bool = False) -> dict[str, Any]:
     if not env.exists():
         subprocess.run([uv, "venv", str(env), "--python", "3.12"], check=True)
     python = env / "bin" / "python"
+    if not python.is_file():
+        raise RuntimeError(f"managed environment is incomplete: {python}; repair or remove .unsloth/venv manually")
     marker = project / ".unsloth" / "install.json"
-    if not marker.exists():
+    health = environment_health(python)
+    reused = health["healthy"]
+    if not health["healthy"]:
         subprocess.run([uv, "pip", "install", "--python", str(python), "unsloth", "--torch-backend=auto"], check=True)
-        marker.write_text(json.dumps({"python": str(python), "uv": uv}, indent=2) + "\n", encoding="utf-8")
-    return {"dry_run": False, **plan, "installed": True, "marker": str(marker)}
+        health = environment_health(python)
+    if not health["healthy"]:
+        raise RuntimeError(f"managed environment failed verification: {health['error']}")
+    marker.write_text(
+        json.dumps({"python": str(python), "uv": uv, "environment": health["details"]}, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return {
+        "dry_run": False, **plan, "installed": True, "reused": reused,
+        "marker": str(marker), "environment": health["details"],
+    }

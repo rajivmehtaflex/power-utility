@@ -30,8 +30,26 @@ def main() -> int:
         model.save_pretrained_merged(target, tokenizer, save_method="merged_16bit")
     else:
         model.save_pretrained_gguf(target, tokenizer, quantization_method=export_cfg.get("quantization", "q4_k_m"))
-    (target / "export_metadata.json").write_text(json.dumps({"source": source, "format": fmt, "model": model_cfg}, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({"output": str(target), "format": fmt}))
+    verification = {"reloaded": False, "inference": False}
+    if export_cfg.get("verify", True) and fmt != "gguf":
+        reloaded, reload_tokenizer = FastLanguageModel.from_pretrained(
+            model_name=str(target),
+            max_seq_length=cfg.get("training", {}).get("max_seq_length", 512),
+            load_in_4bit=False,
+        )
+        FastLanguageModel.for_inference(reloaded)
+        import torch
+        inputs = reload_tokenizer("Verification", return_tensors="pt").to("cuda")
+        with torch.inference_mode():
+            reloaded.generate(**inputs, max_new_tokens=1)
+        verification = {"reloaded": True, "inference": True}
+    elif fmt == "gguf":
+        verification["reason"] = "GGUF requires a compatible external inference runtime for reload verification"
+    (target / "export_metadata.json").write_text(
+        json.dumps({"source": source, "format": fmt, "model": model_cfg, "verification": verification}, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    print(json.dumps({"output": str(target), "format": fmt, "verification": verification}))
     return 0
 
 

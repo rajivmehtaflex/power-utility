@@ -35,6 +35,18 @@ def _alpaca_error(row: dict[str, Any], line: int) -> str | None:
     return None
 
 
+def messages_from_record(row: dict[str, Any]) -> list[dict[str, str]]:
+    if "messages" in row:
+        return row["messages"]
+    prompt = _content(row["instruction"])
+    if _content(row.get("input", "")).strip():
+        prompt += "\n\n" + _content(row["input"])
+    return [
+        {"role": "user", "content": prompt},
+        {"role": "assistant", "content": _content(row["output"])},
+    ]
+
+
 def validate_dataset(path: str | Path) -> dict[str, Any]:
     source = Path(path)
     errors: list[str] = []
@@ -75,4 +87,18 @@ def validate_dataset(path: str | Path) -> dict[str, Any]:
                 errors.append(error)
     if duplicate_rows:
         errors.append(f"{duplicate_rows} exact duplicate record(s)")
-    return {"path": str(source), "rows": rows, "format": detected, "errors": errors, "duplicates": duplicate_rows}
+    return {
+        "path": str(source), "rows": rows, "format": detected, "errors": errors,
+        "duplicates": duplicate_rows, "record_hashes": sorted(hashes),
+    }
+
+
+def validate_dataset_pair(train_path: str | Path, eval_path: str | Path) -> tuple[dict[str, Any], dict[str, Any]]:
+    train = validate_dataset(train_path)
+    evaluation = validate_dataset(eval_path)
+    overlap = set(train["record_hashes"]) & set(evaluation["record_hashes"])
+    if overlap:
+        message = f"train/eval overlap: {len(overlap)} exact duplicate record(s)"
+        train["errors"].append(message)
+        evaluation["errors"].append(message)
+    return train, evaluation

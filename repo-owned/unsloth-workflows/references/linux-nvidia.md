@@ -2,7 +2,7 @@
 
 The supported execution shape is Linux x86_64 with an NVIDIA driver, a visible GPU, Python 3.12, and a project-local `.unsloth/venv`. `doctor` is read-only and reports platform, architecture, Python, `uv`, `nvidia-smi`, GPU names/memory/driver, and whether the host is eligible.
 
-`setup` may create the project environment and install packages. It must not install drivers, modify an active unrelated environment, or delete an incompatible environment. Use the official automatic backend path first:
+`setup` may create the project environment and install packages only after `nvidia-smi` reports a visible GPU. It must not install drivers, modify an active unrelated environment, or delete an incompatible environment. It validates package imports, `pip check`, CUDA availability, and a one-element CUDA computation before reusing or recording the environment. Use the official automatic backend path first:
 
 ```bash
 uv venv .unsloth/venv --python 3.12

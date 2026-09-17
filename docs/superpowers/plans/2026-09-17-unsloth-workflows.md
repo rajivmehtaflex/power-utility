@@ -45,7 +45,7 @@
 - [x] Document repo-owned installation and separate staging import behavior.
 - [x] Add a helper that rejects the repository as staging source and updates only generated groups.
 - [x] Add CPU CI for tests and syntax compilation.
-- [ ] Add the `repo-owned/unsloth-workflows` entry to `MANIFEST.json` with current metadata.
+- [x] Add the `repo-owned/unsloth-workflows` entry to `MANIFEST.json` with current metadata.
 
 ### Task 3: Linux/NVIDIA validation
 

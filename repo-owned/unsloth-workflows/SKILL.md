@@ -4,7 +4,7 @@ description: Explain, prepare, and execute Unsloth model training workflows on L
 license: Apache-2.0
 compatibility: Requires a Linux shell for execution; training requires NVIDIA drivers, a visible CUDA GPU, Python 3.12, network access for package/model downloads, and enough disk/VRAM for the selected model. Discuss and dry-run modes are CPU/read-only.
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
   author: rajivmehtaflex
   source: "https://unsloth.ai/docs/llms.txt"
   execution_platform: linux-nvidia
@@ -41,7 +41,7 @@ The runner lives in `scripts/`. The reusable text path accepts ChatML `messages`
 
 ## Environment rules
 
-Execution targets Linux/NVIDIA only. `setup` owns `.unsloth/` inside the selected project, prefers `uv`, creates a Python 3.12 environment at `.unsloth/venv`, installs Unsloth with the automatic PyTorch backend, and records an install marker. It reuses a passing environment and never replaces system drivers or an unrelated active environment. If the host is unsupported, report the exact platform and recovery path.
+Execution targets Linux/NVIDIA only. `setup` first requires a visible NVIDIA GPU, then owns `.unsloth/` inside the selected project, prefers `uv`, creates a Python 3.12 environment at `.unsloth/venv`, installs Unsloth with the automatic PyTorch backend, and proves imports, dependency consistency, CUDA availability, and a small CUDA computation before recording version evidence. It reuses only a verified environment and never replaces system drivers or an unrelated active environment.
 
 ## Evidence and safety
 

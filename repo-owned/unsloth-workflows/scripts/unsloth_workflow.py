@@ -9,7 +9,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from data_validation import validate_dataset
+from data_validation import validate_dataset, validate_dataset_pair
 from environment import doctor, setup
 from workflow_config import ConfigError, load_json, validate_config
 
@@ -31,7 +31,12 @@ def _load_and_validate(args: argparse.Namespace) -> dict:
 def _run_python(project: Path, script: str, config: str) -> int:
     python = project / ".unsloth" / "venv" / "bin" / "python"
     runner = Path(__file__).resolve().parent / script
-    return subprocess.run([str(python), str(runner), "--config", str(Path(config).resolve())], cwd=project, check=False).returncode
+    result = subprocess.run(
+        [str(python), str(runner), "--config", str(Path(config).resolve())],
+        cwd=project,
+        check=False,
+    )
+    return 128 + abs(result.returncode) if result.returncode < 0 else result.returncode
 
 
 def _project_path(project: Path, value: str) -> str:
@@ -62,34 +67,53 @@ def main(argv: list[str] | None = None) -> int:
                 dataset = cfg.get("data", {}).get("train")
             if not dataset:
                 raise ConfigError("provide --dataset or data.train in --config")
+            dataset = _project_path(project, dataset)
             report = validate_dataset(dataset)
+            report.pop("record_hashes", None)
             _emit(report)
             return 0 if not report["errors"] else 1
         cfg = _load_and_validate(args)
         if args.dry_run:
             _emit({"command": args.command, "dry_run": True, "project": str(project), "config": cfg})
             return 0
-        setup(project, False)
         if args.command == "train":
             cfg["data"]["train"] = _project_path(project, cfg["data"]["train"])
             if cfg["data"].get("eval"):
                 cfg["data"]["eval"] = _project_path(project, cfg["data"]["eval"])
             report = validate_dataset(cfg["data"]["train"])
+            eval_report = None
+            if cfg["data"].get("eval"):
+                report, eval_report = validate_dataset_pair(cfg["data"]["train"], cfg["data"]["eval"])
             if report["errors"]:
+                report.pop("record_hashes", None)
                 _emit(report)
                 return 1
-            if cfg["data"].get("eval"):
-                eval_report = validate_dataset(cfg["data"]["eval"])
-                if eval_report["errors"]:
-                    _emit(eval_report)
-                    return 1
+            if eval_report and eval_report["errors"]:
+                eval_report.pop("record_hashes", None)
+                _emit(eval_report)
+                return 1
+            setup(project, False)
             return _run_python(project, "sft_train.py", args.config)
         if args.command == "evaluate":
+            cfg["data"]["eval"] = _project_path(project, cfg["data"]["eval"])
+            report = validate_dataset(cfg["data"]["eval"])
+            if report["errors"]:
+                report.pop("record_hashes", None)
+                _emit(report)
+                return 1
+            setup(project, False)
             return _run_python(project, "evaluate_model.py", args.config)
+        setup(project, False)
         return _run_python(project, "export_model.py", args.config)
+    except subprocess.CalledProcessError as exc:
+        print(f"command failed with exit code {exc.returncode}: {exc.cmd}", file=sys.stderr)
+        return exc.returncode if exc.returncode > 0 else 1
     except (ConfigError, RuntimeError, OSError) as exc:
         print(str(exc), file=sys.stderr)
         return 2
+    except KeyboardInterrupt:
+        print("interrupted", file=sys.stderr)
+        return 130
 
 
 if __name__ == "__main__":

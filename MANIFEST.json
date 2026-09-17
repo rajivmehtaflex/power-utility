@@ -122,7 +122,7 @@
       "description": "Coordinate substantive implementation work with real subagents using adaptive assignments, lead-mediated handoffs, review, and verified reporting. Use when a task needs delegated implementation, adaptive ownership, agent handoffs, independent review, or correction loops.",
       "original_fields": {
         "compatibility": "Requires an agent runtime with real subagent spawning, result retrieval, follow-up, and lifecycle controls; otherwise report that delegated workflow is unavailable and use only an explicitly authorized lead-only path.",
-        "metadata_version": "1.0.0"
+        "metadata_version": "1.0.1"
       },
       "spec_compliant": true,
       "warnings": []

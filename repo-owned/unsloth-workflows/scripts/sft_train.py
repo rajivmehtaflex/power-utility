@@ -4,8 +4,11 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
+import importlib.metadata
 import json
 from pathlib import Path
+from data_validation import messages_from_record
 
 
 def _load_rows(path: str):
@@ -16,14 +19,12 @@ def _load_rows(path: str):
         if not line.strip():
             continue
         row = json.loads(line)
-        if "messages" in row:
-            rows.append({"messages": row["messages"]})
-        else:
-            prompt = row["instruction"]
-            if row.get("input"):
-                prompt += "\n\n" + row["input"]
-            rows.append({"messages": [{"role": "user", "content": prompt}, {"role": "assistant", "content": row["output"]}]})
+        rows.append({"messages": messages_from_record(row)})
     return Dataset.from_list(rows)
+
+
+def _file_sha256(path: str) -> str:
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
 def main() -> int:
@@ -55,15 +56,18 @@ def main() -> int:
         use_gradient_checkpointing="unsloth",
     )
     dataset = _load_rows(data_cfg["train"])
+    eval_dataset = _load_rows(data_cfg["eval"]) if data_cfg.get("eval") else None
 
     def format_rows(batch):
         return {"text": [tokenizer.apply_chat_template(x, tokenize=False, add_generation_prompt=False) for x in batch["messages"]]}
 
     dataset = dataset.map(format_rows, batched=True)
+    eval_interval = max(1, train_cfg.get("eval_steps", train_cfg.get("save_steps", 10)))
     trainer = SFTTrainer(
         model=model,
         tokenizer=tokenizer,
         train_dataset=dataset,
+        eval_dataset=eval_dataset,
         args=SFTConfig(
             output_dir=train_cfg.get("output_dir", "./outputs"),
             max_seq_length=max_length,
@@ -74,6 +78,8 @@ def main() -> int:
             num_train_epochs=train_cfg.get("num_epochs", 1),
             logging_steps=1,
             save_steps=train_cfg.get("save_steps", 10),
+            eval_strategy="steps" if eval_dataset is not None else "no",
+            eval_steps=eval_interval,
             report_to="none",
         ),
     )
@@ -81,7 +87,19 @@ def main() -> int:
     output = Path(train_cfg.get("output_dir", "./outputs"))
     model.save_pretrained(output)
     tokenizer.save_pretrained(output)
-    (output / "training_metadata.json").write_text(json.dumps({"model": model_cfg, "training": train_cfg}, indent=2) + "\n", encoding="utf-8")
+    metadata = {
+        "model": model_cfg,
+        "training": train_cfg,
+        "datasets": {"train": {"path": data_cfg["train"], "sha256": _file_sha256(data_cfg["train"])}},
+        "tokenizer": {"name_or_path": tokenizer.name_or_path, "chat_template": tokenizer.chat_template},
+        "dependencies": {
+            package: importlib.metadata.version(package)
+            for package in ("unsloth", "torch", "transformers", "trl", "peft", "datasets")
+        },
+    }
+    if data_cfg.get("eval"):
+        metadata["datasets"]["eval"] = {"path": data_cfg["eval"], "sha256": _file_sha256(data_cfg["eval"])}
+    (output / "training_metadata.json").write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
     return 0
 
 

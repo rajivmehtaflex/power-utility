@@ -10,6 +10,8 @@ from pathlib import Path
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 ENTRYPOINT = SKILL_ROOT / "scripts" / "unsloth_workflow.py"
+sys.path.insert(0, str(SKILL_ROOT / "scripts"))
+from data_validation import messages_from_record, validate_dataset_pair  # noqa: E402
 
 
 class WorkflowCliTests(unittest.TestCase):
@@ -109,6 +111,44 @@ class WorkflowCliTests(unittest.TestCase):
             self.assertEqual(result.returncode, 2)
             self.assertIn("unknown config key", result.stderr)
 
+    def test_config_rejects_unknown_nested_keys_before_dry_run(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            config = Path(tmp) / "run.json"
+            config.write_text(
+                json.dumps(
+                    {
+                        "model": {"name": "x"},
+                        "data": {"train": "data.jsonl"},
+                        "training": {"output_dirr": "typo"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            result = self.run_cli("train", "--config", str(config), "--dry-run")
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("training.output_dirr", result.stderr)
+
+    def test_train_rejects_bad_data_before_attempting_platform_setup(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "project"
+            project.mkdir()
+            (project / "train.jsonl").write_text("not json\n", encoding="utf-8")
+            config = project / "run.json"
+            config.write_text(
+                json.dumps(
+                    {
+                        "model": {"name": "x"},
+                        "data": {"train": "train.jsonl"},
+                        "training": {"method": "qlora"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            result = self.run_cli("train", "--project", str(project), "--config", str(config))
+            self.assertEqual(result.returncode, 1, result.stderr)
+            self.assertIn("invalid JSON", result.stdout)
+            self.assertFalse((project / ".unsloth").exists())
+
     def test_skill_runs_from_copied_path_containing_spaces(self):
         with tempfile.TemporaryDirectory() as tmp:
             copied = Path(tmp) / "copied skill"
@@ -128,6 +168,25 @@ class WorkflowCliTests(unittest.TestCase):
             result = self.run_cli("validate-data", "--dataset", str(dataset))
             self.assertEqual(result.returncode, 1)
             self.assertIn("duplicate", json.loads(result.stdout)["errors"][0])
+
+    def test_alpaca_record_converts_to_chat_messages_for_evaluation(self):
+        messages = messages_from_record(
+            {"instruction": "Classify this", "input": "item", "output": "positive"}
+        )
+        self.assertEqual(messages[0]["role"], "user")
+        self.assertIn("item", messages[0]["content"])
+        self.assertEqual(messages[1], {"role": "assistant", "content": "positive"})
+
+    def test_dataset_pair_rejects_train_eval_overlap(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            train = Path(tmp) / "train.jsonl"
+            evaluation = Path(tmp) / "eval.jsonl"
+            row = {"messages": [{"role": "user", "content": "x"}, {"role": "assistant", "content": "y"}]}
+            train.write_text(json.dumps(row) + "\n", encoding="utf-8")
+            evaluation.write_text(json.dumps(row) + "\n", encoding="utf-8")
+            train_report, eval_report = validate_dataset_pair(train, evaluation)
+            self.assertIn("train/eval overlap", train_report["errors"][0])
+            self.assertIn("train/eval overlap", eval_report["errors"][0])
 
 
 if __name__ == "__main__":
