@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-14T00:00:00+00:00",
+  "generated": "2026-09-17T00:00:00+00:00",
   "spec": "https://agentskills.io/specification.md",
   "skills": [
     {
@@ -122,7 +122,7 @@
       "description": "Coordinate substantive implementation work with real subagents using adaptive assignments, lead-mediated handoffs, review, and verified reporting. Use when a task needs delegated implementation, adaptive ownership, agent handoffs, independent review, or correction loops.",
       "original_fields": {
         "compatibility": "Requires an agent runtime with real subagent spawning, result retrieval, follow-up, and lifecycle controls; otherwise report that delegated workflow is unavailable and use only an explicitly authorized lead-only path.",
-        "metadata_version": "1.0.0"
+        "metadata_version": "1.0.1"
       },
       "spec_compliant": true,
       "warnings": []
@@ -1177,6 +1177,22 @@
         "metadata_author": "Prime Intellect",
         "metadata_project": "prime-agent",
         "metadata_type": "reference"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "unsloth-workflows",
+      "source": "repo-owned",
+      "source_path": "repo-owned/unsloth-workflows",
+      "category": "mlops",
+      "dest": "repo-owned/unsloth-workflows",
+      "description": "Explain, prepare, and execute Unsloth model training workflows on Linux/NVIDIA machines, including environment setup, datasets, SFT, LoRA/QLoRA, RL, evaluation, export, and serving guidance.",
+      "original_fields": {
+        "license": "Apache-2.0",
+        "compatibility": "Requires a Linux shell for execution; training requires NVIDIA drivers and a visible CUDA GPU.",
+        "metadata_author": "rajivmehtaflex",
+        "metadata_version": "1.0.0"
       },
       "spec_compliant": true,
       "warnings": []

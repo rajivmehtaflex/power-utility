@@ -1,6 +1,6 @@
 # Skill Collections — Cross-Agent Mono-Repo
 
-Spec: https://agentskills.io/specification.md · 72 skills · synced 2026-09-14
+Spec: https://agentskills.io/specification.md · 73 skills · synced 2026-09-17
 
 [![skills.sh](https://skills.sh/b/rajivmehtaflex/power-utility)](https://skills.sh/rajivmehtaflex/power-utility)
 
@@ -14,7 +14,7 @@ The [skills CLI](https://github.com/vercel-labs/skills) auto-detects installed
 agents (Claude Code, Codex, Cursor, Copilot, OpenCode, …) or takes `--agent`:
 
 ```bash
-# Install ALL 72 skills (auto-detect agents, interactive pick)
+# Install ALL 73 skills (auto-detect agents, interactive pick)
 npx skills add rajivmehtaflex/power-utility
 
 # List available skills without installing
@@ -105,6 +105,116 @@ real subagent controls, state that limitation instead of simulating agents.
 npx skills-ref validate <skill-dir>
 ```
 
+### Repo-owned skills and generated refresh (maintainer)
+
+`repo-owned/` contains skills maintained directly in this repository. The
+`unsloth-workflows` skill covers Linux/NVIDIA Unsloth setup, data validation,
+text SFT, evaluation, export, and framework-wide guidance:
+
+```bash
+npx skills add rajivmehtaflex/power-utility --skill unsloth-workflows
+python repo-owned/unsloth-workflows/scripts/unsloth_workflow.py doctor --project .
+```
+
+Generated collections must be built in a separate staging directory and then
+imported. The import updates only `agents-shared/`, `dev-workspace/`, and
+`profile/`; it preserves `repo-owned/`, `docs/`, and repository metadata:
+
+```bash
+python tools/import_generated_skills.py /path/to/staged-collection --repo .
+```
+
+### Prompt cookbook: `unsloth-workflows`
+
+Use these prompts after installing the skill. Start each request by naming the
+mode you want: **Discuss** is read-only, **Prepare** creates reviewable files,
+and **Execute** may install packages and run GPU work inside the selected
+project.
+
+#### Build a mental model
+
+```text
+Use unsloth-workflows in Discuss mode. Explain how CPT, SFT, DPO, GRPO,
+LoRA, QLoRA, full fine-tuning, quantization, GGUF, and vLLM fit together.
+Use one small customer-support example and clearly separate the training
+objective from the parameter-update method. Do not install anything.
+```
+
+#### Inspect a Linux/NVIDIA machine
+
+```text
+Use unsloth-workflows in Discuss mode. Inspect this Linux/NVIDIA project with
+doctor only. Report the Python version, NVIDIA driver, visible GPU memory,
+CUDA availability, expected project environment, and any blocker. Do not
+create `.unsloth`, install packages, or download a model.
+```
+
+#### Prepare a dataset and configuration
+
+```text
+Use unsloth-workflows in Prepare mode. I have `data/support.jsonl` with
+ChatML messages. Validate required roles, empty responses, duplicates,
+train/eval overlap, and likely token-length risks. Create a reviewable
+`run.json` for QLoRA SFT of `Qwen/Qwen2.5-0.5B-Instruct`, max sequence length
+512, batch size 1, 10 smoke-test steps, and an explicit evaluation file.
+Do not install packages or start training.
+```
+
+#### Run a small SFT job
+
+```text
+Use unsloth-workflows in Execute mode for this project. First run doctor,
+then validate the configured train and eval files, then create or reuse the
+project-local `.unsloth/venv`. Run a 10-step QLoRA SFT smoke test, save a
+checkpoint, record model revision, dataset hashes, dependency versions, and
+the chat template, and report each phase separately. Stop before training if
+the host is not Linux with a visible NVIDIA GPU.
+```
+
+#### Compare the base model with the adapter
+
+```text
+Use unsloth-workflows in Execute mode. Evaluate the base model and the adapter
+from `outputs/` on `data/eval.jsonl`. Support either ChatML or Alpaca records,
+report held-out loss, exact-match when expected answers exist, and save sample
+generations. Load only one model copy at a time if VRAM is limited. Do not
+claim improvement unless the measured results support it.
+```
+
+#### Export and verify a model
+
+```text
+Use unsloth-workflows in Execute mode. Export the trained adapter from
+`outputs/` as a merged 16-bit model and as GGUF Q4_K_M. Preserve tokenizer and
+chat-template metadata. Reload every format that the selected runtime
+supports, run a short generation, and report which artifacts were actually
+verified. Keep the original training output unchanged.
+```
+
+#### Ask for an advanced workflow
+
+```text
+Use unsloth-workflows in Prepare mode. I want to train a vision model with
+GRPO using a reward function that checks structured answers. Read the current
+official Unsloth example, check the installed API and GPU requirements,
+prepare a task-specific script and dependency list, and propose a bounded
+smoke test. Do not execute until the script and risks are reviewable.
+```
+
+#### Diagnose a failed run
+
+```text
+Use unsloth-workflows in Discuss mode to diagnose this failure. Inspect the
+command, resolved config, environment report, traceback, and output directory.
+Classify the cause as data, chat-template/tokenization, dependency/CUDA,
+memory, training configuration, or export/runtime mismatch. Give the smallest
+safe next check and do not reinstall or delete anything.
+```
+
+For reliable results, include the model revision, dataset paths, intended
+training method, GPU name and memory, sequence length, output directory, and
+whether the request is a smoke test or a production run.
+
 ### Re-sync from live sources (maintainer)
 
 
@@ -121,6 +231,7 @@ are never modified — only these copies are normalized.
 
 | Name | Group | Category | Spec-compliant | Description |
 |---|---|---|---|---|
+| `unsloth-workflows` | repo-owned | mlops | yes | Explain, prepare, and execute Unsloth workflows on Linux/NVIDIA machines. |
 | `data-to-okf` | agents-shared | — | yes | Converts any local folder of mixed documents (docx, pdf, xlsx, duckdb, csv, imag |
 | `release-notes` | agents-shared | — | yes | >- |
 | `graph-flow` | dev-workspace | — | yes | Use when coordinating a repository implementation from a goal through approved,  |
