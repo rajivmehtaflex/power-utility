@@ -1,0 +1,26 @@
+name: unsloth-workflows
+
+on:
+  push:
+    paths:
+      - "repo-owned/unsloth-workflows/**"
+      - "tools/import_generated_skills.py"
+      - ".github/workflows/unsloth-workflows.yml"
+  pull_request:
+    paths:
+      - "repo-owned/unsloth-workflows/**"
+      - "tools/import_generated_skills.py"
+      - ".github/workflows/unsloth-workflows.yml"
+
+jobs:
+  cpu:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run portable skill tests
+        run: python -m unittest discover -s repo-owned/unsloth-workflows/tests -v
+      - name: Check Python syntax
+        run: python -m compileall -q repo-owned/unsloth-workflows/scripts tools/import_generated_skills.py

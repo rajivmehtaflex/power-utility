@@ -1,6 +1,6 @@
 # Skill Collections — Cross-Agent Mono-Repo
 
-Spec: https://agentskills.io/specification.md · 72 skills · synced 2026-09-14
+Spec: https://agentskills.io/specification.md · 73 skills · synced 2026-09-17
 
 [![skills.sh](https://skills.sh/b/rajivmehtaflex/power-utility)](https://skills.sh/rajivmehtaflex/power-utility)
 
@@ -14,7 +14,7 @@ The [skills CLI](https://github.com/vercel-labs/skills) auto-detects installed
 agents (Claude Code, Codex, Cursor, Copilot, OpenCode, …) or takes `--agent`:
 
 ```bash
-# Install ALL 72 skills (auto-detect agents, interactive pick)
+# Install ALL 73 skills (auto-detect agents, interactive pick)
 npx skills add rajivmehtaflex/power-utility
 
 # List available skills without installing
@@ -105,6 +105,25 @@ real subagent controls, state that limitation instead of simulating agents.
 npx skills-ref validate <skill-dir>
 ```
 
+### Repo-owned skills and generated refresh (maintainer)
+
+`repo-owned/` contains skills maintained directly in this repository. The
+`unsloth-workflows` skill covers Linux/NVIDIA Unsloth setup, data validation,
+text SFT, evaluation, export, and framework-wide guidance:
+
+```bash
+npx skills add rajivmehtaflex/power-utility --skill unsloth-workflows
+python repo-owned/unsloth-workflows/scripts/unsloth_workflow.py doctor --project .
+```
+
+Generated collections must be built in a separate staging directory and then
+imported. The import updates only `agents-shared/`, `dev-workspace/`, and
+`profile/`; it preserves `repo-owned/`, `docs/`, and repository metadata:
+
+```bash
+python tools/import_generated_skills.py /path/to/staged-collection --repo .
+```
+
 ### Re-sync from live sources (maintainer)
 
 
@@ -121,6 +140,7 @@ are never modified — only these copies are normalized.
 
 | Name | Group | Category | Spec-compliant | Description |
 |---|---|---|---|---|
+| `unsloth-workflows` | repo-owned | mlops | yes | Explain, prepare, and execute Unsloth workflows on Linux/NVIDIA machines. |
 | `data-to-okf` | agents-shared | — | yes | Converts any local folder of mixed documents (docx, pdf, xlsx, duckdb, csv, imag |
 | `release-notes` | agents-shared | — | yes | >- |
 | `graph-flow` | dev-workspace | — | yes | Use when coordinating a repository implementation from a goal through approved,  |
