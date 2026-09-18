@@ -6,8 +6,8 @@ compatibility: Works with Claude Code, Codex, Antigravity, and Hermes Agent. Req
 allowed-tools: Bash Read Write Edit
 metadata:
   author: Hermes Agent
+  version: "3.5.3"
   tags: modal,gpu,deployment,cloud,devops,pre-check,optimization,websocket,pty
-  version: 3.4.0
 ---
 
 # Modal Deploy
@@ -173,6 +173,8 @@ ALTERNATIVES = {
 
 `templates/` is a **complete, deployable web-terminal app**: a browser terminal (xterm.js) connected over WebSocket to a bash PTY running in a Modal container. Deploy it as-is:
 
+> **Bake your tools into the image.** `debian_slim()` ships only `curl`. Anything the terminal session will need (`git`, `zstd`, `openssh-client`, …) should be added at deploy time in `modal_app.py`. Because bullseye is EOL (Aug 2026) and its security pool is purged, use the archive.debian.org repoint recipe in the bullseye pitfall below instead of a bare `.apt_install(...)`.
+
 ```bash
 cp -r templates my-terminal && cd my-terminal
 cp templates/config.py config.py  # edit resources; GPU_COUNT=0 for CPU-only
@@ -185,6 +187,8 @@ Open the printed URL in a browser — you get a shell inside the container. The 
 
 > ⚠️ **Security:** the terminal has **no authentication** — anyone with the URL gets a shell inside the (sandboxed) Modal container. Don't put secrets in the container, and stop the app when not in use:
 > `.venv/bin/modal app stop <app-name> --yes`
+
+> **Note on custom/project-level `modal_app.py`:** If your `modal_app.py` uses `.add_local_file(...)` instead of `.add_local_dir(".", ...)`, verify it mounts `config.py` and installs `python-dotenv`. See `references/custom-app-mount.md`.
 
 ---
 
@@ -592,7 +596,7 @@ app = modal.App("your-app-name")  # <-- Change this
 # Optimized image with mount filtering
 image = (
     modal.Image.debian_slim()
-    .apt_install("curl")
+    .apt_install("curl", "git", "zstd", "openssh-client")  # bake tools in; live apt install can 404
     .pip_install("fastapi", "uvicorn", "python-dotenv")
     .add_local_dir(
         ".",
@@ -1008,6 +1012,28 @@ This strips all inherited env vars and sets only the minimum needed. Use this wr
 ```
 Credentials are stored in `~/.modal.toml`. If the profile is listed, auth is working.
 
+### ❌ `modal profile logout` / `modal profile delete` Do Not Exist
+
+**Error:** `No such command 'logout'` (or `delete` / `remove`) when trying to sign out.
+
+**Cause:** Verified absent in the installed CLI (`modal profile -h` only lists `activate`, `current`, `list` in 1.x). There is no first-class way to remove a single token.
+
+**Fix — log out by removing the config file (back up first if you might re-login without re-pasting the token):**
+
+```bash
+# 1. Back up (recoverable; lets you `cp` it back to re-authenticate)
+cp -p ~/.modal.toml ~/.modal.toml.bak.$(date +%Y%m%d-%H%M%S)
+
+# 2. Remove the live config — this is the actual logout
+rm -v ~/.modal.toml
+
+# 3. Verify: profile list is empty AND any authed call now fails
+modal profile list                      # → empty table
+modal app list                          # → "Token missing. Could not authenticate client."
+```
+
+Re-add a profile later with `modal profile create <name>` (newer CLIs) or `modal setup` (older CLIs). Restoring the backup is a no-setup shortcut: `cp ~/.modal.toml.bak.<ts> ~/.modal.toml`.
+
 ### ❌ Wrong Working Directory
 
 **Error:** `FileNotFoundError` during deploy
@@ -1038,6 +1064,24 @@ terminal(command=".venv/bin/modal deploy modal_app.py",
 
 **Fix:** Pass config via Modal secrets or environment variables, not `.env` file.
 
+### ❌ Custom `modal_app.py` Doesn't Mount `config.py`
+
+**Error:** `ModuleNotFoundError: No module named 'config'` at startup when deploying from an existing project.
+
+**Cause:** A custom/older `modal_app.py` (e.g. using `.add_local_file("main.py", ...)` + `.add_local_dir("static", ...)`) does not include `config.py` in the image. `main.py` imports `config`, so the container crashes.
+
+**Fix:** Either add `config.py` explicitly:
+```python
+.add_local_file("main.py", remote_path="/root/main.py")
+.add_local_file("config.py", remote_path="/root/config.py")
+.add_local_dir("static", remote_path="/root/static")
+```
+Or prefer `.add_local_dir(".", remote_path="/root", ignore=[".git",".venv", ...])` — it captures `config.py` automatically. Always install `python-dotenv` if `main.py` calls `load_dotenv()`.
+
+**Pitfall companion:** If `main.py` uses `load_dotenv()` but the image doesn't include `python-dotenv`, import fails before the mount issue is visible. Install both: `.pip_install("fastapi", "uvicorn", "python-dotenv")`.
+
+See `references/custom-app-mount.md` for the full comparison of mount patterns.
+
 ### ❌ Setting GPU Doesn't Auto-Configure CPU/RAM
 
 **Cause:** GPU, CPU, RAM are independent resources.
@@ -1054,6 +1098,36 @@ MODAL_MEMORY=16384
 **Error:** `The @app.function decorator must apply to functions in global scope`
 
 **Fix:** Move decorated functions to module level. Use `serialized=True` if wrapping is necessary.
+
+### ❌ Debian 11 (bullseye) Containers Hit `apt` 404s on debian-security
+
+**Error:** `apt install`/`dist-upgrade` fails with `404 Not Found` for many `bullseye-security` packages (`openssh-client`, `libcurl3-gnutls`, `git-man`, `dpkg`, `libc6`, …), then `E: Unable to fetch some archives`. The 404s come from Fastly (151.101.x.x) serving `deb.debian.org` — and they hit **deploy-time `.apt_install(...)` builds too**, not just live installs (verified 2026-09-18).
+
+**Cause (verified live):** bullseye went EOL on 2026-08-31. The `bullseye-security` **Packages index still advertises superseded versions** (e.g. git 2.30.2-1+deb11u5) while the matching `.deb`s have been **purged from the pool entirely** — the same 404 is returned by `deb.debian.org`, `security.debian.org`, `mirrors.kernel.org`, and even `snapshot.debian.org`'s copy of that pool path. The purge propagates at Debian's pace, not the CDN's — `--fix-missing` and cache purges do NOT fix it (verified). Only the frozen `archive.debian.org` copy of the final point release remains complete.
+
+**Fix — bake packages from archive.debian.org (EOL-safe image build):**
+```python
+image = (
+    modal.Image.debian_slim(python_version="3.12")
+    .run_commands(
+        "printf 'deb http://archive.debian.org/debian bullseye main\\n"
+        "deb http://archive.debian.org/debian bullseye-updates main\\n' > /etc/apt/sources.list",
+        "apt-get -o Acquire::Check-Valid-Until=false update -qq",
+        "apt-get -o Acquire::Check-Valid-Until=false install -y --no-install-recommends curl git zstd openssh-client",
+        "rm -rf /var/lib/apt/lists/*",
+    )
+    .pip_install("fastapi", "uvicorn", "python-dotenv")
+    # NOTE: keep ALL .add_local_* calls LAST — Modal forbids build steps after them
+    .add_local_file("main.py", remote_path="/root/main.py")
+)
+```
+Key details, all verified live:
+- Point at `bullseye` + `bullseye-updates` on `archive.debian.org` — do NOT use `bullseye-security` (archive has no `dists/bullseye-security` at all).
+- `-o Acquire::Check-Valid-Until=false` is required: the frozen Release file is expired.
+- archive's final point release carries current-at-EOL versions (curl 7.74.0-1.3+deb11u13, openssh 8.4p1-5+deb11u3) — not the newest security fixes, acceptable for a disposable sandbox terminal.
+- The final `.run_commands` must come BEFORE any `.add_local_*` (Modal errors on build steps after local mounts).
+
+**For live (in-terminal) installs:** repoint `/etc/apt/sources.list` the same way first, or retry `apt install --fix-missing` and accept it may stay broken until Debian finishes the purge.
 
 ### ❌ Verifying CPU/RAM Inside a Deployed Slim Container Misleads
 
@@ -1213,6 +1287,9 @@ terminal(command="cd /parent/path && rm -rf <project-folder-name>")
 
 ## Changelog
 
+- **v3.5.3** (2026-09-18): Rewrote the bullseye pitfall after live verification that the 404s are NOT transient mirror lag — bullseye went EOL 2026-08-31 and its security pool is permanently purged (404s from every host incl. snapshot.debian.org; `--fix-missing` does not help). New working recipe: repoint sources at `archive.debian.org/debian` (`bullseye` + `bullseye-updates`, NOT `bullseye-security`), pass `-o Acquire::Check-Valid-Until=false`, install in `.run_commands`, and keep `.add_local_*` calls last. v3.5.2's "bake with .apt_install" prevention is confirmed insufficient on its own. — `templates/modal_app.py` now ships `.apt_install("curl", "git", "zstd", "openssh-client")`, and the Quick Start section states the rule: add every tool the session needs at deploy time, because live `apt install` in the running container can 404 on oldstable security pools. Builds on the v3.5.1 pitfall.
+- **v3.5.1** (2026-09-18): Added pitfall "Debian 11 (bullseye) Containers Hit `apt` 404s on debian-security" — oldstable superseded-update churn on `deb.debian.org` (Fastly) causes `404 Not Found` on many security `.deb`s during live `apt install`/`dist-upgrade` inside the terminal. Fix: `apt update` then `apt install/dist-upgrade --fix-missing`; prevention: bake required packages with `.apt_install(...)` at image build time in `modal_app.py`.
+- **v3.5.0** (2026-08-26): Added pitfall "`modal profile logout` / `modal profile delete` Do Not Exist" — verified live on the installed CLI (1.x: only `activate` / `current` / `list`). Logout = back up and `rm ~/.modal.toml`; verify via empty `profile list` AND `modal app list` returning `Token missing`. Re-add with `modal profile create` / `modal setup`, or restore the backup to re-authenticate without re-pasting the token.
 - **v3.4.0** (2026-08-21): Added "Account Inspection & Historical Log Recovery" section — identity via `modal profile list`, live auth proof via any authenticated call (`modal app list`); log-access reality table (app logs only for active/recent apps; historical container logs are dashboard-only; no audit/billing CLI in 1.2.6); volume/secret forensics workflow (`volume list`/`ls`/`get`) for reconstructing past operations from durable resources. New pitfalls: junk `[--help]` profile in `~/.modal.toml` from `--profile` misuse, volume path prefix doubling, artifact filenames varying per run dir. Amended whoami pitfall: absent in 1.2.6 as well, not just 1.5+.
 - **v3.3.0** (2026-07-18): Added pitfall "Verifying CPU/RAM Inside a Deployed Slim Container Misleads" — `free` is absent in `debian_slim()`, and cgroup `memory.limit_in_bytes`/`memory.max` reports the host total, not the per-container reservation. Guidance: `nproc` is reliable live proof of CPU; confirm RAM from the deploy-time `config.py MEMORY` value (not from inside the container); optionally `apt_install("procps")`. Pairs a live `nproc` reading with an offline `config.py` field-assert for verification.
 - **v3.2.0** (2026-07-09): Added Hermes-specific PYTHONPATH leak pitfall — Hermes Agent's terminal inherits `PYTHONPATH` pointing at its own 3.11 venv, causing `ModuleNotFoundError` for C-extension wheels when running `.venv/bin/modal`. Fix: `env -i HOME="$HOME" PATH="$PWD/.venv/bin:..." .venv/bin/modal <cmd>`. Replaced all `modal whoami` references with `modal profile list` (whoami removed in CLI 1.5+). Added workflow rule to Step 2: only modify config fields the user explicitly specified — don't silently change unmentioned fields.

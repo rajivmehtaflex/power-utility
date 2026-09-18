@@ -11,7 +11,16 @@ app = modal.App("modal-web-terminal")  # <-- Change this
 # Optimized image with mount filtering
 image = (
     modal.Image.debian_slim()
-    .apt_install("curl")
+    # bullseye is EOL (Aug 2026): security pool purged upstream, so bare
+    # .apt_install 404s. Repoint at archive.debian.org, then update+install.
+    # Full recipe + rationale: SKILL.md -> bullseye pitfall (v3.5.3).
+    .run_commands(
+        "printf 'deb http://archive.debian.org/debian bullseye main\\n"
+        "deb http://archive.debian.org/debian bullseye-updates main\\n' > /etc/apt/sources.list",
+        "apt-get -o Acquire::Check-Valid-Until=false update -qq",
+        "apt-get -o Acquire::Check-Valid-Until=false install -y --no-install-recommends curl git zstd openssh-client",
+        "rm -rf /var/lib/apt/lists/*",
+    )  # keep ALL .add_local_* calls LAST
     .pip_install("fastapi", "uvicorn", "python-dotenv")
     .add_local_dir(
         ".",
