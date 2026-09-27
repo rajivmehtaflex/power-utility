@@ -124,12 +124,41 @@
           "loaded_library_provenance": "ldd: only build-tree libs (libllama, libggml*, libmtmd, common) + system libs incl. libgomp; no prebuilt substitutions",
           "env": "uv sync --locked, 31 packages, dep-lock sha256 87ac7a84…275ad21"
         },
-        "conversion": "pending",
-        "target_inference": "pending",
-        "staged_reload": "pending",
-        "publication": "pending",
+        "conversion": {
+          "state": "passed",
+          "recorded_at": "2026-09-27",
+          "artifact": "qwen3-0.6b-f16.gguf",
+          "sha256": "c8b740a8d6564e3efb49f8a94cf9d34dc959d4aa2f09531c7f90663d2efa6e59",
+          "detail": "convert_hf_to_gguf.py --outtype f16; 311 tensors, ~1.5 GiB; clean export; single output file as expected"
+        },
+        "target_inference": {
+          "state": "passed",
+          "functional_smoke": "passed",
+          "numerical_fidelity": {
+            "state": "failed",
+            "metric": "token-set Jaccard (reference vs target)",
+            "threshold": 0.5,
+            "measured": "0.278 / 0.097 / 1.000 (fixture-1 / fixture-2 / fixture-3)",
+            "reason": "Fixture-3 (near-limit, ~3900-token prompt) matched the reference's 31-token continuation exactly; short fixtures shared the first token then diverged at near-tie greedy continuations. Declared threshold not met on 2/3 fixtures; parity NOT claimed per the no-relaxation rule. Functional usability is unaffected (see functional_smoke)."
+          },
+          "instrument": "llama-simple (greedy, raw completion) at build 198232c63ac3c736; timings recorded as observations (target 8.0/5.0/54.5 s vs reference 11.1/9.6/86.9 s per fixture)"
+        },
+        "staged_reload": {
+          "state": "passed",
+          "detail": "Staged copy alone, HF_HUB_OFFLINE=1 + HF_HUB_DISABLE_TELEMETRY=1, cwd=/; identical generation to validation run. Limitation: OS-level network denial not exercised."
+        },
+        "publication": {
+          "state": "passed",
+          "recorded_at": "2026-09-27",
+          "repo_id": "rajivmehtapy/test-hf-converter-qwen3-0.6b-gguf",
+          "visibility": "private",
+          "remote_commit": "39da3ef8fc44a22b8f91a0eec9ff7885e519d2f7",
+          "files_verified": "10/10 streamed and content-hashed on the remote; receipt at runs/p7-qwen3-0.6b-f16/logs/publish_receipt.json (outside the staged inventory)",
+          "url": "https://huggingface.co/rajivmehtapy/test-hf-converter-qwen3-0.6b-gguf"
+        },
+        "status": "conversion-verified",
         "recorded_at": "2026-09-27",
-        "notes": "Toolchain source build verified on the recorded host. Model conversion and inference have not executed yet."
+        "notes": "Full pipeline executed: source build → pinned conversion → frozen-fixture validation (functional passed; numerical failed at declared threshold and is reported, not relaxed) → staged reload → real private publication with remote content verification. Recipe status 'conversion-verified' per the evidence-state table; fidelity limitation travels on the model card and EVIDENCE.md."
       },
       "limitations": [
         "CPU execution only; accelerator backends unverified on the build host",

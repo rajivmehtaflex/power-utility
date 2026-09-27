@@ -1,0 +1,53 @@
+name: hf-generative-model-converter
+
+on:
+  push:
+    paths:
+      - "repo-owned/hf-generative-model-converter/**"
+      - "tests/test_hf_converter_package.py"
+      - "tools/skill-validation/**"
+      - "MANIFEST.json"
+      - "README.md"
+      - "VALIDATION_REPORT.md"
+      - ".github/workflows/hf-generative-model-converter.yml"
+  pull_request:
+    paths:
+      - "repo-owned/hf-generative-model-converter/**"
+      - "tests/test_hf_converter_package.py"
+      - "tools/skill-validation/**"
+      - "MANIFEST.json"
+      - "README.md"
+      - "VALIDATION_REPORT.md"
+      - ".github/workflows/hf-generative-model-converter.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned uv
+        uses: astral-sh/setup-uv@v10.2.0
+        with:
+          version: "0.11.18"
+          enable-cache: false
+      - name: Sync pinned validator toolchain
+        run: uv sync --project tools/skill-validation --locked
+      - name: Validate Agent Skills package
+        run: uv run --project tools/skill-validation skills-ref validate repo-owned/hf-generative-model-converter
+      - name: Helper tests (manifest + publication)
+        run: uv run --project tools/skill-validation python -m unittest discover -s repo-owned/hf-generative-model-converter/tests -v
+      - name: Package and catalog tests
+        run: uv run --project tools/skill-validation python -m unittest discover -s tests -v
+      - name: Validate catalog JSON
+        run: python -m json.tool MANIFEST.json > /dev/null
+      - name: Check Python syntax
+        run: python -m compileall -q repo-owned/hf-generative-model-converter/scripts tests/test_hf_converter_package.py
+      # Deliberately absent: model downloads, llama.cpp source builds, and any
+      # Hub writes. Those require the recorded host class and credentials and
+      # are owned by the verification evidence, not routine CI.

@@ -13,7 +13,7 @@ plan phase P5 (deferred by project decision, 2026-09-27) and are intentionally *
 
 | Source model (pinned) | Target | Exporter / runtime | Platform | Status | Evidence |
 |---|---|---|---|---|---|
-| `Qwen/Qwen3-0.6B` @ `c1899de289a04d12100db370d81485cdf75e47ca` | `gguf` | llama.cpp `convert_hf_to_gguf.py` @ `v0.5.0` (`d2e54583c7452353eb35d40431281f6ee984332f`) + `llama-cli` runtime, source-built | linux-x86_64, CPU | **pending build → verification** | recipe `gguf-qwen3-0.6b-linux-x64-cpu` in `assets/recipes.json`; upstream declares qwen3 conversion support at this pin — to be confirmed at source checkout before any conversion |
+| `Qwen/Qwen3-0.6B` @ `c1899de289a04d12100db370d81485cdf75e47ca` | `gguf` | llama.cpp `convert_hf_to_gguf.py` @ `v0.5.0` (`7fe450e19305b828c199d602c23a8337aaa1f03b`) + source-built runtime | linux-x86_64, CPU | **conversion-verified** (2026-09-27): source build, conversion, functional smoke, staged reload, and private publication all passed; numerical parity FAILED at the declared Jaccard-0.5 threshold on 2/3 short fixtures (near-limit fixture matched exactly) and is reported on the model card | recipe `gguf-qwen3-0.6b-linux-x64-cpu` in `assets/recipes.json`; `docs/superpowers/verification/hf-converter/runtime-results.json`; published receipt `rajivmehtapy/test-hf-converter-qwen3-0.6b-gguf` @ `39da3ef8` (private) |
 | `Qwen/Qwen3-0.6B` @ same | `onnx` | Optimum ONNX + matched `ORTModelForCausalLM` | linux-x86_64, CPU | planned (P5, deferred) | none yet |
 | `Qwen/Qwen3-0.6B` @ same | `litert-lm` | `litert_torch` export + LiteRT-LM runtime | linux-x86_64, CPU | planned (P5, deferred; transitive-binary audit outstanding) | none yet |
 

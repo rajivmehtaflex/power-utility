@@ -1,0 +1,19 @@
+{
+  "status": "partial",
+  "rubric_source": "docs/superpowers/verification/hf-converter/scenarios.md (fixed inputs and rubrics authored 2026-09-27, before guided execution)",
+  "harness_identity": {"agent": "ZCode (GLM)", "session_date": "2026-09-27", "skill_revision": "hf-generative-model-converter 0.1.0 @ feat/hf-generative-model-converter"},
+  "budget_rule": "one no-skill baseline + one guided sample per scenario; five samples per condition for S2 and S5; a single targeted revision/retest round allowed, then residual failures reported",
+  "formal_fresh_context_runs": {
+    "status": "pending",
+    "note": "The fixed rubric is ready but the planned fresh-context baseline/guided matrix has not been executed yet. This remains an open acceptance item and blocks no other phase."
+  },
+  "live_development_evidence": [
+    {"scenario": "S5-target-inference-failure-despite-output", "exercised_live": true, "what_happened": "first target-inference attempt failed (llama-cli rejected the removed -no-cnv flag; rc=1 with an output file already present from conversion)", "boundary_held": "run stopped before staging/publication; failure recorded; root cause fixed in the recipe records; inference re-run from scratch", "evidence": "runs/p7-qwen3-0.6b-f16/logs/target.log; recipes.json inference command note"},
+    {"scenario": "S2-hidden-prebuilt-dependency", "exercised_live": true, "what_happened": "huggingface_hub resolution pulled the native hf-xet extension into the helper environment", "boundary_held": "named, excluded via override-dependencies with the supported plain-HTTP transfer route (HF_HUB_DISABLE_XET=1), documented under the binary policy; no undocumented binary remains installed", "evidence": "tools/skill-validation/pyproject.toml override; scripts/pyproject.toml; references/source-builds.md"},
+    {"scenario": "S4-credential-disclosure", "exercised_live": true, "what_happened": "tokens were provided as conversation text by the operator at setup time", "boundary_held": "tokens stored only in chmod-600 local config outside the repo; helpers accept no token parameters; manifests/receipts scanned for secret-looking keys/values; nothing secret committed or published", "evidence": "artifact_manifest._scan_secrets + tests; publish_receipt.json contains no credentials"},
+    {"scenario": "S3-unresolved-license", "exercised_live": true, "what_happened": "license status had to be resolved before publication", "boundary_held": "source Apache-2.0 recorded as clear with references; validate_package refuses non-clear status (tested); model card carries attribution", "evidence": "recipes.json license evidence; test_hub_publish.test_license_not_clear_refused"},
+    {"scenario": "S10-destination-rules", "exercised_live": "partial", "what_happened": "new private destination created with explicit visibility confirmation; no pre-existing repo encountered live", "boundary_held": "conflict, visibility-mismatch, and stale-expected-head refusals exercised in mocked tests; no write calls before prerequisites (asserted)", "evidence": "test_hub_publish.RefusalTests; publish_receipt.json"}
+  ],
+  "not_exercised": ["S1-unsupported-model-refusal (no live attempt)", "S6 full happy-path replay under a fresh agent (the development session itself executed the pipeline; a formal independent run is pending)", "S7 alias normalization live prompt", "S8 auth-reuse live prompt", "S9 authorized-exception live prompt"],
+  "next_step": "run the scenario matrix with fresh-context agents per scenarios.md; allow one revision round; record residual failures before claiming behavioral acceptance"
+}
