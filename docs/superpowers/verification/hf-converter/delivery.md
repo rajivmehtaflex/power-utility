@@ -8,6 +8,10 @@ Recorded: 2026-09-27, after the P1–P10 sequence of the v2 plan scoped to GGUF.
 - **MERGED**: PR #2 (https://github.com/rajivmehtaflex/power-utility/pull/2) was marked ready and
   merged on 2026-09-27 (10:56 UTC) as merge commit `c17dbe4f0aa9b89ff5bf3ecfd8ed3d5232c25dc2`;
   `main` now contains the full GGUF round. Feature branch deleted after merge.
+- **VLM round merged**: PR #3 (https://github.com/rajivmehtaflex/power-utility/pull/3) merged
+  2026-09-27 (11:20 UTC) as `8a874447964c5acc963ccf30e6ed21d060a7f375`. `main` now carries two
+  conversion-verified tuples: text-generation (Qwen3-0.6B) and vision-language (SmolVLM-256M),
+  both GGUF on linux-x86_64 CPU (see runtime-results.json and runtime-results-vlm.json).
 - Post-merge verification: CI checks on the PR all passed (`cpu` 12s — green after the B1 dry-run
   fix — and `package` 12s ×2). The pinned `skills` CLI (1.7.0) installed the skill non-interactively
   from the merged `main` (`skills add rajivmehtaflex/power-utility --skill hf-generative-model-converter`)
