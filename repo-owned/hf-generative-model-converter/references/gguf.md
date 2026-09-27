@@ -85,9 +85,17 @@ uv run --project envs/<key> python sources/llama.cpp-v0.5.0/convert_hf_to_gguf.p
 ## §Run (target inference)
 
 ```bash
-builds/<key>/bin/llama-cli -m runs/<run-id>/work/qwen3-0.6b-f16.gguf \
-  -c 4096 -b 512 -n 32 --temp 0 --seed 42 -no-cnv -p "<frozen fixture prompt>"
+builds/<key>/bin/llama-simple -m runs/<run-id>/work/qwen3-0.6b-f16.gguf \
+  -c 4096 -n 32 --temp 0 --seed 42 -p "<frozen fixture prompt>"
 ```
+
+`llama-simple` performs raw completion with no chat template — the same semantics as the transformers
+raw-reference path, which is what makes the two comparable. **Do not use `llama-cli` for parity runs**
+at this pin: it defaults to conversation mode (single turn via `-st`) and applies the Qwen3 thinking
+template, so its output distribution differs from a raw reference by design — that was corrected
+during P7 after the recorded `-no-cnv` flag turned out to be gone and `-st` runs showed template
+insertion (`[Start thinking]`). For an interactive/chat smoke check, `llama-cli -st` is fine, but it
+is never the parity instrument.
 
 Record: active backend (CPU expected; a non-CPU backend appearing here is reported, not assumed),
 EOS/bound termination, decoded output, and phase timings (observations, not benchmarks). Validation

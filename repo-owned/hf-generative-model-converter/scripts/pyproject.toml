@@ -1,10 +1,9 @@
 [project]
-name = "power-utility-skill-validation"
+name = "hf-converter-scripts"
 version = "0.1.0"
-description = "Pinned official Agent Skills validator tooling for the power-utility monorepo"
+description = "Pinned dependency environment for the hf-generative-model-converter helper scripts (manifest + publication)"
 requires-python = ">=3.11"
 dependencies = [
-    "skills-ref @ git+https://github.com/agentskills/agentskills@f130f348f502d9804278a617f86929846896d2e9#subdirectory=skills-ref",
     "jsonschema>=4.21,<5",
     "huggingface_hub>=0.34.0,<1.0",
 ]

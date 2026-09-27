@@ -79,12 +79,13 @@
         {
           "step": "inference",
           "workdir": ".hf-converter/builds/<build-key>",
-          "tool": "llama-cli",
-          "command": "./bin/llama-cli -m <gguf> -c 4096 -b 512 -n 32 --temp 0 --seed 42 -no-cnv -p <prompt>",
+          "tool": "llama-simple",
+          "command": "./bin/llama-simple -m <gguf> -n 32 <prompt-as-single-argument>",
           "parameters": {
             "gguf": "string; converted artifact path",
-            "prompt": "string; frozen fixture prompt"
-          }
+            "prompt": "string; frozen fixture prompt, passed as ONE argv element"
+          },
+          "note": "llama-simple is pure greedy with context auto-sized to prompt+predict — exact parity with the transformers raw reference (do_sample=False). It parses only -m/-n/-ngl; all other flags become part of the prompt (P7 correction after observed arg-echo). stdout = prompt echo + generation; strip the prompt prefix. llama-cli at this pin defaults to chat mode (-st single turn) and applies the Qwen3 thinking template — NOT parity-comparable with a raw reference."
         }
       ],
       "required_files": [
