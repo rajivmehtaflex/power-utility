@@ -4,9 +4,9 @@ description: Use when converting a Hugging Face text-generation or vision-langua
 license: Apache-2.0
 compatibility: Linux x86_64 shell with git, CMake >=3.14, a C++17 compiler, Python 3.12 with uv, and network access to github.com and huggingface.co. CPU-only inference baseline; no GPU assumed. Source builds need ~3 GB disk and run within ~12 GB RAM. Publication needs an HF write token already stored in the local Hub configuration. Verified scope today is GGUF text-generation on CPU; every other target or platform is planned, not verified.
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
   author: rajivmehtaflex
-  verified_targets: "gguf (text-generation, linux-x86_64 CPU)"
+  verified_targets: "gguf: text-generation (Qwen/Qwen3-0.6B) and vision-language (SmolVLM-256M-Instruct), linux-x86_64 CPU"
   planned_targets: "onnx, litert-lm — see references/compatibility.md; never execute as supported"
 ---
 

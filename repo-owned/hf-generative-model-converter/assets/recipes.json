@@ -216,18 +216,31 @@
           "parameters": {"run-id": "string"}
         },
         {
-          "step": "convert",
+          "step": "convert_text_model",
           "workdir": ".hf-converter/envs/<build-key>",
           "tool": "uv run python",
-          "command": "uv run --project <env> python <sources>/llama.cpp-v0.5.0/convert_hf_to_gguf.py <model-dir> --outfile <run>/work/smolvlm-256m-f16.gguf --mmproj <run>/work/smolvlm-256m-mmproj-f16.gguf --outtype f16 --clip-model-is-vision",
-          "note": "exact mmproj flags to be confirmed against convert_hf_to_gguf.py --help at the pin during execution; expected output inventory: exactly two GGUF files (model + projector)"
+          "command": "uv run --project <env> python <sources>/llama.cpp-v0.5.0/convert_hf_to_gguf.py <model-dir> --outfile <run>/work/smolvlm-256m-f16.gguf --outtype f16",
+          "note": "run WITHOUT --mmproj: converts the text model only (arch llama)"
+        },
+        {
+          "step": "convert_mmproj",
+          "workdir": ".hf-converter/envs/<build-key>",
+          "tool": "uv run python",
+          "command": "uv run --project <env> python <sources>/llama.cpp-v0.5.0/convert_hf_to_gguf.py <model-dir> --outfile <run>/work/mmproj-smolvlm-256m-f16.gguf --mmproj --outtype f16",
+          "note": "P8 correction: --mmproj switches the converter to projector-ONLY mode (separate run), and --outfile is used verbatim (no automatic mmproj- prefix); choose distinct output names"
         },
         {
           "step": "inference",
           "workdir": ".hf-converter/builds/<build-key>",
           "tool": "llama-mtmd-cli",
-          "command": "./bin/llama-mtmd-cli -m <model-gguf> --mmproj <mmproj-gguf> -c 4096 -n 32 --temp 0 --image <fixture-image> -p <prompt>",
-          "note": "raw single-image runs for the two-image protocol; never substituted by text-only inference"
+          "command": "./bin/llama-mtmd-cli -m <model-gguf> --mmproj <mmproj-gguf> -c 4096 -n 32 --temp 0 --image <fixture-image> -p <prompt>  (stdin closed)",
+          "parameters": {
+            "model-gguf": "string; converted text model",
+            "mmproj-gguf": "string; converted projector",
+            "fixture-image": "string; frozen fixture image path",
+            "prompt": "string; frozen fixture prompt"
+          },
+          "note": "mtmd-cli has no single-turn flag at this pin; close stdin (</dev/null) to end the session. Never substitute text-only inference for the two-image protocol"
         }
       ],
       "required_files": [
@@ -253,14 +266,34 @@
         "numerical_fidelity": "text comparison per fixture; if incomparable, labeled unverified"
       },
       "evidence": {
-        "status": "documented-pending",
-        "source_build": {"state": "passed", "note": "reuse of verified build 198232c63ac3c736 (same llama.cpp pin; libmtmd present)", "recorded_at": "2026-09-27"},
-        "conversion": "pending",
-        "target_inference": "pending",
-        "staged_reload": "pending",
-        "publication": "pending",
+        "status": "conversion-verified",
+        "source_build": {"state": "passed", "note": "reuse of verified build 198232c63ac3c736 (same llama.cpp pin; libmtmd present); llama-mtmd-cli sha256 79287b336b1946f0a195a21f7131d2b4b7125a77bc0d8c526649fbbc40407e3a", "recorded_at": "2026-09-27"},
+        "conversion": {
+          "state": "passed",
+          "artifacts": [
+            {"file": "smolvlm-256m-f16.gguf", "arch": "llama", "tensors": 273, "sha256": "5cb113621e0b166cd5a4f44a5ac5a3a76a4ed4975c3e64e3ac954e6f8079c986"},
+            {"file": "mmproj-smolvlm-256m-f16.gguf", "arch": "clip", "tensors": 198, "sha256": "03a4925b514ed8bce8ef37d98ae05db3c1308a79468f11f63d33cb8a55c5f2fa"}
+          ]
+        },
+        "target_inference": {
+          "state": "passed",
+          "functional_smoke": "passed",
+          "numerical_fidelity": {"state": "passed", "metric": "expected-color-word match vs frozen reference answers, both fixtures", "measured": "converted outputs identical to reference ('Red.' / 'Blue.'), reference passed both first"},
+          "two_image_protocol": {"reference_passed_both": true, "converted_passed_both": true, "text_only_substitution": false},
+          "instrument": "llama-mtmd-cli, greedy; timings recorded as observations (reference 41.5/29.2 s vs target 38.2/38.6 s)"
+        },
+        "staged_reload": {"state": "passed", "detail": "staged copies only, HF_HUB_OFFLINE=1, cwd=/; OS-level network denial not exercised"},
+        "publication": {
+          "state": "passed",
+          "repo_id": "rajivmehtapy/test-hf-converter-smolvlm-256m-gguf",
+          "visibility": "private",
+          "remote_commit": "5aedf0720eb7686b8767050e8c27b5bcb8aa1b80",
+          "files_verified": "16/16 streamed and content-hashed on the remote; receipt at runs/p8-smolvlm-256m/logs/publish_receipt.json",
+          "url": "https://huggingface.co/rajivmehtapy/test-hf-converter-smolvlm-256m-gguf"
+        },
+        "status_note": "Full two-image VLM protocol executed: functional smoke AND numerical fidelity both passed (unlike the text round, converted outputs matched the reference exactly on every fixture).",
         "recorded_at": "2026-09-27",
-        "notes": "Support confirmed at the pin; recipe documented and pending execution (planned VLM round). Nothing VLM-related has been converted or validated yet."
+        "notes": "VLM tuple conversion-verified with numerical fidelity passing. Corrections made during execution are recorded in runtime-results-vlm.json (two-run mmproj semantics, mtmd-cli flags, pillow dependency, NOTICE license attribution)."
       },
       "limitations": [
         "CPU execution only",
