@@ -1,0 +1,9 @@
+{
+  "name": "power-utility-skill-validation",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Pinned skills installer (vercel-labs/skills) used for power-utility acceptance checks",
+  "dependencies": {
+    "skills": "1.7.0"
+  }
+}

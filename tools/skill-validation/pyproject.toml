@@ -1,0 +1,11 @@
+[project]
+name = "power-utility-skill-validation"
+version = "0.1.0"
+description = "Pinned official Agent Skills validator tooling for the power-utility monorepo"
+requires-python = ">=3.11"
+dependencies = [
+    "skills-ref @ git+https://github.com/agentskills/agentskills@f130f348f502d9804278a617f86929846896d2e9#subdirectory=skills-ref",
+]
+
+[tool.uv]
+package = false
