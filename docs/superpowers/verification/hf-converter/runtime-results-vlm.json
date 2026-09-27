@@ -1,0 +1,44 @@
+{
+  "run_id": "p8-smolvlm-256m",
+  "recorded_at": "2026-09-27",
+  "recipe": "gguf-smolvlm-256m-linux-x64-cpu (rev 1)",
+  "host": {"os": "Ubuntu 24.04.5 LTS", "arch": "x86_64", "cpu": "4 x Intel Xeon 2.60GHz", "memory_available_mb": 11786, "gpu": "none"},
+  "pins": {
+    "model": {"id": "HuggingFaceTB/SmolVLM-256M-Instruct", "revision": "7e3e67edbbed1bf9888184d9df282b700a323964", "gated": false, "license": "apache-2.0 (no LICENSE file in source repo; NOTICE in package)"},
+    "llama_cpp": {"tag": "v0.5.0", "revision": "7fe450e19305b828c199d602c23a8337aaa1f03b"},
+    "converter_env_lock_sha256_v2": "9061c04866533c98fb37f29e39824a7ab53f89d0012c3051c8a35b1c3287deb9 (pillow 11.3.0 added for VLM image handling; text-round lock 87ac7a84 remains the record for run p7)",
+    "build_key": "198232c63ac3c736 (reused; llama-mtmd-cli added to the same verified build, sha256 79287b336b1946f0a195a21f7131d2b4b7125a77bc0d8c526649fbbc40407e3a)"
+  },
+  "phases": {
+    "source_build": {"state": "passed", "note": "reuse of the verified text-round build + mtmd-cli target added from the same pinned tree"},
+    "acquisition": {"state": "passed", "files": 38, "model_safetensors_bytes": 513028808, "note": "onnx/ directory present in source repo; not acquired into the conversion path"},
+    "conversion": {
+      "state": "passed",
+      "artifacts": [
+        {"file": "smolvlm-256m-f16.gguf", "arch": "llama", "tensors": 273, "sha256": "5cb113621e0b166cd5a4f44a5ac5a3a76a4ed4975c3e64e3ac954e6f8079c986"},
+        {"file": "mmproj-smolvlm-256m-f16.gguf", "arch": "clip", "tensors": 198, "sha256": "03a4925b514ed8bce8ef37d98ae05db3c1308a79468f11f63d33cb8a55c5f2fa"}
+      ],
+      "semantics": "two separate converter runs: text model without --mmproj; projector with --mmproj (which switches the converter to projector-only mode at this pin)"
+    },
+    "reference_inference": {"state": "passed", "settings": "transformers Idefics3, float32, greedy, 32 new tokens, chat template", "outputs": {"fixture-image-red": "Red.", "fixture-image-blue": "Blue."}, "elapsed_s": {"red": 41.5, "blue": 29.2}},
+    "target_inference": {"state": "passed", "instrument": "llama-mtmd-cli, greedy, --image + --mmproj", "outputs": {"fixture-image-red": "Red.", "fixture-image-blue": "Blue."}, "elapsed_s": {"red": 38.2, "blue": 38.6}},
+    "validation": {
+      "fixtures_frozen_before_inspection": true,
+      "two_image_protocol": {"reference_passed_both": true, "converted_passed_both": true, "text_only_substitution": false},
+      "functional_smoke": "passed",
+      "numerical_fidelity": {"declared_metric": "converted output must contain the reference-confirmed color word, both fixtures", "measured": "converted outputs identical to reference on both fixtures", "state": "passed"},
+      "staged_reload": {"state": "passed", "conditions": "staged copies only, HF_HUB_OFFLINE=1, cwd=/", "limitation": "OS-level network denial not exercised"}
+    },
+    "packaging": {"state": "passed", "files": 16, "manifest_verify": "passed (exact set, sha256, gates, license clear via NOTICE)"},
+    "publication": {"state": "see receipt", "repo_id": "rajivmehtapy/test-hf-converter-smolvlm-256m-gguf", "visibility": "private", "receipt": "runs/p8-smolvlm-256m/logs/publish_receipt.json"}
+  },
+  "corrections_during_run": [
+    "convert_hf_to_gguf.py --mmproj at this pin switches to projector-ONLY mode (two separate runs needed: text model without the flag, projector with it); the seeded recipe's combined invocation was corrected",
+    "the help text's 'mmproj- prefix added to output file name' did not apply: --outfile is used verbatim, so distinct output names must be chosen explicitly",
+    "llama-mtmd-cli has no -st/--no-cnv flag; single-shot runs end via stdin EOF",
+    "pillow 11.3.0 added to the locked converter env (VLM requirement); lock hash recorded under the VLM recipe only",
+    "source repo carries no LICENSE file at the pin; NOTICE attribution file added to the package"
+  ],
+  "claim": "conversion-verified (functional AND numerical fidelity passed on the two-image protocol); publication state per receipt",
+  "pending": ["ONNX/LiteRT-LM targets (P5, deferred)", "accelerator backends (no GPU host)", "quantized VLM variants"]
+}

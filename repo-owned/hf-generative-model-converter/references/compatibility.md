@@ -21,7 +21,7 @@ plan phase P5 (deferred by project decision, 2026-09-27) and are intentionally *
 
 | Source model | Target | Exporter / runtime | Platform | Status | Evidence |
 |---|---|---|---|---|---|
-| `HuggingFaceTB/SmolVLM-256M-Instruct` @ `7e3e67edbbed1bf9888184d9df282b700a323964` (Apache-2.0, not gated) | `gguf` | llama.cpp `convert_hf_to_gguf.py` (smolvlm model + mmproj projector) @ `v0.5.0` + `llama-mtmd-cli` runtime | linux-x86_64, CPU | **pending conversion + two-image validation** — support confirmed at the pin (`conversion/smolvlm.py:11`); recipe `gguf-smolvlm-256m-linux-x64-cpu` documented; nothing executed yet | seeded 2026-09-27; D1 VLM round owns execution |
+| `HuggingFaceTB/SmolVLM-256M-Instruct` @ `7e3e67edbbed1bf9888184d9df282b700a323964` (Apache-2.0, not gated) | `gguf` | llama.cpp `convert_hf_to_gguf.py` two-run conversion (text model + `--mmproj` projector) @ `v0.5.0` + `llama-mtmd-cli` runtime | linux-x86_64, CPU | **conversion-verified** (2026-09-27): two-image protocol fully passed — reference and converted both answered correctly on both fixtures, converted outputs identical to reference; staged reload and private publication verified (16/16 remote files) | recipe `gguf-smolvlm-256m-linux-x64-cpu`; `runtime-results-vlm.json`; receipt `rajivmehtapy/test-hf-converter-smolvlm-256m-gguf` @ `5aedf072` (private) |
 | `HuggingFaceTB/SmolVLM-256M-Instruct` | `onnx` / `litert-lm` | — | — | planned (P5) / no assumed route | none yet |
 | `google/gemma-3-4b-it` | any | — | — | not pursued (gated source; alternative row only if the primary tuple blocks) | none yet |
 
