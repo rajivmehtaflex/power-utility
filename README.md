@@ -116,6 +116,21 @@ npx skills add rajivmehtaflex/power-utility --skill unsloth-workflows
 python repo-owned/unsloth-workflows/scripts/unsloth_workflow.py doctor --project .
 ```
 
+The `hf-generative-model-converter` skill converts pinned Hugging Face
+text-generation models to GGUF with a source-built llama.cpp toolchain,
+validates the converted model by real inference, and publishes verified
+packages to the Hugging Face Hub behind a SHA-256 manifest and guarded
+publication helper. Verified scope is deliberately narrow: GGUF on
+linux-x86_64 CPU (demonstrated with `Qwen/Qwen3-0.6B`); ONNX and LiteRT-LM
+rows are planned and intentionally not advertised by the skill. The skill
+package is Apache-2.0 — converted models keep their own source license terms,
+and publication requires that license status be resolved first:
+
+```bash
+npx skills add rajivmehtaflex/power-utility --skill hf-generative-model-converter
+uv run --project tools/skill-validation skills-ref validate repo-owned/hf-generative-model-converter
+```
+
 Generated collections must be built in a separate staging directory and then
 imported. The import updates only `agents-shared/`, `dev-workspace/`, and
 `profile/`; it preserves `repo-owned/`, `docs/`, and repository metadata:

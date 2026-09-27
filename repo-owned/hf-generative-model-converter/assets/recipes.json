@@ -1,0 +1,273 @@
+{
+  "schema_version": 1,
+  "recipes": [
+    {
+      "id": "gguf-qwen3-0.6b-linux-x64-cpu",
+      "revision": 1,
+      "target": "gguf",
+      "source": {
+        "model_id": "Qwen/Qwen3-0.6B",
+        "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+        "architecture": "Qwen3ForCausalLM",
+        "model_type": "qwen3",
+        "architecture_class": "decoder-only",
+        "task": "text-generation",
+        "license": "apache-2.0",
+        "gated": false
+      },
+      "platform": {
+        "build_host": "linux-x86_64",
+        "execution": "cpu",
+        "accelerator": "none-verified"
+      },
+      "toolchain": {
+        "component": "llama.cpp",
+        "repo": "https://github.com/ggml-org/llama.cpp",
+        "tag": "v0.5.0",
+        "revision": "7fe450e19305b828c199d602c23a8337aaa1f03b",
+        "revision_note": "annotated tag object c13fcbf684171d5e0bca3fc5c34be6a99174b05f peels to this commit; releases-API target_commitish was the branch head, not the pin",
+        "converter_support_evidence": "conversion/qwen.py:159 registers Qwen3ForCausalLM at this commit (verified in local pinned checkout 2026-09-27)",
+        "dependency_lock": {
+          "env": "uv (uv.lock)",
+          "sha256": "87ac7a849f8798bd3c584e52d45dbe5eb11be867b5d2da1cf935a5611275ad21",
+          "key_facts": "torch 2.11.0+cpu, transformers 4.57.6, numpy 2.2.6, protobuf<5, huggingface-hub 0.36.2, gguf 0.19.0 from the pinned llama.cpp tree (editable, not PyPI)"
+        },
+        "build_key": "198232c63ac3c736",
+        "build_flags": ["-DCMAKE_BUILD_TYPE=Release", "-DLLAMA_CURL=ON"],
+        "build_jobs": 4,
+        "compiler": "gcc/g++ 13.3.0",
+        "cmake": "3.28.3",
+        "declared_binary_exceptions": []
+      },
+      "profile": {
+        "outtype": "f16",
+        "quantization": "none (F16 master); user-requested quantization is a separate documented step",
+        "context_length": 4096,
+        "batch": 1,
+        "generation": {
+          "sampling": "greedy",
+          "seed": 42,
+          "max_new_tokens": 32
+        },
+        "chat_template": "tokenizer_config.json template applied by runtime at inference",
+        "thinking_mode": "native to Qwen3; fixtures use default (non-forced) mode",
+        "tokenizer": "repo tokenizer.json (fast) + vocab.json; no external merges"
+      },
+      "commands": [
+        {
+          "step": "build_toolchain",
+          "workdir": ".hf-converter/builds/<build-key>",
+          "tool": "cmake",
+          "command": "cmake <sources>/llama.cpp-v0.5.0 -DCMAKE_BUILD_TYPE=Release -DLLAMA_CURL=ON && cmake --build . --config Release -j 4"
+        },
+        {
+          "step": "convert",
+          "workdir": ".hf-converter/envs/<build-key>",
+          "tool": "uv run python",
+          "command": "uv run --project <env> python <sources>/llama.cpp-v0.5.0/convert_hf_to_gguf.py <model-dir> --outfile <run>/work/qwen3-0.6b-f16.gguf --outtype f16",
+          "parameters": {
+            "model-dir": "string; verified checkout of the pinned source revision",
+            "outfile": "string; run workspace path"
+          }
+        },
+        {
+          "step": "runtime_health",
+          "workdir": ".hf-converter/builds/<build-key>",
+          "tool": "llama-cli",
+          "command": "./bin/llama-cli --version"
+        },
+        {
+          "step": "inference",
+          "workdir": ".hf-converter/builds/<build-key>",
+          "tool": "llama-simple",
+          "command": "./bin/llama-simple -m <gguf> -n 32 <prompt-as-single-argument>",
+          "parameters": {
+            "gguf": "string; converted artifact path",
+            "prompt": "string; frozen fixture prompt, passed as ONE argv element"
+          },
+          "note": "llama-simple is pure greedy with context auto-sized to prompt+predict — exact parity with the transformers raw reference (do_sample=False). It parses only -m/-n/-ngl; all other flags become part of the prompt (P7 correction after observed arg-echo). stdout = prompt echo + generation; strip the prompt prefix. llama-cli at this pin defaults to chat mode (-st single turn) and applies the Qwen3 thinking template — NOT parity-comparable with a raw reference."
+        }
+      ],
+      "required_files": [
+        "config.json",
+        "generation_config.json",
+        "model.safetensors",
+        "tokenizer.json",
+        "tokenizer_config.json",
+        "vocab.json"
+      ],
+      "required_files_note": "Minimal verified acquisition index: the pinned conversion completed with exactly these files. The source repo additionally carries merges.txt, LICENSE, README.md and .gitattributes; merges.txt and LICENSE are carried into the staged package for reproducibility and attribution, the rest are not.",
+      "validation_policy": {
+        "reference": "transformers native torch pipeline, same tokenizer/template/settings, pinned source revision",
+        "fixtures": "3 synthetic text prompts, frozen before converted output is inspected; 1 near the 4096-token profile limit; expectations + tolerances recorded before evaluation",
+        "acceptance": [
+          "nonempty decoded output for every fixture",
+          "clean termination at EOS or the 32-token bound",
+          "no runtime errors; no nonfinite values where observable",
+          "recorded token/text comparison against the reference; parity metric and threshold declared before conversion"
+        ],
+        "timeout_budget": "recorded per phase before first run",
+        "numerical_fidelity": "reported separately from functional smoke; if not comparable, labeled unverified"
+      },
+      "evidence": {
+        "status": "pending",
+        "source_build": {
+          "state": "passed",
+          "recorded_at": "2026-09-27T09:41:07Z",
+          "build_key": "198232c63ac3c736",
+          "ready_marker": ".hf-converter/builds/198232c63ac3c736/READY",
+          "runtime_health": "llama-cli --version → 0.5.0-dev (build 1, commit 7fe450e), built with GNU 13.3.0 for Linux x86_64",
+          "binary_sha256": {
+            "llama-cli": "91c9a2567adc84a445573e82eea600afc3531cc4a8c357ab162cd216461a4ecd",
+            "llama-quantize": "52fb8ee91d9cda156bad16a7528e3d187f70b1ea7507df9e7c0b2c61ab7b2471"
+          },
+          "configure_time_downloads": "none (all ggml/native deps built in-tree from the pinned checkout)",
+          "loaded_library_provenance": "ldd: only build-tree libs (libllama, libggml*, libmtmd, common) + system libs incl. libgomp; no prebuilt substitutions",
+          "env": "uv sync --locked, 31 packages, dep-lock sha256 87ac7a84…275ad21"
+        },
+        "conversion": {
+          "state": "passed",
+          "recorded_at": "2026-09-27",
+          "artifact": "qwen3-0.6b-f16.gguf",
+          "sha256": "c8b740a8d6564e3efb49f8a94cf9d34dc959d4aa2f09531c7f90663d2efa6e59",
+          "detail": "convert_hf_to_gguf.py --outtype f16; 311 tensors, ~1.5 GiB; clean export; single output file as expected"
+        },
+        "target_inference": {
+          "state": "passed",
+          "functional_smoke": "passed",
+          "numerical_fidelity": {
+            "state": "failed",
+            "metric": "token-set Jaccard (reference vs target)",
+            "threshold": 0.5,
+            "measured": "0.278 / 0.097 / 1.000 (fixture-1 / fixture-2 / fixture-3)",
+            "reason": "Fixture-3 (near-limit, ~3900-token prompt) matched the reference's 31-token continuation exactly; short fixtures shared the first token then diverged at near-tie greedy continuations. Declared threshold not met on 2/3 fixtures; parity NOT claimed per the no-relaxation rule. Functional usability is unaffected (see functional_smoke)."
+          },
+          "instrument": "llama-simple (greedy, raw completion) at build 198232c63ac3c736; timings recorded as observations (target 8.0/5.0/54.5 s vs reference 11.1/9.6/86.9 s per fixture)"
+        },
+        "staged_reload": {
+          "state": "passed",
+          "detail": "Staged copy alone, HF_HUB_OFFLINE=1 + HF_HUB_DISABLE_TELEMETRY=1, cwd=/; identical generation to validation run. Limitation: OS-level network denial not exercised."
+        },
+        "publication": {
+          "state": "passed",
+          "recorded_at": "2026-09-27",
+          "repo_id": "rajivmehtapy/test-hf-converter-qwen3-0.6b-gguf",
+          "visibility": "private",
+          "remote_commit": "39da3ef8fc44a22b8f91a0eec9ff7885e519d2f7",
+          "files_verified": "10/10 streamed and content-hashed on the remote; receipt at runs/p7-qwen3-0.6b-f16/logs/publish_receipt.json (outside the staged inventory)",
+          "url": "https://huggingface.co/rajivmehtapy/test-hf-converter-qwen3-0.6b-gguf"
+        },
+        "status": "conversion-verified",
+        "recorded_at": "2026-09-27",
+        "notes": "Full pipeline executed: source build → pinned conversion → frozen-fixture validation (functional passed; numerical failed at declared threshold and is reported, not relaxed) → staged reload → real private publication with remote content verification. Recipe status 'conversion-verified' per the evidence-state table; fidelity limitation travels on the model card and EVIDENCE.md."
+      },
+      "limitations": [
+        "CPU execution only; accelerator backends unverified on the build host",
+        "A host build does not establish Android, browser, mobile, or other-host artifact compatibility",
+        "F16 master profile; quantized variants require their own documented acceptance"
+      ]
+    },
+    {
+      "id": "gguf-smolvlm-256m-linux-x64-cpu",
+      "revision": 1,
+      "target": "gguf",
+      "source": {
+        "model_id": "HuggingFaceTB/SmolVLM-256M-Instruct",
+        "revision": "7e3e67edbbed1bf9888184d9df282b700a323964",
+        "architecture": "Idefics3ForConditionalGeneration",
+        "model_type": "idefics3",
+        "architecture_class": "vision-language (image+text to text)",
+        "task": "image-text-to-text",
+        "license": "apache-2.0",
+        "gated": false
+      },
+      "platform": {
+        "build_host": "linux-x86_64",
+        "execution": "cpu",
+        "accelerator": "none-verified"
+      },
+      "toolchain": {
+        "component": "llama.cpp",
+        "repo": "https://github.com/ggml-org/llama.cpp",
+        "tag": "v0.5.0",
+        "revision": "7fe450e19305b828c199d602c23a8337aaa1f03b",
+        "converter_support_evidence": "conversion/smolvlm.py:11 registers Idefics3ForConditionalGeneration + SmolVLMForConditionalGeneration (verified in local pinned checkout 2026-09-27); converter emits the model GGUF plus a separate mmproj projector GGUF; runtime is the mtmd multimodal binary (libmtmd already present in the verified build's ldd inventory)",
+        "build_flags": ["-DCMAKE_BUILD_TYPE=Release", "-DLLAMA_CURL=ON", "-DLLAMA_BUILD_TESTS=OFF"],
+        "build_jobs": 4,
+        "compiler": "gcc/g++ 13.3.0",
+        "cmake": "3.28.3",
+        "declared_binary_exceptions": []
+      },
+      "profile": {
+        "outtype": "f16",
+        "quantization": "none (F16 master)",
+        "context_length": 4096,
+        "batch": 1,
+        "generation": {"sampling": "greedy", "seed": 42, "max_new_tokens": 32},
+        "chat_template": "chat_template.json applied by the multimodal runtime; image preprocessing per processor_config",
+        "vision": {"mmproj": "separate projector GGUF emitted by the converter; --mmproj required at load", "protocol": "two controlled synthetic images with distinct expected answers, identical prompt; reference must pass both before the converted pipeline is judged (references/validation.md)"}
+      },
+      "commands": [
+        {
+          "step": "acquire",
+          "workdir": ".hf-converter/runs/<run-id>",
+          "tool": "uv run python (huggingface_hub snapshot_download)",
+          "command": "snapshot_download('HuggingFaceTB/SmolVLM-256M-Instruct', revision='7e3e67edbbed1bf9888184d9df282b700a323964', local_dir='work/model')",
+          "parameters": {"run-id": "string"}
+        },
+        {
+          "step": "convert",
+          "workdir": ".hf-converter/envs/<build-key>",
+          "tool": "uv run python",
+          "command": "uv run --project <env> python <sources>/llama.cpp-v0.5.0/convert_hf_to_gguf.py <model-dir> --outfile <run>/work/smolvlm-256m-f16.gguf --mmproj <run>/work/smolvlm-256m-mmproj-f16.gguf --outtype f16 --clip-model-is-vision",
+          "note": "exact mmproj flags to be confirmed against convert_hf_to_gguf.py --help at the pin during execution; expected output inventory: exactly two GGUF files (model + projector)"
+        },
+        {
+          "step": "inference",
+          "workdir": ".hf-converter/builds/<build-key>",
+          "tool": "llama-mtmd-cli",
+          "command": "./bin/llama-mtmd-cli -m <model-gguf> --mmproj <mmproj-gguf> -c 4096 -n 32 --temp 0 --image <fixture-image> -p <prompt>",
+          "note": "raw single-image runs for the two-image protocol; never substituted by text-only inference"
+        }
+      ],
+      "required_files": [
+        "config.json",
+        "generation_config.json",
+        "model.safetensors",
+        "tokenizer.json",
+        "tokenizer_config.json",
+        "chat_template.json",
+        "added_tokens.json",
+        "merges.txt"
+      ],
+      "required_files_note": "Acquisition index from the HF API inventory at pin resolution (2026-09-27); processor files present in the repo are verified at download time before load.",
+      "validation_policy": {
+        "reference": "transformers Idefics3 pipeline, same processor/prompt/settings, pinned source revision",
+        "fixtures": "two synthetic images (distinct expected answers) x one identical prompt, frozen before evaluation; image files hashed and recorded",
+        "acceptance": [
+          "reference passes both images first; converted pipeline must pass both",
+          "nonempty decoded output, clean termination, no runtime errors",
+          "no VLM check may be replaced by text-only inference"
+        ],
+        "timeout_budget": "recorded per phase before first run",
+        "numerical_fidelity": "text comparison per fixture; if incomparable, labeled unverified"
+      },
+      "evidence": {
+        "status": "documented-pending",
+        "source_build": {"state": "passed", "note": "reuse of verified build 198232c63ac3c736 (same llama.cpp pin; libmtmd present)", "recorded_at": "2026-09-27"},
+        "conversion": "pending",
+        "target_inference": "pending",
+        "staged_reload": "pending",
+        "publication": "pending",
+        "recorded_at": "2026-09-27",
+        "notes": "Support confirmed at the pin; recipe documented and pending execution (planned VLM round). Nothing VLM-related has been converted or validated yet."
+      },
+      "limitations": [
+        "CPU execution only",
+        "single-host evidence",
+        "F16 master profile",
+        "multimodal projector adds a second artifact the packaging allowlist must cover"
+      ]
+    }
+  ]
+}

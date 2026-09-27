@@ -1,0 +1,221 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rajivmehtaflex.github.io/power-utility/hf-generative-model-converter/manifest.schema.json",
+  "title": "Artifact manifest (schema version 1)",
+  "description": "Deterministic inventory of a staged conversion package. The manifest never contains its own hash; the external publication receipt records the manifest hash and remote commit.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "source", "recipe", "toolchain", "build_host",
+    "deployment", "profile", "license", "files", "validation"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model_id", "revision", "architecture", "task", "license"],
+      "properties": {
+        "model_id": { "type": "string", "minLength": 3 },
+        "revision": { "type": "string", "minLength": 7 },
+        "architecture": { "type": "string" },
+        "task": { "type": "string" },
+        "license": { "type": "string" }
+      }
+    },
+    "recipe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "revision", "target"],
+      "properties": {
+        "id": { "type": "string", "minLength": 3 },
+        "revision": { "type": "integer", "minimum": 1 },
+        "target": { "type": "string", "enum": ["gguf", "onnx", "litert-lm"] },
+        "required_files": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Source processor/tokenizer/config files that must be present in files[]."
+        }
+      }
+    },
+    "toolchain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "revision", "build_key"],
+      "properties": {
+        "name": { "type": "string" },
+        "revision": { "type": "string" },
+        "build_key": { "type": "string" },
+        "dependency_locks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "sha256"],
+            "properties": {
+              "name": { "type": "string" },
+              "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+            }
+          }
+        },
+        "binary_exceptions": {
+          "type": "array",
+          "description": "Explicitly authorized prebuilt components. Empty list is the normal case.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["component", "version", "authorization"],
+            "properties": {
+              "component": { "type": "string" },
+              "version": { "type": "string" },
+              "authorization": { "type": "string", "minLength": 8 }
+            }
+          }
+        }
+      }
+    },
+    "build_host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["os", "arch"],
+      "properties": {
+        "os": { "type": "string" },
+        "arch": { "type": "string" },
+        "interpreter": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+    "deployment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platform", "execution"],
+      "properties": {
+        "platform": { "type": "string" },
+        "execution": { "type": "string" },
+        "accelerator": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["outtype", "context_length", "batch", "sampling", "max_new_tokens"],
+      "properties": {
+        "outtype": { "type": "string" },
+        "quantization": { "type": "string" },
+        "context_length": { "type": "integer", "minimum": 1 },
+        "batch": { "type": "integer", "minimum": 1 },
+        "sampling": { "type": "string" },
+        "seed": { "type": ["integer", "null"] },
+        "max_new_tokens": { "type": "integer", "minimum": 1 },
+        "chat_template": { "type": "string" }
+      }
+    },
+    "license": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "references"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["clear", "needs-evidence", "prohibited-under-recorded-terms"]
+        },
+        "references": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+      }
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "size", "sha256"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[^/\\\\].*$",
+            "description": "Relative POSIX path; code additionally rejects absolute paths, '..' segments, and symlink components."
+          },
+          "size": { "type": "integer", "minimum": 0 },
+          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fixtures", "generation", "runtime", "phases"],
+      "properties": {
+        "fixtures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "sha256"],
+            "properties": {
+              "id": { "type": "string" },
+              "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+              "near_limit": { "type": "boolean" }
+            }
+          }
+        },
+        "generation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sampling", "max_new_tokens"],
+          "properties": {
+            "sampling": { "type": "string" },
+            "seed": { "type": ["integer", "null"] },
+            "max_new_tokens": { "type": "integer", "minimum": 1 },
+            "context_length": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "runtime": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "backend"],
+          "properties": {
+            "name": { "type": "string" },
+            "version": { "type": "string" },
+            "backend": { "type": "string" }
+          }
+        },
+        "phases": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["functional_smoke", "numerical_fidelity", "staged_reload"],
+          "properties": {
+            "functional_smoke": { "$ref": "#/$defs/phase" },
+            "numerical_fidelity": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["state"],
+              "properties": {
+                "state": { "enum": ["passed", "failed", "pending", "blocked", "unverified"] },
+                "metric": { "type": "string" },
+                "threshold": { "type": ["number", "string", "null"] },
+                "measured": { "type": ["number", "string", "null"] },
+                "reason": { "type": "string" }
+              }
+            },
+            "staged_reload": { "$ref": "#/$defs/phase" }
+          }
+        },
+        "limitations": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "$defs": {
+    "phase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state"],
+      "properties": {
+        "state": { "enum": ["passed", "failed", "pending", "blocked"] },
+        "reason": { "type": "string" }
+      }
+    }
+  }
+}

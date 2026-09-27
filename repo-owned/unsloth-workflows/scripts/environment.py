@@ -81,12 +81,16 @@ def setup_plan(project: Path) -> dict[str, Any]:
 
 
 def setup(project: Path, dry_run: bool = False) -> dict[str, Any]:
-    if dry_run and not sys.platform.startswith("linux"):
+    if dry_run:
+        # Dry-run is read-only and host-independent: it must not require Linux,
+        # NVIDIA drivers, or a visible GPU. Execution preconditions below are
+        # unchanged and still gate every non-dry-run path.
         plan = setup_plan(project)
         return {
             "dry_run": True,
-            "supported_platform": False,
-            "error": "execution setup requires Linux with NVIDIA drivers",
+            "supported_platform": sys.platform.startswith("linux"),
+            **({} if sys.platform.startswith("linux") else
+               {"error": "execution setup requires Linux with NVIDIA drivers"}),
             **plan,
         }
     if not sys.platform.startswith("linux"):

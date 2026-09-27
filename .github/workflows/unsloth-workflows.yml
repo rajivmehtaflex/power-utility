@@ -6,6 +6,7 @@ on:
       - "repo-owned/unsloth-workflows/**"
       - "tools/import_generated_skills.py"
       - "tests/test_import_generated_skills.py"
+      - "tools/skill-validation/**"
       - "MANIFEST.json"
       - "README.md"
       - "VALIDATION_REPORT.md"
@@ -15,6 +16,7 @@ on:
       - "repo-owned/unsloth-workflows/**"
       - "tools/import_generated_skills.py"
       - "tests/test_import_generated_skills.py"
+      - "tools/skill-validation/**"
       - "MANIFEST.json"
       - "README.md"
       - "VALIDATION_REPORT.md"
@@ -28,13 +30,19 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - uses: actions/setup-node@v4
+      - name: Install pinned uv
+        uses: astral-sh/setup-uv@v10.2.0
+        with:
+          version: "0.11.18"
+          enable-cache: false
       - name: Run portable skill tests
         run: |
           python -m unittest discover -s tests -v
           python -m unittest discover -s repo-owned/unsloth-workflows/tests -v
       - name: Validate Agent Skills package
-        run: npx -y skills-ref validate repo-owned/unsloth-workflows
+        run: |
+          uv sync --project tools/skill-validation --locked
+          uv run --project tools/skill-validation skills-ref validate repo-owned/unsloth-workflows
       - name: Validate catalog JSON
         run: python -m json.tool MANIFEST.json > /dev/null
       - name: Check Python syntax

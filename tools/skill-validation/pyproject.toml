@@ -1,0 +1,16 @@
+[project]
+name = "power-utility-skill-validation"
+version = "0.1.0"
+description = "Pinned official Agent Skills validator tooling for the power-utility monorepo"
+requires-python = ">=3.11"
+dependencies = [
+    "skills-ref @ git+https://github.com/agentskills/agentskills@f130f348f502d9804278a617f86929846896d2e9#subdirectory=skills-ref",
+    "jsonschema>=4.21,<5",
+    "huggingface_hub>=0.34.0,<1.0",
+]
+
+[tool.uv]
+package = false
+# Binary policy: exclude the native hf-xet extension; use the supported plain-HTTP
+# transfer route (HF_HUB_DISABLE_XET=1). Declared, audited choice per references/source-builds.md.
+override-dependencies = ["hf-xet; sys_platform == 'never'"]
