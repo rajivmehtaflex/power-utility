@@ -105,7 +105,7 @@ class BuildTests(unittest.TestCase):
 
     def test_rejects_secret_looking_metadata(self):
         bad = valid_metadata()
-        bad["deployment"]["notes"] = "deploy with hf_REDACTEDTOKEN"
+        bad["deployment"]["notes"] = "deploy with hf_FAKE0123456789abcdef"
         with tempfile.TemporaryDirectory() as td:
             with self.assertRaisesRegex(am.ManifestError, "secret-looking"):
                 am.build_manifest(make_stage(Path(td)), bad)
