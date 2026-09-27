@@ -21,8 +21,12 @@ Recorded: 2026-09-27, after the P1–P10 sequence of the v2 plan scoped to GGUF.
 
 All green on the recorded host: pinned skills-ref validation (both owned skills), helper tests
 29/29, root package tests 26/26, `MANIFEST.json` valid, `npm ci` from lockfile, `git diff --check`
-clean. Secrets/weights scanned over the full branch diff; the one real-token-derived test fixture was
-replaced with a synthetic token before pushing.
+clean. Secrets/weights scanned over the full branch diff; a real-token-derived test fixture (25-character
+prefix of the read token, added in the original `05cd30d`) was replaced with a synthetic token, and
+the branch history was subsequently **rewritten and force-pushed** so the fragment no longer exists
+in any reachable commit. Because GitHub may serve orphaned pre-rewrite commits by SHA until garbage
+collection, **rotation of the read token remains the required complement** and was requested from the
+token owner.
 
 ## What is claimed vs pending
 
