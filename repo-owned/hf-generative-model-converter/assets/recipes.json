@@ -166,6 +166,108 @@
         "A host build does not establish Android, browser, mobile, or other-host artifact compatibility",
         "F16 master profile; quantized variants require their own documented acceptance"
       ]
+    },
+    {
+      "id": "gguf-smolvlm-256m-linux-x64-cpu",
+      "revision": 1,
+      "target": "gguf",
+      "source": {
+        "model_id": "HuggingFaceTB/SmolVLM-256M-Instruct",
+        "revision": "7e3e67edbbed1bf9888184d9df282b700a323964",
+        "architecture": "Idefics3ForConditionalGeneration",
+        "model_type": "idefics3",
+        "architecture_class": "vision-language (image+text to text)",
+        "task": "image-text-to-text",
+        "license": "apache-2.0",
+        "gated": false
+      },
+      "platform": {
+        "build_host": "linux-x86_64",
+        "execution": "cpu",
+        "accelerator": "none-verified"
+      },
+      "toolchain": {
+        "component": "llama.cpp",
+        "repo": "https://github.com/ggml-org/llama.cpp",
+        "tag": "v0.5.0",
+        "revision": "7fe450e19305b828c199d602c23a8337aaa1f03b",
+        "converter_support_evidence": "conversion/smolvlm.py:11 registers Idefics3ForConditionalGeneration + SmolVLMForConditionalGeneration (verified in local pinned checkout 2026-09-27); converter emits the model GGUF plus a separate mmproj projector GGUF; runtime is the mtmd multimodal binary (libmtmd already present in the verified build's ldd inventory)",
+        "build_flags": ["-DCMAKE_BUILD_TYPE=Release", "-DLLAMA_CURL=ON", "-DLLAMA_BUILD_TESTS=OFF"],
+        "build_jobs": 4,
+        "compiler": "gcc/g++ 13.3.0",
+        "cmake": "3.28.3",
+        "declared_binary_exceptions": []
+      },
+      "profile": {
+        "outtype": "f16",
+        "quantization": "none (F16 master)",
+        "context_length": 4096,
+        "batch": 1,
+        "generation": {"sampling": "greedy", "seed": 42, "max_new_tokens": 32},
+        "chat_template": "chat_template.json applied by the multimodal runtime; image preprocessing per processor_config",
+        "vision": {"mmproj": "separate projector GGUF emitted by the converter; --mmproj required at load", "protocol": "two controlled synthetic images with distinct expected answers, identical prompt; reference must pass both before the converted pipeline is judged (references/validation.md)"}
+      },
+      "commands": [
+        {
+          "step": "acquire",
+          "workdir": ".hf-converter/runs/<run-id>",
+          "tool": "uv run python (huggingface_hub snapshot_download)",
+          "command": "snapshot_download('HuggingFaceTB/SmolVLM-256M-Instruct', revision='7e3e67edbbed1bf9888184d9df282b700a323964', local_dir='work/model')",
+          "parameters": {"run-id": "string"}
+        },
+        {
+          "step": "convert",
+          "workdir": ".hf-converter/envs/<build-key>",
+          "tool": "uv run python",
+          "command": "uv run --project <env> python <sources>/llama.cpp-v0.5.0/convert_hf_to_gguf.py <model-dir> --outfile <run>/work/smolvlm-256m-f16.gguf --mmproj <run>/work/smolvlm-256m-mmproj-f16.gguf --outtype f16 --clip-model-is-vision",
+          "note": "exact mmproj flags to be confirmed against convert_hf_to_gguf.py --help at the pin during execution; expected output inventory: exactly two GGUF files (model + projector)"
+        },
+        {
+          "step": "inference",
+          "workdir": ".hf-converter/builds/<build-key>",
+          "tool": "llama-mtmd-cli",
+          "command": "./bin/llama-mtmd-cli -m <model-gguf> --mmproj <mmproj-gguf> -c 4096 -n 32 --temp 0 --image <fixture-image> -p <prompt>",
+          "note": "raw single-image runs for the two-image protocol; never substituted by text-only inference"
+        }
+      ],
+      "required_files": [
+        "config.json",
+        "generation_config.json",
+        "model.safetensors",
+        "tokenizer.json",
+        "tokenizer_config.json",
+        "chat_template.json",
+        "added_tokens.json",
+        "merges.txt"
+      ],
+      "required_files_note": "Acquisition index from the HF API inventory at pin resolution (2026-09-27); processor files present in the repo are verified at download time before load.",
+      "validation_policy": {
+        "reference": "transformers Idefics3 pipeline, same processor/prompt/settings, pinned source revision",
+        "fixtures": "two synthetic images (distinct expected answers) x one identical prompt, frozen before evaluation; image files hashed and recorded",
+        "acceptance": [
+          "reference passes both images first; converted pipeline must pass both",
+          "nonempty decoded output, clean termination, no runtime errors",
+          "no VLM check may be replaced by text-only inference"
+        ],
+        "timeout_budget": "recorded per phase before first run",
+        "numerical_fidelity": "text comparison per fixture; if incomparable, labeled unverified"
+      },
+      "evidence": {
+        "status": "documented-pending",
+        "source_build": {"state": "passed", "note": "reuse of verified build 198232c63ac3c736 (same llama.cpp pin; libmtmd present)", "recorded_at": "2026-09-27"},
+        "conversion": "pending",
+        "target_inference": "pending",
+        "staged_reload": "pending",
+        "publication": "pending",
+        "recorded_at": "2026-09-27",
+        "notes": "Support confirmed at the pin; recipe documented and pending execution (planned VLM round). Nothing VLM-related has been converted or validated yet."
+      },
+      "limitations": [
+        "CPU execution only",
+        "single-host evidence",
+        "F16 master profile",
+        "multimodal projector adds a second artifact the packaging allowlist must cover"
+      ]
     }
   ]
 }
