@@ -21,7 +21,7 @@ Recorded: 2026-09-27. Executor: this session, on the recorded build host.
 
 | Component | Pin | Verification |
 |---|---|---|
-| llama.cpp | tag `v0.5.0`, commit `d2e54583c7452353eb35d40431281f6ee984332f` (release 2026-09-23) | GitHub releases API at fetch time |
+| llama.cpp | tag `v0.5.0`, commit `7fe450e19305b828c199d602c23a8337aaa1f03b` (release 2026-09-23) | tag object `c13fcbf684171d5e0bca3fc5c34be6a99174b05f` peels to this commit, verified in the local clone; note: the releases API `target_commitish` (`d2e5458…`) is the branch head at publish time and was **not** used as the pin |
 | `Qwen/Qwen3-0.6B` | revision `c1899de289a04d12100db370d81485cdf75e47ca` | HF API (`/api/models/Qwen/Qwen3-0.6B`), authenticated read |
 | Model facts | `Qwen3ForCausalLM`, `model_type: qwen3`, Apache-2.0, **not gated**, 10 repo files incl. single `model.safetensors` + `tokenizer.json` (fast tokenizer) | same response |
 | HF authorization | read token role=`read`, write token role=`write`, user `rajivmehtapy` | `whoami-v2` checked at setup |
@@ -36,5 +36,13 @@ Recorded: 2026-09-27. Executor: this session, on the recorded build host.
 
 ## Open risks carried into P4
 
-1. Qwen3 support in `convert_hf_to_gguf.py` is upstream-declared; must be confirmed by grep/behavior at the pinned commit before conversion runs.
-2. A dependency-lock hash for the build key is only computable after the converter-env resolution is frozen (P4 step, before build).
+1. ~~Qwen3 support in the converter is upstream-declared only.~~ **Resolved at checkout:** the pin
+   registers `Qwen3ForCausalLM` via `conversion/qwen.py:159` (`@ModelBase.register("Qwen3ForCausalLM",
+   "Qwen3Model")`, model class inheriting `Qwen2Model`); the converter's model registry lives in the
+   `conversion/` package at this revision. Confirmed 2026-09-27 in the local pinned checkout.
+2. ~~Dependency-lock hash not yet computable.~~ **Resolved:** converter env locked via uv
+   (`uv.lock`, sha256 `87ac7a849f8798bd3c584e52d45dbe5eb11be867b5d2da1cf935a5611275ad21`, 31 packages:
+   torch 2.11.0+cpu from the declared CPU index, transformers 4.57.6, numpy 2.2.6, protobuf<5,
+   huggingface-hub 0.36.2, `gguf` 0.19.0 from the same pinned llama.cpp tree rather than PyPI).
+   Build key `198232c63ac3c736` = sha256(llama.cpp commit ‖ build flags ‖ gcc 13.3.0 ‖ cmake 3.28.3 ‖
+   dep-lock sha256)[:16].

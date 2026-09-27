@@ -24,7 +24,15 @@
         "component": "llama.cpp",
         "repo": "https://github.com/ggml-org/llama.cpp",
         "tag": "v0.5.0",
-        "revision": "d2e54583c7452353eb35d40431281f6ee984332f",
+        "revision": "7fe450e19305b828c199d602c23a8337aaa1f03b",
+        "revision_note": "annotated tag object c13fcbf684171d5e0bca3fc5c34be6a99174b05f peels to this commit; releases-API target_commitish was the branch head, not the pin",
+        "converter_support_evidence": "conversion/qwen.py:159 registers Qwen3ForCausalLM at this commit (verified in local pinned checkout 2026-09-27)",
+        "dependency_lock": {
+          "env": "uv (uv.lock)",
+          "sha256": "87ac7a849f8798bd3c584e52d45dbe5eb11be867b5d2da1cf935a5611275ad21",
+          "key_facts": "torch 2.11.0+cpu, transformers 4.57.6, numpy 2.2.6, protobuf<5, huggingface-hub 0.36.2, gguf 0.19.0 from the pinned llama.cpp tree (editable, not PyPI)"
+        },
+        "build_key": "198232c63ac3c736",
         "build_flags": ["-DCMAKE_BUILD_TYPE=Release", "-DLLAMA_CURL=ON"],
         "build_jobs": 4,
         "compiler": "gcc/g++ 13.3.0",
@@ -101,13 +109,26 @@
       },
       "evidence": {
         "status": "pending",
-        "source_build": "pending",
+        "source_build": {
+          "state": "passed",
+          "recorded_at": "2026-09-27T09:41:07Z",
+          "build_key": "198232c63ac3c736",
+          "ready_marker": ".hf-converter/builds/198232c63ac3c736/READY",
+          "runtime_health": "llama-cli --version → 0.5.0-dev (build 1, commit 7fe450e), built with GNU 13.3.0 for Linux x86_64",
+          "binary_sha256": {
+            "llama-cli": "91c9a2567adc84a445573e82eea600afc3531cc4a8c357ab162cd216461a4ecd",
+            "llama-quantize": "52fb8ee91d9cda156bad16a7528e3d187f70b1ea7507df9e7c0b2c61ab7b2471"
+          },
+          "configure_time_downloads": "none (all ggml/native deps built in-tree from the pinned checkout)",
+          "loaded_library_provenance": "ldd: only build-tree libs (libllama, libggml*, libmtmd, common) + system libs incl. libgomp; no prebuilt substitutions",
+          "env": "uv sync --locked, 31 packages, dep-lock sha256 87ac7a84…275ad21"
+        },
         "conversion": "pending",
         "target_inference": "pending",
         "staged_reload": "pending",
         "publication": "pending",
         "recorded_at": "2026-09-27",
-        "notes": "Pins concrete; upstream support for qwen3 conversion declared but not yet confirmed at the pinned commit. Nothing here has executed yet."
+        "notes": "Toolchain source build verified on the recorded host. Model conversion and inference have not executed yet."
       },
       "limitations": [
         "CPU execution only; accelerator backends unverified on the build host",
