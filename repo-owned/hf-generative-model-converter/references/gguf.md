@@ -64,7 +64,10 @@ print(p)"
 
 Before loading, check the file index against the recipe's `required_files`
 (`config.json`, `generation_config.json`, `model.safetensors`, `tokenizer.json`,
-`tokenizer_config.json`, `vocab.json`) — a missing or unexpected file stops the run. Source access:
+`tokenizer_config.json`, `vocab.json`) — a missing or unexpected file stops the run. That list is the
+minimal verified acquisition index, not the full repo inventory: the pinned repo also carries
+`merges.txt`, `LICENSE`, `README.md` and `.gitattributes`, of which `merges.txt` and `LICENSE` are
+carried into the staged package (see `required_files_note` in `assets/recipes.json`). Source access:
 public, not gated; license Apache-2.0 (status `clear`, recorded).
 
 ## §Convert

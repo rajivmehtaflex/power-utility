@@ -96,6 +96,7 @@
         "tokenizer_config.json",
         "vocab.json"
       ],
+      "required_files_note": "Minimal verified acquisition index: the pinned conversion completed with exactly these files. The source repo additionally carries merges.txt, LICENSE, README.md and .gitattributes; merges.txt and LICENSE are carried into the staged package for reproducibility and attribution, the rest are not.",
       "validation_policy": {
         "reference": "transformers native torch pipeline, same tokenizer/template/settings, pinned source revision",
         "fixtures": "3 synthetic text prompts, frozen before converted output is inspected; 1 near the 4096-token profile limit; expectations + tolerances recorded before evaluation",
