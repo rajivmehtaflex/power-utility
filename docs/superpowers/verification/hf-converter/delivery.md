@@ -5,8 +5,14 @@ Recorded: 2026-09-27, after the P1–P10 sequence of the v2 plan scoped to GGUF.
 ## Delivery state (explicit, per plan §1 evidence states)
 
 - **Branch pushed**: `feat/hf-generative-model-converter` → `origin` (github.com/rajivmehtaflex/power-utility)
-- **PR open (draft)**: https://github.com/rajivmehtaflex/power-utility/pull/2 — draft ≠ merged; the
-  remote default branch (`main`) has **not** been updated.
+- **MERGED**: PR #2 (https://github.com/rajivmehtaflex/power-utility/pull/2) was marked ready and
+  merged on 2026-09-27 (10:56 UTC) as merge commit `c17dbe4f0aa9b89ff5bf3ecfd8ed3d5232c25dc2`;
+  `main` now contains the full GGUF round. Feature branch deleted after merge.
+- Post-merge verification: CI checks on the PR all passed (`cpu` 12s — green after the B1 dry-run
+  fix — and `package` 12s ×2). The pinned `skills` CLI (1.7.0) installed the skill non-interactively
+  from the merged `main` (`skills add rajivmehtaflex/power-utility --skill hf-generative-model-converter`)
+  into two agent layouts; the installed helper ran from an unrelated cwd and all references,
+  both recipes, and the manifest resolved.
 - Commits on the branch (oldest first):
   - `5d2a700` docs: carry implementation plan v2
   - `ded085a` build: pinned validator/installer tooling + Unsloth CI validator-route fix
@@ -15,7 +21,7 @@ Recorded: 2026-09-27, after the P1–P10 sequence of the v2 plan scoped to GGUF.
   - `05cd30d` P6 manifest/publication helpers + tests
   - `2ce89c5` P7 real conversion acceptance + P8/P9 package/catalog integration
   - `2ce89c5` test: synthetic secret fixture
-- **Merge**: intentionally not performed; requires the maintainer's review and authorization.
+- **Merge**: performed with the maintainer's authorization (see above).
 
 ## Acceptance checks at delivery (plan §6 command set)
 
