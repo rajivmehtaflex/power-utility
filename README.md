@@ -1,6 +1,6 @@
 # Skill Collections — Cross-Agent Mono-Repo
 
-Spec: https://agentskills.io/specification.md · 73 skills · synced 2026-09-17
+Spec: https://agentskills.io/specification.md · 74 skills · synced 2026-09-17
 
 [![skills.sh](https://skills.sh/b/rajivmehtaflex/power-utility)](https://skills.sh/rajivmehtaflex/power-utility)
 
@@ -14,7 +14,7 @@ The [skills CLI](https://github.com/vercel-labs/skills) auto-detects installed
 agents (Claude Code, Codex, Cursor, Copilot, OpenCode, …) or takes `--agent`:
 
 ```bash
-# Install ALL 73 skills (auto-detect agents, interactive pick)
+# Install ALL 74 skills (auto-detect agents, interactive pick)
 npx skills add rajivmehtaflex/power-utility
 
 # List available skills without installing
@@ -117,15 +117,24 @@ python repo-owned/unsloth-workflows/scripts/unsloth_workflow.py doctor --project
 ```
 
 The `hf-generative-model-converter` skill converts pinned Hugging Face
-text-generation models to GGUF with a source-built llama.cpp toolchain or to
-ONNX with Optimum plus a provenance-verified ONNX Runtime, validates the
-converted model by real inference, and publishes verified packages to the
-Hugging Face Hub behind a SHA-256 manifest and guarded publication helper.
-Verified scope is deliberately narrow: GGUF and ONNX on linux-x86_64 CPU
-(demonstrated with `Qwen/Qwen3-0.6B`); the VLM ONNX row is deferred and
-LiteRT-LM is planned — neither is advertised by the skill. The skill
-package is Apache-2.0 — converted models keep their own source license terms,
-and publication requires that license status be resolved first:
+generative models to GGUF (source-built llama.cpp toolchain) or ONNX
+(Optimum export plus a provenance-verified ONNX Runtime), validates the
+converted model by real inference against frozen fixtures, and publishes
+verified packages to the Hugging Face Hub behind a SHA-256 manifest and a
+guarded publication helper.
+
+Verified routes (linux-x86_64 CPU, every claim backed by recorded evidence):
+
+| Route | Verified tuple(s) | Status |
+|---|---|---|
+| GGUF — text-generation | `Qwen/Qwen3-0.6B` | conversion-verified; numerical parity failed at the declared metric and is disclosed |
+| GGUF — vision-language | `HuggingFaceTB/SmolVLM-256M-Instruct` | conversion-verified; two-image protocol fully passed |
+| ONNX — text-generation | `Qwen/Qwen3-0.6B` | conversion-verified; onnxruntime is a declared, provenance-verified official wheel (no silent prebuilt); parity disclosure recorded |
+| ONNX — vision-language | — | deferred (2026-09-28 scope decision) |
+| LiteRT-LM | — | planned; not advertised by the skill |
+
+The skill package is Apache-2.0 — converted models keep their own source
+license terms, and publication requires that license status be resolved first:
 
 ```bash
 npx skills add rajivmehtaflex/power-utility --skill hf-generative-model-converter
@@ -248,6 +257,7 @@ are never modified — only these copies are normalized.
 | Name | Group | Category | Spec-compliant | Description |
 |---|---|---|---|---|
 | `unsloth-workflows` | repo-owned | mlops | yes | Explain, prepare, and execute Unsloth workflows on Linux/NVIDIA machines. |
+| `hf-generative-model-converter` | repo-owned | mlops | yes | Convert pinned Hugging Face models to GGUF or ONNX, validate by real inference, and publish verified packages with a SHA-256 manifest. |
 | `data-to-okf` | agents-shared | — | yes | Converts any local folder of mixed documents (docx, pdf, xlsx, duckdb, csv, imag |
 | `release-notes` | agents-shared | — | yes | >- |
 | `graph-flow` | dev-workspace | — | yes | Use when coordinating a repository implementation from a goal through approved,  |
