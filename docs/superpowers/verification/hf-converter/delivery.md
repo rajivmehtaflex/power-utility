@@ -109,3 +109,15 @@ Two user-requested variants from the hash-verified F16 master; skill v0.5.0.
   observed → staged-reload gate switched to Jaccard ≥ 0.5 (disclosed); helper `.cache` residue
   guard added after a caught-and-fixed polluted upload.
 - CI: PR #6 all green. Record: [runtime-results-quantized.json](runtime-results-quantized.json).
+
+## 2026-09-28 — Behavioral matrix + VLM ONNX probe merged (PR #7 → `d0c16e4`)
+
+- **Formal behavioral matrix COMPLETE**: all ten scenarios carry formal fresh-context runs
+  (S2/S5 at 5×5). Guided verdict **10/10**; zero revision retests used. Highlights: S6-guided
+  reproduced the published F16 artifact byte-identically; S8-guided reused auth silently with a
+  correct no-write default; baselines recorded as-is (S2: 2/5 tainted-toolchain shipping; S8:
+  credential rediscovery failure → re-prompt).
+- **VLM ONNX: BLOCKED** (probed) — `idefics3` absent from optimum-onnx 0.1.0's export mapping
+  (latest release); row re-openable only by an upstream exporter PR.
+- **Remaining open**: accelerator backends (blocked on GPU hardware); VLM LiteRT (not pursued).
+- CI: PR #7 all green. Records: behavior-results.json, runtime-results-vlm-onnx-probe.json.
