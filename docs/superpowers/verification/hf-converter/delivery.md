@@ -53,3 +53,25 @@ token owner.
 - GitHub: `gh` active account `rajivmehtaflex` (branch push + draft PR used it).
 - Hugging Face: write token (user `rajivmehtapy`) used once for the private test-repo publication;
   tokens live only in chmod-600 local files; nothing secret is committed.
+
+## 2026-09-28 — ONNX round merged (PR #4 → `d90ddab`)
+
+Scope: P5 ONNX half, **text-generation only** (VLM ONNX deferred by user scope decision;
+LiteRT-LM remains planned). Skill v0.3.0 now advertises `gguf` + `onnx` text-generation on
+linux-x86_64 CPU.
+
+- **Verified tuple**: `Qwen/Qwen3-0.6B` @ `c1899de2` → ONNX fp32 (`text-generation-with-past`),
+  optimum-onnx 0.1.0/optimum 2.1.0 export, `ORTModelForCausalLM` on onnxruntime 1.30.0.
+- **Declared runtime**: official onnxruntime PyPI wheel, provenance verified byte-for-byte
+  (wheel `fa688e78…` vs installed native lib `0b2a6e0d…`); `hf-xet` excluded;
+  `source-build-verified` NOT claimed for onnx.
+- **Results**: functional smoke passed; numerical fidelity failed at the declared Jaccard-0.5
+  threshold (0.300/0.171/1.000) — disclosed, not relaxed; staged reload passed byte-identically;
+  publication `rajivmehtapy/test-hf-converter-qwen3-0.6b-onnx` @ `92a57de2` (private, 14/14 remote
+  files content-verified; receipt at `runs/p9-qwen3-0.6b-onnx/logs/publish_receipt.json`).
+- **Disclosed gap**: optimum 2.1.0 qwen3 `head_dim` cache-shape gap → declared
+  `embed_size_per_head=head_dim` load patch, documented in recipe/model card/EVIDENCE.
+- **Helper**: manifest scanner exemption for the schema-mandated `binary_exceptions[].authorization`
+  key (+test); `HF_TOKEN` env-name note for huggingface_hub ≥0.34.
+- **CI**: PR #4 checks all green (cpu ×2, package ×2). Full record:
+  [runtime-results-onnx.json](runtime-results-onnx.json).
