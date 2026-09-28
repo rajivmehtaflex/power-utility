@@ -108,8 +108,9 @@ npx skills-ref validate <skill-dir>
 ### Repo-owned skills and generated refresh (maintainer)
 
 `repo-owned/` contains skills maintained directly in this repository. The
-`unsloth-workflows` skill covers Linux/NVIDIA Unsloth setup, data validation,
-text SFT, evaluation, export, and framework-wide guidance:
+`unsloth-workflows` skill covers Linux/NVIDIA Unsloth setup, datasets and Data Recipes,
+SFT, LoRA/QLoRA/QAT, CPT, GRPO/GSPO reasoning, evaluation, export (Dynamic 3.0 GGUFs),
+local API serving, and framework-wide guidance:
 
 ```bash
 npx skills add rajivmehtaflex/power-utility --skill unsloth-workflows
@@ -242,7 +243,7 @@ supports, run a short generation, and report which artifacts were actually
 verified. Keep the original training output unchanged.
 ```
 
-#### Ask for an advanced workflow
+#### Ask for an advanced workflow (GRPO / Reasoning)
 
 ```text
 Use unsloth-workflows in Prepare mode. I want to train a vision model with
@@ -250,6 +251,15 @@ GRPO using a reward function that checks structured answers. Read the current
 official Unsloth example, check the installed API and GPU requirements,
 prepare a task-specific script and dependency list, and propose a bounded
 smoke test. Do not execute until the script and risks are reviewable.
+```
+
+#### Serve locally or connect to a coding agent
+
+```text
+Use unsloth-workflows in Discuss mode. Explain how to run the trained model as a
+local OpenAI/Anthropic-compatible HTTP API server, share it over LAN or a
+Cloudflare tunnel, and connect it as the backend LLM for Claude Code or Hermes
+Agent. Do not run any commands.
 ```
 
 #### Diagnose a failed run

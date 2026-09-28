@@ -1,7 +1,22 @@
-# Efficiency and scale
+# Efficiency, scale, and quantization
 
-Unsloth’s kernels, Flash/SDPA/xFormers backends, padding-free execution, and packing reduce wasted work. Packing must preserve example boundaries. Gradient checkpointing trades extra computation for lower activation memory. Precision is a quality and compatibility choice: FP16/BF16/FP8 and 4-bit paths depend on the GPU and model.
+## High-performance kernels and packing
 
-For multiple GPUs, distinguish DDP (replicated models and synchronized gradients), FSDP (sharded training state), and model splitting (`device_map="balanced"`). More GPUs do not automatically create one larger-memory GPU. Long-context training increases activation and kernel pressure; validate the chosen length with a small run.
+- **Unsloth Triton Kernels**: Hand-crafted forward and backward kernels for cross-entropy loss, RoPE embedding, RMSNorm, and LoRA projections eliminate PyTorch autograd overhead and maintain exact numerical accuracy.
+- **Padding-Free Sample Packing**: Packs sequences to eliminate pad tokens, achieving up to 3x training speedup while preserving sequence attention masks across example boundaries.
+- **Gradient Checkpointing**: Unsloth's selective activation offloading allows fine-tuning larger batch sizes without out-of-memory (OOM) failures.
 
-Source: [packing and kernels](https://unsloth.ai/docs/blog/3x-faster-training-packing.md), [multi-GPU](https://unsloth.ai/docs/basics/multi-gpu-training-with-unsloth.md), and [QAT](https://unsloth.ai/docs/blog/quantization-aware-training-qat.md).
+## Quantization paradigms
+
+- **Dynamic 3.0 GGUFs & Dynamic Quants**: Employs adaptive bit-rate allocation per layer based on KL divergence and perplexity sensitivity, outperforming standard static/imatrix GGUF quantization.
+- **Dynamic 1.58-bit (Ternary) Quants**: Enables running frontier reasoning models like DeepSeek-R1 locally with near-lossless accuracy at minimal memory footprint.
+- **Dynamic NVFP4**: Blackwell native 4-bit floating-point execution providing massive throughput improvements on RTX 50 series and B200 hardware.
+
+## Multi-GPU distributed training
+
+When scaling beyond a single GPU, choose the distribution strategy deliberately:
+1. **Distributed Data Parallel (DDP)**: Use the Unsloth CLI for multi-GPU training. Each GPU maintains a full model replica and processes an independent data batch, synchronizing gradients via NCCL.
+2. **Fully Sharded Data Parallel (FSDP)**: Shards parameters, gradients, and optimizer states across GPUs, required when the model and optimizer cannot fit within a single GPU's VRAM.
+3. **Pipeline / Model Splitting (`device_map="balanced"`)**: Shards layers across devices sequentially. Recommended for inference evaluation; inefficient for active training due to pipeline bubbles.
+
+Sources: [packing and kernels](https://unsloth.ai/docs/blog/3x-faster-training-packing.md), [multi-GPU guide](https://unsloth.ai/docs/basics/multi-gpu-training-with-unsloth.md), [DDP via CLI](https://unsloth.ai/docs/basics/multi-gpu-training-with-unsloth/ddp.md), [Dynamic 3.0 GGUFs](https://unsloth.ai/docs/basics/dynamic-3.0-ggufs.md), [NVFP4 guide](https://unsloth.ai/docs/basics/nvfp4.md), [DeepSeek-R1 1.58-bit](https://unsloth.ai/docs/models/tutorials/deepseek-r1-how-to-run-locally/deepseek-r1-dynamic-1.58-bit.md).

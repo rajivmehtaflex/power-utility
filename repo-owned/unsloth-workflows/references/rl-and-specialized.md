@@ -1,7 +1,24 @@
-# Preferences, RL, and specialized modalities
+# Preferences, Reinforcement Learning, and specialized modalities
 
-DPO, ORPO, KTO, and SimPO use preference or desirability data. GRPO generates groups of attempts and updates the policy using a reward function. Reward hacking is a first-class failure mode: a higher measured score may not mean the intended behavior improved. Use a bounded smoke run before longer RL.
+## Preference optimization and RL
 
-Vision workflows add image content to messages and may selectively train vision, language, attention, or MLP layers. TTS/STT workflows require aligned audio/text and model-specific sampling rates or special tokens. Embedding workflows optimize vector representations and pooling behavior rather than chat responses. MoE models require architecture-aware memory and routing checks.
+Unsloth supports both preference alignment and reward-driven reinforcement learning:
 
-For these paths, read the current official example, check installed APIs, adapt a task-specific script, and label the result as documented or tested. Source: [RL guide](https://unsloth.ai/docs/get-started/reinforcement-learning-rl-guide.md), [vision](https://unsloth.ai/docs/basics/vision-fine-tuning.md), [TTS](https://unsloth.ai/docs/basics/text-to-speech-tts-fine-tuning.md), and [embeddings](https://unsloth.ai/docs/basics/embedding-finetuning.md).
+- **Preference Optimization (DPO, ORPO, KTO, SimPO)**: Align models on paired chosen/rejected examples or desirability scores without an active reward environment.
+- **Group Relative Policy Optimization (GRPO)**: Generates groups of responses per prompt and scores them relative to group mean and standard deviation. Removes the separate value/critic network, slashing VRAM by over 50% compared to traditional PPO.
+- **GRPO with 7x Longer Context**: Optimized attention kernels and sequence parallel rollouts allow training DeepSeek-R1 style reasoning models with long context windows.
+- **GSPO (Group Sequence Policy Optimization)**: Sequence-level policy optimization for structured step-by-step reasoning.
+- **Vision RL (VLM RL)**: Reinforcement learning directly on multimodal models, rewarding visual grounding, diagram comprehension, and spatial accuracy.
+- **FP8 RL**: Accelerates rollout generation and policy updates under 8-bit floating point precision.
+- **Training AI Agents with RL**: Rewards multi-step tool calls, terminal task success, and valid API usage.
+- **Mitigating Reward Hacking**: A higher reward score does not imply better behavior. Combine verification of exact outputs, strict format penalties (e.g. `<think>` XML blocks), and length penalties to avoid degenerate or verbose loops.
+- **Precision: FP16 vs BF16 for RL**: Upstream findings demonstrate FP16 overcomes training-inference mismatch issues present in BF16 when generating rollouts.
+
+## Specialized modalities and architectures
+
+- **Vision / Multimodal**: Fine-tune models like Qwen3-VL, Gemma-Vision, and DeepSeek-OCR 2. Supports freezing the vision encoder while training cross-attention projections or the full language backbone.
+- **12x Faster MoE Fine-Tuning**: Custom Triton kernels optimize token routing and dispatch for Mixture-of-Experts architectures (e.g., DeepSeek-V3/V4, Qwen-MoE).
+- **TTS and Audio**: Fine-tuning voice and speech recognition models with tokenized spectrograms.
+- **Embeddings**: Fine-tuning vector embedding models with InfoNCE or Matryoshka representation loss.
+
+Sources: [RL guide](https://unsloth.ai/docs/get-started/reinforcement-learning-rl-guide.md), [GRPO long context](https://unsloth.ai/docs/get-started/reinforcement-learning-rl-guide/grpo-long-context.md), [Vision RL](https://unsloth.ai/docs/get-started/reinforcement-learning-rl-guide/vision-reinforcement-learning-vlm-rl.md), [FP8 RL](https://unsloth.ai/docs/get-started/reinforcement-learning-rl-guide/fp8-reinforcement-learning.md), [GSPO RL](https://unsloth.ai/docs/get-started/reinforcement-learning-rl-guide/advanced-rl-documentation/gspo-reinforcement-learning.md), [FP16 vs BF16 for RL](https://unsloth.ai/docs/get-started/reinforcement-learning-rl-guide/advanced-rl-documentation/fp16-vs-bf16-for-rl.md), [Agent RL](https://unsloth.ai/docs/get-started/reinforcement-learning-rl-guide/training-ai-agents-with-rl.md), [Faster MoE](https://unsloth.ai/docs/basics/faster-moe.md).

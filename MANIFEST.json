@@ -1187,12 +1187,12 @@
    "source_path": "repo-owned/unsloth-workflows",
    "category": "mlops",
    "dest": "repo-owned/unsloth-workflows",
-   "description": "Explain, prepare, and execute Unsloth model training workflows on Linux/NVIDIA machines, including environment setup, datasets, SFT, LoRA/QLoRA, RL, evaluation, export, and serving guidance.",
+   "description": "Explain, prepare, and execute Unsloth workflows on Linux/NVIDIA machines. Covers Unsloth Studio/Desktop, environment setup, datasets/Data Recipes, SFT, LoRA/QLoRA/QAT, CPT, GRPO/GSPO/RL, multimodal models, evaluation, export, Dynamic 3.0 GGUFs, and local/agent serving (OpenAI/Anthropic APIs, Claude Code, Hermes Agent).",
    "original_fields": {
     "license": "Apache-2.0",
-    "compatibility": "Requires a Linux shell for execution; training requires NVIDIA drivers and a visible CUDA GPU.",
+    "compatibility": "Requires a Linux shell for execution; training requires NVIDIA drivers, a visible CUDA GPU, Python 3.12, network access for package/model downloads, and enough disk/VRAM for the selected model. Discuss and dry-run modes are CPU/read-only.",
     "metadata_author": "rajivmehtaflex",
-    "metadata_version": "1.0.0"
+    "metadata_version": "1.1.0"
    },
    "spec_compliant": true,
    "warnings": []

@@ -1,10 +1,10 @@
 ---
 name: unsloth-workflows
-description: Explain, prepare, and execute Unsloth model training workflows on Linux/NVIDIA machines. Use for Unsloth environment setup, datasets, SFT, LoRA/QLoRA, CPT, preference/RL training, multimodal models, evaluation, export, quantization, and local serving.
+description: Explain, prepare, and execute Unsloth workflows on Linux/NVIDIA machines. Covers Unsloth Studio/Desktop, environment setup, datasets/Data Recipes, SFT, LoRA/QLoRA/QAT, CPT, GRPO/GSPO/RL, multimodal models, evaluation, export, Dynamic 3.0 GGUFs, and local/agent serving (OpenAI/Anthropic APIs, Claude Code, Hermes Agent).
 license: Apache-2.0
 compatibility: Requires a Linux shell for execution; training requires NVIDIA drivers, a visible CUDA GPU, Python 3.12, network access for package/model downloads, and enough disk/VRAM for the selected model. Discuss and dry-run modes are CPU/read-only.
 metadata:
-  version: "1.0.1"
+  version: "1.1.0"
   author: rajivmehtaflex
   source: "https://unsloth.ai/docs/llms.txt"
   execution_platform: linux-nvidia
@@ -14,16 +14,19 @@ metadata:
 
 Use this skill as a framework guide and a shell workflow runner. Keep three modes distinct:
 
-- **Discuss:** explain concepts or inspect a request. Do not install, write files, download models, or train.
-- **Prepare:** create reviewable configuration or task-specific scripts. Do not install dependencies or start GPU work.
+- **Discuss:** explain concepts, explore models, or inspect a request. Covers Unsloth Studio/Desktop, cross-platform hardware, and agent runtimes. Do not install, write files, download models, or train.
+- **Prepare:** create reviewable configuration or task-specific scripts (e.g. custom RL reward functions, Data Recipes, multimodal pipelines). Do not install dependencies or start GPU work.
 - **Execute:** perform the requested operation after preflight. Installation and model downloads are side effects and must be limited to the selected project.
 
 ## Route a request
 
-1. Identify the objective: domain adaptation (continued pretraining), examples-to-behavior (SFT), preferences (DPO/ORPO/KTO), reward-driven behavior (GRPO/RL), embeddings, vision, speech, or inference/export.
-2. Identify the adaptation method independently: full fine-tuning, LoRA, or QLoRA.
-3. Inspect model family, revision, modality, chat template, dataset schema, sequence length, GPU memory, and desired output format.
-4. For Discuss, use the references without running commands. For Prepare, create a JSON config and conversion script. For Execute, run the command below from this skill directory.
+1. **Identify the objective**: domain adaptation (CPT), supervised demonstrations (SFT), preferences (DPO/ORPO/KTO/SimPO), reinforcement learning (GRPO/GSPO/Agent RL), quantization-aware training (QAT), multi-token prediction (MTP), multimodal (vision/audio), embeddings, or serving/export.
+2. **Identify parameter method and precision**: full fine-tuning, LoRA, QLoRA, FP8, or Dynamic NVFP4.
+3. **Inspect inputs and targets**: model family/revision, chat/tool template, dataset schema, sequence length (up to 500K context), GPU memory, and target runtime (vLLM, GGUF, local API, Claude Code, Hermes Agent).
+4. **Select mode**:
+   - For **Discuss**, use the references and live documentation queries without modifying disk state.
+   - For **Prepare**, author reviewable JSON configs and adaptation scripts.
+   - For **Execute**, run the runner commands below from this skill directory.
 
 ## Runner
 
@@ -49,12 +52,12 @@ Report these separately: configuration validated, environment verified, training
 
 Read only the reference needed for the current request:
 
-- [framework-map.md](references/framework-map.md) for the mental model and method selection.
-- [linux-nvidia.md](references/linux-nvidia.md) for setup and capability checks.
-- [data-and-templates.md](references/data-and-templates.md) for schemas, templates, and masking.
-- [training.md](references/training.md) for SFT, LoRA/QLoRA, CPT, and checkpoints.
-- [rl-and-specialized.md](references/rl-and-specialized.md) for preferences, RL, vision, speech, embeddings, and MoE.
-- [efficiency-and-scale.md](references/efficiency-and-scale.md) for precision, packing, long context, and multi-GPU.
-- [evaluation-and-serving.md](references/evaluation-and-serving.md) for evaluation, export, quantization, inference, and troubleshooting.
+- [framework-map.md](references/framework-map.md) for the mental model, ecosystem components, and dynamic documentation queries.
+- [linux-nvidia.md](references/linux-nvidia.md) for setup, NVIDIA architectures (including Blackwell/NVFP4), and capability checks.
+- [data-and-templates.md](references/data-and-templates.md) for schemas, Data Recipes, tool calling, and loss masking.
+- [training.md](references/training.md) for SFT, LoRA/QLoRA, QAT, 500K context, MTP, kernels + packing, and checkpoints.
+- [rl-and-specialized.md](references/rl-and-specialized.md) for preferences, GRPO, GSPO, VLM RL, Agent RL, reward hacking mitigations, and 12x MoE.
+- [efficiency-and-scale.md](references/efficiency-and-scale.md) for Dynamic 3.0 GGUFs, 1.58-bit quants, NVFP4, and multi-GPU DDP.
+- [evaluation-and-serving.md](references/evaluation-and-serving.md) for evaluation, export, local OpenAI/Anthropic APIs, coding agent integrations, and mobile ExecuTorch.
 
 The references summarize the official map at [Unsloth documentation](https://unsloth.ai/docs/llms.txt). They distinguish upstream-documented behavior, local detection, and smoke-tested behavior; do not present an untested combination as verified.
