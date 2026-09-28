@@ -96,3 +96,16 @@ linux-x86_64 CPU. All three plan targets are conversion-verified.
   compilation never completes in bounded time).
 - **CI**: PR #5 checks all green (cpu ×2, package ×2). Full record:
   [runtime-results-litertlm.json](runtime-results-litertlm.json).
+
+## 2026-09-28 — Quantized GGUF variant round merged (PR #6)
+
+Two user-requested variants from the hash-verified F16 master; skill v0.5.0.
+
+- **Q8_0** (805 MB): parity **passed** at the declared threshold (0.714/0.833/1.000, near-limit
+  exact) — first fully-passing conversion. Publication `…gguf-q8-0` @ `5f92cd9c` (10/10).
+- **Q4_K_M** (484 MB): parity **failed** (0.368/0.135/0.500) — disclosed, not relaxed; outputs
+  coherent. Publication `…gguf-q4-k-m` @ `48b3ec8c` (10/10).
+- Toolchain rebuilt post-wipe (llama-cli byte-identical to p7); CPU threading nondeterminism
+  observed → staged-reload gate switched to Jaccard ≥ 0.5 (disclosed); helper `.cache` residue
+  guard added after a caught-and-fixed polluted upload.
+- CI: PR #6 all green. Record: [runtime-results-quantized.json](runtime-results-quantized.json).
