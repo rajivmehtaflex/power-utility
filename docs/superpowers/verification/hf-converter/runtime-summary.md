@@ -79,3 +79,31 @@ Full record: [runtime-results-onnx.json](runtime-results-onnx.json). Recipe
 
 Updated pending list: LiteRT-LM (P5) and quantized GGUF variants remain future rounds; VLM ONNX is
 **deferred** (2026-09-28 scope decision), not pending.
+
+## LiteRT-LM round — 2026-09-28 (P5, LiteRT half; VLM not pursued)
+
+Full record: [runtime-results-litertlm.json](runtime-results-litertlm.json). Recipe
+`litertlm-qwen3-0.6b-linux-x64-cpu` rev 1; run `p10-qwen3-0.6b-litertlm`.
+
+- **Route:** `Qwen/Qwen3-0.6B` @ `c1899de2…` → `.litertlm` bundle (dynamic-int8, KV 2048) via
+  litert-torch 0.9.4 + litert-lm-builder 0.17.1; runtime litert-lm 0.17.1 over ai-edge-litert 2.2.0
+  (XNNPACK CPU). No native builds: every native component ships inside a **declared official PyPI
+  wheel** (provenance + runtime-download audit recorded); `source-build-verified` is not claimed.
+- **Results:** functional smoke passed (3/3 runnable fixtures; engine load ≈0.5 s); numerical
+  fidelity **FAILED at the declared threshold on fixture-1** (0.300 / 0.586 / 0.545) and is
+  disclosed, not relaxed — fixtures 2 and 4 (near-limit, 1905-token prefill) met the threshold;
+  staged reload passed byte-identically (offline, cwd `/`).
+- **Publication:** private `rajivmehtapy/test-hf-converter-qwen3-0.6b-litertlm` @ `0c725fdd`, 4/4
+  files stream-verified by content hash; receipt outside the staged inventory.
+- **Corrections recorded** (all in the recipe + runtime-results): protobuf ≥5.26 needed by
+  litert-lm-builder gencode; tensorflow-cpu is a mandatory exporter import; the upstream qwen
+  example's default conversion flags produce an **engine-incompatible graph** (prefill fails
+  beyond ≈7 tokens) — `--mask_as_input=True --transpose_kv_cache=True` mandatory; fp32 profile
+  abandoned (engine graph compilation never completes in bounded time; dynamic_int8 is the
+  documented default); profile change 4096→2048 declared with fixture-4 frozen before any target
+  run (fixture-3 blocked-by-profile); session-API gotchas (sync decode fails, one session per
+  engine, xnnpack cache sidecar).
+
+All three targets (GGUF, ONNX, LiteRT-LM) now carry conversion-verified evidence for
+text-generation on linux-x86_64 CPU. Remaining: VLM rows (ONNX deferred, LiteRT not pursued),
+quantized GGUF variants, accelerator backends, formal fresh-context behavioral matrix.

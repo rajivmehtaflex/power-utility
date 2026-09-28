@@ -65,3 +65,58 @@ Recorded: 2026-09-27. Executor: this session, on the recorded build host.
 - **Discovered constraint carried into the recipe:** optimum 2.1.0 ignores qwen3's explicit
   `head_dim` when sizing the KV cache (uses `hidden_size//num_heads`); the exported graph is
   correct and a declared one-attribute load patch is required at inference.
+
+## LiteRT-LM round feasibility — recon 2026-09-28 (web-verified; local probes pending)
+
+Status of everything below: **documented** (verified against PyPI JSON APIs and the GitHub API on
+2026-09-28) — nothing is locally executed yet. Local probes are S0 of the round.
+
+- **Exporter:** `litert-torch` 0.9.4 (PyPI, first-party `google-ai-edge`; repo renamed from
+  `ai-edge-torch`). Qwen3 is **explicitly supported**: `litert_torch/generative/examples/qwen/`
+  contains `qwen3.py` (a `Qwen3(DecoderOnlyModel)` wrapper built from the Edge Generative API
+  layers, HF-checkpoint weights loaded via a tensor-name map; example hyperparameters shown are the
+  4B: 36 layers, dim 2560 — 0.6B is a config subset), `convert_v3_to_tflite.py`,
+  `verify_qwen3.py`. Export exposes `prefill`/`decode` signatures (`prefill_{SEQ-LEN}` naming
+  convention). Deps: `torch>=2.4,<2.14` (2.11.0+cpu fits), transformers unpinned (must verify
+  against 4.57.6), torchao >=0.17, ai-edge-litert, ai-edge-quantizer 0.9.*, litert-converter 0.4.*,
+  jax, jaxtyping. Python >=3.10.
+- **Packager:** `litert-lm-builder` 0.17.1 — pure-Python (~38 KB wheel; deps protobuf, flatbuffers,
+  absl-py, tomli); "command-line tool and Python API for building and unpacking LiteRT-LM files",
+  i.e. the `.litertlm` container (tflite + tokenizer) builder.
+- **Runtime:** `litert-lm` 0.17.1 CLI (pure-Python `py3-none-any`; deps litert-lm-api +
+  litert-lm-builder pinned 0.17.1, click, prompt_toolkit, questionary; install `uv tool install
+  litert-lm`) over `ai-edge-litert` 2.2.0, which ships the **native Linux x86_64 runtime as a
+  first-party manylinux wheel** (~91 MB for 2.0.2; macOS arm64 wheels are ~178 KB — the gap is
+  bundled native code). LiteRT-LM README lists Qwen among supported model families; the quickstart
+  runs Gemma 3n straight from an HF `-litert-lm` repo; v0.16.0 additionally publishes versioned C
+  API shared-library prebuilts on GitHub releases.
+- **Binary-policy fit:** the ONNX-round precedent applies — declared first-party Google wheels with
+  recorded provenance (version + wheel sha256 + loaded-library check); no Bazel/CMake source build
+  required. Still owed per plan P5 at execution: audit what `litert-lm` actually loads at runtime
+  (no undeclared download-at-first-run), record provenance.
+- **Risks:** (1) the qwen3 example re-implements the architecture — adapting the example to
+  Qwen3-0.6B is config work, not a one-flag HF export; an alternative "LiteRT Torch Hugging Face
+  Export extension" path exists in the docs and must be probed. (2) tokenizer packaging into the
+  `.litertlm` bundle (SentencePiece conversion tooling exists: `tokenizer_to_sentencepiece.py`).
+  (3) CPU execution-provider evidence for the LiteRT-LM dispatcher on this host is unproven.
+- **Scope:** text-generation only (`Qwen/Qwen3-0.6B` @ `c1899de2…`); VLM has "no assumed route"
+  per the plan matrix.
+
+## LiteRT-LM round feasibility — resolved 2026-09-28 (execution complete)
+
+The recon section above was confirmed by execution, with these deltas:
+
+- **Exporter:** works, but the reauthored qwen example's default conversion flags produce an
+  engine-incompatible graph — `--mask_as_input=True --transpose_kv_cache=True` are mandatory
+  (disclosed upstream gap; gemma3/deepseek examples default these True). The `export_hf`
+  (one-flag HF) path needs transformers >4.57 (missing `cache_utils.LinearAttentionCacheMixin`)
+  and was not used — parity fairness kept transformers at 4.57.6.
+- **Exporter dependencies:** tensorflow-cpu is a hard import of the generative path (schema
+  codegen); protobuf must be ≥5.26 for litert-lm-builder's gencode.
+- **Profile:** fp32 master abandoned — engine graph compilation does not complete in bounded time
+  (the exported graph is valid and packs; `describe` works). dynamic_int8 (the converter's
+  documented default) ships; context profile 2048 with prefill ladder 8…2048.
+- **Packager:** pure-Python, works as documented; TOML `model_type` is written without the
+  `tf_lite_` prefix.
+- **Runtime:** engine init ≈0.5 s with kernel cache; runtime-download audit clean; the bundled
+  `liblitert-lm.so` is the engine. Staged reload byte-identical with cache redirected.

@@ -131,7 +131,8 @@ Verified routes (linux-x86_64 CPU, every claim backed by recorded evidence):
 | GGUF — vision-language | `HuggingFaceTB/SmolVLM-256M-Instruct` | conversion-verified; two-image protocol fully passed |
 | ONNX — text-generation | `Qwen/Qwen3-0.6B` | conversion-verified; onnxruntime is a declared, provenance-verified official wheel (no silent prebuilt); parity disclosure recorded |
 | ONNX — vision-language | — | deferred (2026-09-28 scope decision) |
-| LiteRT-LM | — | planned; not advertised by the skill |
+| LiteRT-LM — text-generation | `Qwen/Qwen3-0.6B` | conversion-verified; `.litertlm` bundle on declared, provenance-verified official wheels; parity disclosure recorded; requires disclosed conversion flags |
+| LiteRT-LM — vision-language | — | not pursued (no assumed route in the plan) |
 
 The skill package is Apache-2.0 — converted models keep their own source
 license terms, and publication requires that license status be resolved first:

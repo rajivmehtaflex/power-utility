@@ -1,0 +1,159 @@
+{
+  "round": "litertlm-qwen3-0.6b (P5, LiteRT-LM half; VLM not pursued - no assumed route per plan)",
+  "recorded_at": "2026-09-28",
+  "monorepo_base": "main @ 57682b0",
+  "source": {
+    "model_id": "Qwen/Qwen3-0.6B",
+    "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+    "integrity": "re-downloaded snapshot (workspace wiped post-ONNX round); model.safetensors sha256 f47f7117\u202696874b == HF LFS oid at pinned revision"
+  },
+  "environment": {
+    "build_key": "3fdb8eb251c31330",
+    "lock_sha256": "b98e8bb42e764df39af115bb95c1842dce2cec511ba2b1514f0fc9cfea01ca48",
+    "packages": {
+      "python": "3.12.3",
+      "torch": "2.11.0+cpu",
+      "transformers": "4.57.6",
+      "litert-torch": "0.9.4",
+      "litert-lm": "0.17.1",
+      "litert-lm-builder": "0.17.1",
+      "ai-edge-litert": "2.2.0",
+      "tensorflow-cpu": "2.21.0",
+      "protobuf": "7.36.2",
+      "jax": "0.11.2",
+      "torchao": "0.18.0"
+    },
+    "declared_wheels": [
+      {
+        "component": "ai-edge-litert (LiteRT runtime, XNNPACK CPU delegate)",
+        "version": "2.2.0",
+        "wheel": "ai_edge_litert-2.2.0-cp312-cp312-manylinux_2_27_x86_64.whl",
+        "sha256": "4e151f07229b2f714f9b34ea42a9cacffc98953b1f6e832adee4479f6b81f50a"
+      },
+      {
+        "component": "litert-lm CLI + bundled native engine",
+        "version": "0.17.1",
+        "wheel": "litert_lm-0.17.1-py3-none-any.whl",
+        "sha256": "ef9372fa3e1b9d61a29666248e8e51c4f90f32ef6647c8d617fd47ff5a28333f",
+        "bundled_engine_liblitert_lm_so_sha256": "f202ca2351db108105fed241cd731266255c2471f3ed850c265d0c29d27fd841"
+      },
+      {
+        "component": "litert-torch (exporter)",
+        "version": "0.9.4",
+        "wheel": "litert_torch-0.9.4-py3-none-any.whl",
+        "sha256": "e338b9ddd71ed5fa6002525a386e22f0cec441da6deb5f9a45e73c97d91b6353"
+      },
+      {
+        "component": "litert-lm-builder (packer)",
+        "version": "0.17.1",
+        "wheel": "litert_lm_builder-0.17.1-py3-none-any.whl",
+        "sha256": "fdfe7d15f91f7609a92e0c1771798750dd788829b535f788933bda2e196ce4c0"
+      },
+      {
+        "component": "tensorflow-cpu (exporter dependency)",
+        "version": "2.21.0",
+        "wheel": "tensorflow_cpu-2.21.0-cp312-cp312-manylinux_2_27_x86_64.whl",
+        "sha256": "dcc8afd32930e42d5296b6ee19078b773706830af4ea97fbe503b9f5e0f820cb"
+      }
+    ],
+    "runtime_download_audit": "grep of litert_lm/litert_lm_api/litert_lm_builder found no urllib/requests/urlretrieve download paths; the only Hub client is the user-invoked 'litert-lm import --from-huggingface-repo' (unused by this recipe)",
+    "policy_note": "no native builds; no silent prebuilt binaries (all declared with recorded provenance); source-build-verified NOT claimed"
+  },
+  "fixtures": {
+    "frozen_before_inspection": true,
+    "prompts_shared_with_gguf_onnx_rounds": true,
+    "original_freeze": "fixtures.json sha256 760b839d\u2026 (3 prompts incl. 3905-token near-limit)",
+    "profile_change": "kv_cache_max_len reduced 4096\u21922048 after fp32 profile abandoned; fixture-3 (3905 tok) reclassified blocked-by-profile; fixture-4-near-limit (1905 tok, 93% of 2048) declared BEFORE any target run (fixtures_v2_profile.json, fixture-4 sha256 dae566cc\u2026)",
+    "threshold": "token-set Jaccard >= 0.5 per fixture, declared before export"
+  },
+  "conversion": {
+    "command": "convert_v3_to_tflite --model_size=0.6b --quantize=dynamic_int8 --mask_as_input=True --transpose_kv_cache=True --kv_cache_max_len=2048 --prefill_seq_lens 8..2048",
+    "rc": 0,
+    "duration": "~13 min (7 prefill signatures + decode)",
+    "pack": "litert-lm pack rc=0 (1.4 s)",
+    "bundle": {
+      "file": "qwen3-0.6b-int8-tp.litertlm",
+      "sha256": "903cbfc5ae0df725ccc9984a061f2e25fcda589f3e3f9bc1de18d5666f6530b5",
+      "bytes": 655786371
+    },
+    "corrections": [
+      {
+        "issue": "convert_v3_to_tflite crashed: litert_torch.generative.layers.lora hard-imports tensorflow.lite.python.schema_py_generated",
+        "fix": "tensorflow-cpu added to the locked env as a declared exporter dependency"
+      },
+      {
+        "issue": "litert-lm CLI import failure: protobuf 4.x lacks google.protobuf.runtime_version (litert-lm-builder gencode targets protobuf >=5.26)",
+        "fix": "env protobuf pin relaxed to >=5.26,<8 (the <5 pin was carried from the llama.cpp GGUF env; not needed here)"
+      },
+      {
+        "issue": "pack TOML model_type rejected 'tf_lite_prefill_decode'",
+        "fix": "builder prepends tf_lite_ itself; TOML value is 'prefill_decode'"
+      },
+      {
+        "issue": "ENGINE-INCOMPATIBLE GRAPH with upstream example defaults: prefill fails for inputs >~7 tokens (FAILED_PRECONDITION: Prefill input length exceeds available state entries (remaining capacity: 8)); boundary probe 5=OK/8=FAIL; NOT a session leak (fails in fresh processes); Engine(max_num_tokens=2048) does not help",
+        "fix": "re-export with --mask_as_input=True --transpose_kv_cache=True (gemma3/deepseek examples default these True; qwen example does not); boundary probe then passed 8..1900 tokens; bundle repacked",
+        "disclosed_in": [
+          "references/litert-lm.md",
+          "recipes.json",
+          "model-card.md",
+          "EVIDENCE.md"
+        ]
+      },
+      {
+        "issue": "fp32 (--quantize=none) profile: export and pack succeed, litert-lm describe works, but engine graph compilation does not complete in bounded time (>40 min at 200% CPU on 4-core host; partial 2.39GB xnnpack_cache observed)",
+        "disposition": "fp32 documented as research-only; dynamic_int8 (converter's documented default) is the shipped profile"
+      }
+    ]
+  },
+  "validation": {
+    "reference": {
+      "runtime": "transformers 4.57.6 torch bf16 CPU, greedy, 32 new tokens, raw completion",
+      "per_fixture_s": {
+        "fixture-1": 30.9,
+        "fixture-2": 34.8,
+        "fixture-3(blocked)": null,
+        "fixture-4": null
+      }
+    },
+    "target": {
+      "runtime": "litert-lm 0.17.1 engine (liblitert-lm.so) over ai-edge-litert 2.2.0 XNNPACK CPU",
+      "engine_load_s": 0.5,
+      "per_fixture_gen_s": {
+        "fixture-1": 3.1,
+        "fixture-2": 3.0,
+        "fixture-4": 12.5
+      }
+    },
+    "functional_smoke": "passed (3/3 runnable fixtures; coherent, factually correct; 32-token engine cap enforced)",
+    "numerical_fidelity": {
+      "state": "FAILED",
+      "metric": "token-set Jaccard",
+      "threshold": 0.5,
+      "measured": {
+        "fixture-1-short-factual": 0.3,
+        "fixture-2-sentence-task": 0.586,
+        "fixture-4-near-limit": 0.545
+      },
+      "disposition": "disclosed, threshold NOT relaxed; fixture-1 first token matches (' Paris') then near-tie divergence (int8 amplifies cross-implementation numeric pattern disclosed in GGUF/ONNX rounds); fixture-3 blocked-by-profile"
+    },
+    "staged_reload": {
+      "state": "passed",
+      "detail": "stage only, HF_HUB_OFFLINE=1, cwd=/, Engine(cache_dir=/tmp/staged-reload-cache) keeps stage clean; byte-identical outputs; 22.3 s"
+    }
+  },
+  "publication": {
+    "repo_id": "rajivmehtapy/test-hf-converter-qwen3-0.6b-litertlm",
+    "visibility": "private",
+    "status": "published",
+    "remote_commit": "0c725fdd4ae3",
+    "files_verified": "4/4 streamed remote sha256 at publish time + durable receipt reconstructed via read-only re-verification (runs/p10-qwen3-0.6b-litertlm/logs/publish_receipt.json)",
+    "manifest_sha256": "1866edab95604eccb5f74b6aa240fe4c13bdac0a78e9ebf69360b88d82f2fc93"
+  },
+  "api_gotchas_recorded": [
+    "session.run_decode() (synchronous) fails on this bundle - use run_decode_async()",
+    "sequential sessions in one process exhaust the engine state pool - one engine+session per fixture",
+    "Engine default max_num_tokens is tiny; the engine token cap comes from create_session(max_output_tokens=...)",
+    "engines write <bundle>_<size>.xnnpack_cache beside the bundle - redirect via Engine(cache_dir=...)",
+    "env build key must be computed BEFORE uv sync and the final directory created first (venv shebangs embed absolute paths; a post-sync rename breaks console scripts)"
+  ]
+}
