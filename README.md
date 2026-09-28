@@ -132,9 +132,32 @@ Verified routes (linux-x86_64 CPU, every claim backed by recorded evidence):
 | GGUF — text-generation (Q4_K_M) | `Qwen/Qwen3-0.6B` | conversion-verified; parity failed (disclosed) — compact size, unverified fidelity |
 | GGUF — vision-language | `HuggingFaceTB/SmolVLM-256M-Instruct` | conversion-verified; two-image protocol fully passed |
 | ONNX — text-generation | `Qwen/Qwen3-0.6B` | conversion-verified; onnxruntime is a declared, provenance-verified official wheel (no silent prebuilt); parity disclosure recorded |
-| ONNX — vision-language | — | deferred (2026-09-28 scope decision) |
+| ONNX — vision-language | — | **blocked** (probed 2026-09-28: `idefics3` absent from optimum-onnx 0.1.0's export mapping — latest release; re-openable by an upstream exporter PR) |
 | LiteRT-LM — text-generation | `Qwen/Qwen3-0.6B` | conversion-verified; `.litertlm` bundle on declared, provenance-verified official wheels; parity disclosure recorded; requires disclosed conversion flags |
 | LiteRT-LM — vision-language | — | not pursued (no assumed route in the plan) |
+
+### Verification hardware requirements
+
+All rows above were verified on the project's recorded host: **Linux x86_64, 4 CPU cores,
+14 GB RAM, no GPU** — every CPU route (including source builds and fp32/int8 exports) fits that
+box plus ~15 GB of free disk for run workspaces. Model scale verified so far is 0.6B-parameter
+(text) and 256M-parameter (vision) classes.
+
+Accelerator backends are the remaining unverified rows. Each needs the following hardware to be
+verified (requirements are modest because the verified models are small; VRAM scales roughly
+linearly with model size):
+
+| Backend | Hardware | Software prerequisites | Notes |
+|---|---|---|---|
+| llama.cpp CUDA | Any CUDA-capable NVIDIA GPU (compute capability ≥ 6.1), ≥ 6 GB VRAM recommended (F16 0.6B inference needs ~2–3 GB; build + model cache headroom) | NVIDIA driver ≥ 535, CUDA toolkit 12.x, ~10 GB free disk for the toolkit + build tree | New build profile + build key; full validation chain re-run on `CUDAExecutionProvider`-style backend |
+| onnxruntime GPU | Same NVIDIA GPU as above (CUDA EP) | Driver ≥ 535, CUDA 12.x + cuDNN 9.x matching the `onnxruntime-gpu` wheel, declared-wheel provenance re-recorded | `CUDAExecutionProvider` becomes the recorded backend; CPU parity comparisons repeated |
+| llama.cpp Metal | Apple Silicon (M1 or later), ≥ 8 GB unified memory (16 GB comfortable) | macOS with Xcode command-line tools (Metal is built into the llama.cpp build) | Also covers the macOS-host evidence gap recorded in every recipe's limitations |
+| Vulkan (llama.cpp) | Any Vulkan 1.2+ GPU — covers AMD/Intel discrete and some integrated | Vulkan loader + SDK for the build | Cross-vendor option where CUDA is unavailable |
+| LiteRT GPU / NPU | GPU with OpenCL/OpenGL or WebGPU support; NPU per vendor SDK (Intel / Qualcomm) | ai-edge-litert GPU accelerator (bundled) or vendor NPU SDK per its `npu-sdk` extra | The engine already registers GPU/WebGPU accelerators; verification is the missing part |
+
+Disk/RAM guidance for repeat runs of the verified CPU routes: 14 GB RAM is sufficient; keep
+~20 GB free disk per active round (fp32 exports reach ~3 GB per artifact plus staging copies;
+locked envs are ~1–2 GB each).
 
 The skill package is Apache-2.0 — converted models keep their own source
 license terms, and publication requires that license status be resolved first:
