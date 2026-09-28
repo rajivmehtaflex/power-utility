@@ -1,0 +1,84 @@
+{
+  "round": "quantized-gguf-variants (Q8_0, Q4_K_M from the verified F16 master)",
+  "recorded_at": "2026-09-28",
+  "monorepo_base": "main @ 0e3d54b",
+  "master_recovery": {
+    "method": "F16 GGUF recovered from its verified publication (rajivmehtapy/test-hf-converter-qwen3-0.6b-gguf)",
+    "integrity": "sha256 re-verified c8b740a8d6564e3efb49f8a94cf9d34dc959d4aa2f09531c7f90663d2efa6e59 == the hash recorded at p7 publish time",
+    "note": "workspace had been wiped; recovery from the verified publication doubles as a publication-integrity re-check"
+  },
+  "toolchain": {
+    "rebuild": "llama.cpp v0.5.0 @ 7fe450e cloned and rebuilt (gcc 13.3.0, cmake 3.28.3, flags Release+CURL+BUILD_TESTS=OFF)",
+    "reproducibility": "llama-cli hash 91c9a256\u2026 matches the p7 record byte-for-byte; llama-quantize hash 12c55362\u2026 differs from the p4-era record (VLM-era flag set carried) \u2014 disclosed",
+    "converter_env": "restored via uv sync from the surviving lock (87ac7a84\u2026)"
+  },
+  "protocol": {
+    "declared_before_variant_outputs": true,
+    "fixtures": "p7 frozen fixtures reused (hashes verified at reconstruction)",
+    "reference": "p7 reference outputs reused (same model/protocol) \u2014 not re-run",
+    "threshold": "token-set Jaccard >= 0.5 per fixture",
+    "runtime": "llama-simple raw completion, greedy, 32 new tokens, prompt as single argv"
+  },
+  "variants": {
+    "Q8_0": {
+      "bytes": 804753632,
+      "quantize_s": 3.8,
+      "sha256": "419b7f9f2a03d4f11916f7c9719a8a9c8cb348f570ee0114c6537d02ac280bf1",
+      "functional": "passed",
+      "parity": {
+        "state": "PASSED",
+        "measured": [
+          0.714,
+          0.833,
+          1.0
+        ],
+        "note": "first conversion in the project to pass numerical fidelity at the declared metric; near-limit fixture exact (1.000)"
+      },
+      "publication": {
+        "repo_id": "rajivmehtapy/test-hf-converter-qwen3-0.6b-gguf-q8-0",
+        "commit": "5f92cd9c83a9d1998ed8801ef265fc595e24e393",
+        "files_verified": "10/10"
+      }
+    },
+    "Q4_K_M": {
+      "bytes": 484220128,
+      "quantize_s": 25.2,
+      "sha256": "806277179d47e55916e1450af28bbbd5d3c7d5c3354fb90634652dd395a203f7",
+      "functional": "passed",
+      "parity": {
+        "state": "FAILED-disclosed",
+        "measured": [
+          0.368,
+          0.135,
+          0.5
+        ],
+        "note": "int4-block quantization flips near-tie greedy continuations on short fixtures; near-limit still reached threshold; outputs coherent \u2014 parity NOT claimed per the no-relaxation rule"
+      },
+      "publication": {
+        "repo_id": "rajivmehtapy/test-hf-converter-qwen3-0.6b-gguf-q4-k-m",
+        "commit": "48b3ec8c02545d20d443792b6b5eeaee74808cd5",
+        "files_verified": "10/10"
+      }
+    }
+  },
+  "staged_reload": {
+    "gate": "PASS for both variants",
+    "protocol_change_disclosed": "llama.cpp CPU generation is NOT bit-deterministic across runs (multi-thread reduction order flips near-tie tokens \u2014 observed live during this gate: reload outputs Jaccard 0.889\u20130.957 vs validation outputs). The p7 byte-identity criterion is unattainable in principle; gate applied = nonempty regeneration + Jaccard >= 0.5 vs validation-run outputs",
+    "environment": "staged copies only, cwd=/ (runtime performs no network I/O; HF_HUB_OFFLINE moot for llama-simple)"
+  },
+  "corrections_during_round": [
+    {
+      "issue": "first publication carried .cache/huggingface download residue (7 junk files per repo) because hf_hub_download(local_dir=stage) was used to stage LICENSE/config into the stage dirs; helper faithfully inventoried the junk and 'published-unverified' flagged it",
+      "fix": "both remote repos deleted and republished clean; helper _safe_rel now rejects any .cache path (build fails loudly); test added (helper tests 31/31)",
+      "lesson": "never hf_hub_download(local_dir=<stage>); download to a scratch dir and copy"
+    }
+  ],
+  "publication": {
+    "repos": [
+      "rajivmehtapy/test-hf-converter-qwen3-0.6b-gguf-q8-0 @ 5f92cd9c",
+      "rajivmehtapy/test-hf-converter-qwen3-0.6b-gguf-q4-k-m @ 48b3ec8c"
+    ],
+    "visibility": "private",
+    "files_verified": "10/10 per repo (helper streamed verification + durable receipts reconstructed read-only)"
+  }
+}

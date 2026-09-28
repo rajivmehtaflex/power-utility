@@ -127,7 +127,9 @@ Verified routes (linux-x86_64 CPU, every claim backed by recorded evidence):
 
 | Route | Verified tuple(s) | Status |
 |---|---|---|
-| GGUF — text-generation | `Qwen/Qwen3-0.6B` | conversion-verified; numerical parity failed at the declared metric and is disclosed |
+| GGUF — text-generation (F16 master) | `Qwen/Qwen3-0.6B` | conversion-verified; numerical parity failed at the declared metric and is disclosed |
+| GGUF — text-generation (Q8_0) | `Qwen/Qwen3-0.6B` | conversion-verified; numerical parity **passed** at the declared metric (first fully-passing conversion) |
+| GGUF — text-generation (Q4_K_M) | `Qwen/Qwen3-0.6B` | conversion-verified; parity failed (disclosed) — compact size, unverified fidelity |
 | GGUF — vision-language | `HuggingFaceTB/SmolVLM-256M-Instruct` | conversion-verified; two-image protocol fully passed |
 | ONNX — text-generation | `Qwen/Qwen3-0.6B` | conversion-verified; onnxruntime is a declared, provenance-verified official wheel (no silent prebuilt); parity disclosure recorded |
 | ONNX — vision-language | — | deferred (2026-09-28 scope decision) |

@@ -103,6 +103,17 @@ class BuildTests(unittest.TestCase):
             with self.assertRaisesRegex(am.ManifestError, "non-regular file"):
                 am.build_manifest(stage, valid_metadata())
 
+    def test_rejects_hub_download_residue(self):
+        # hf_hub_download(local_dir=stage) writes .cache/huggingface residue; it must never enter
+        # a package (observed in the p11 round)
+        with tempfile.TemporaryDirectory() as td:
+            stage = make_stage(Path(td))
+            junk = stage / ".cache" / "huggingface" / "download"
+            junk.mkdir(parents=True)
+            (junk / "LICENSE.lock").write_text("x")
+            with self.assertRaisesRegex(am.ManifestError, "unsafe path"):
+                am.build_manifest(stage, valid_metadata())
+
     def test_rejects_secret_looking_metadata(self):
         bad = valid_metadata()
         bad["deployment"]["notes"] = "deploy with hf_FAKE0123456789abcdef"
