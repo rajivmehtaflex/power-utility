@@ -50,3 +50,32 @@ inference, staged reload, and a real private publication with remote content ver
 - Accelerator backends — no GPU on this host; unverified.
 - Formal fresh-context behavioral matrix (S1–S10) — rubric ready; live development evidence recorded
   in [behavior-results.json](behavior-results.json); formal runs pending.
+
+## ONNX round — 2026-09-28 (P5, ONNX half; VLM deferred by scope decision)
+
+Full record: [runtime-results-onnx.json](runtime-results-onnx.json). Recipe
+`onnx-qwen3-0.6b-linux-x64-cpu` rev 1; run `p9-qwen3-0.6b-onnx`.
+
+- **Route:** `Qwen/Qwen3-0.6B` @ `c1899de2…` → ONNX fp32 (`text-generation-with-past`) via
+  optimum-onnx 0.1.0 / optimum 2.1.0; inference on onnxruntime 1.30.0 via `ORTModelForCausalLM`.
+  No native build: onnxruntime is a **declared official PyPI wheel** — provenance verified
+  byte-for-byte (published wheel sha256 `fa688e78…`; installed native lib `0b2a6e0d…` identical);
+  `hf-xet` excluded per binary policy. `source-build-verified` is not claimed for this target.
+- **Environment:** uv locked env `37261dde718f24a3` (lock `dfbf268e…`), transformers 4.57.6 kept
+  from the GGUF env for parity fairness.
+- **Fixtures:** frozen before export (same 3 prompts as p7; threshold Jaccard ≥ 0.5 declared up
+  front).
+- **Results:** functional smoke passed (coherent, factually correct; active provider
+  `CPUExecutionProvider`); numerical fidelity **FAILED at the declared threshold**
+  (0.300 / 0.171 / 1.000) and is disclosed, not relaxed — near-limit fixture matched the reference
+  exactly across 3905-token prefill; short fixtures diverged at greedy near-ties
+  (bf16 ref vs fp32 target); staged reload passed byte-identically (offline, cwd `/`).
+- **Publication:** private `rajivmehtapy/test-hf-converter-qwen3-0.6b-onnx` @ `92a57de2…`, 14/14
+  files stream-verified by content hash; receipt outside the staged inventory.
+- **Corrections recorded:** decorator-driven task registration (import the config module before
+  probing); optimum qwen3 `head_dim` cache-shape gap → declared `embed_size_per_head` load patch;
+  `HF_TOKEN` is the only env name huggingface_hub 0.36 reads; manifest scanner vs
+  `binary_exceptions[].authorization` conflict fixed in the helper (narrow exemption + test).
+
+Updated pending list: LiteRT-LM (P5) and quantized GGUF variants remain future rounds; VLM ONNX is
+**deferred** (2026-09-28 scope decision), not pending.

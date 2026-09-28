@@ -117,6 +117,25 @@ class BuildTests(unittest.TestCase):
             with self.assertRaisesRegex(am.ManifestError, "forbidden field"):
                 am.build_manifest(make_stage(Path(td)), bad)
 
+    def test_allows_schema_mandated_binary_exception_authorization(self):
+        # manifest.schema.json requires `authorization` on binary_exceptions entries (a policy
+        # statement about who authorized the declared input); the secret scanner must not
+        # contradict the schema for exactly this path, while still rejecting it elsewhere
+        md = valid_metadata()
+        md["toolchain"]["binary_exceptions"] = [{
+            "component": "onnxruntime (CPU EP)",
+            "version": "1.30.0",
+            "authorization": "declared official PyPI wheel; provenance sha256 recorded in recipe",
+        }]
+        with tempfile.TemporaryDirectory() as td:
+            manifest = am.build_manifest(make_stage(Path(td)), md)
+            self.assertEqual(len(manifest["toolchain"]["binary_exceptions"]), 1)
+        bad = valid_metadata()
+        bad["toolchain"]["authorization"] = "should still be rejected outside binary_exceptions"
+        with tempfile.TemporaryDirectory() as td2:
+            with self.assertRaisesRegex(am.ManifestError, "forbidden field"):
+                am.build_manifest(make_stage(Path(td2)), bad)
+
     def test_rejects_schema_violation(self):
         bad = valid_metadata()
         del bad["license"]

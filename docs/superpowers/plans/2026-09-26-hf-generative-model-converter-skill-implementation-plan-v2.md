@@ -149,9 +149,11 @@ Behavioral scenarios use fixed prompts/rubrics and fresh contexts. Preserve succ
 | Workload candidate | GGUF route | ONNX route | LiteRT-LM route | Initial status |
 |---|---|---|---|---|
 | `Qwen/Qwen3-0.6B`, decoder-only | llama.cpp HF converter + matching generation CLI | Optimum ONNX + `ORTModelForCausalLM`, if supported at resolved revisions | `litert_torch` Qwen3 export + LiteRT-LM runtime | Pending support/build checks |
-| `HuggingFaceTB/SmolVLM-256M-Instruct`, VLM | Multimodal converter/runtime pair if supported | Matching vision-to-text exporter/loader if supported | No assumed route | Pending for GGUF/ONNX; unclaimed for LiteRT |
+| `HuggingFaceTB/SmolVLM-256M-Instruct`, VLM | Multimodal converter/runtime pair if supported | Deferred (2026-09-28 decision): out of scope for now | No assumed route | GGUF verified; ONNX deferred; unclaimed for LiteRT |
 | `google/gemma-3-4b-it`, VLM | Alternative evidence row only if needed | Alternative evidence row only if needed | Candidate only after exporter/runtime, access and resource checks | Pending; no automatic download |
 | Encoder-decoder families such as T5 | Check upstream support; no promise | Separate seq2seq exporter and `ORTModelForSeq2SeqLM` route | Check upstream support; no promise | Documented-only until a specific recipe is verified |
+
+> Scope update (2026-09-28): the ONNX route is **text-generation only** for now. The SmolVLM ONNX tuple is deferred — it stays recorded as out of scope/deferred in `assets/recipes.json`, is never attempted during the ONNX round, and ONNX must not be advertised as VLM-verified. The GGUF route retains both verified tuples.
 
 - [ ] For each accepted tuple, resolve and freeze interpreter, source/submodule revisions, build tools, runtime/exporter packages and native dependency locks. Verify prerequisites without installing heavyweight packages yet. Save exact commands, flags, files, profile and failure conditions; shared pseudocode is insufficient.
 - [ ] Define resource estimates, parallelism cap, runtime budget, build key and ready marker. Decide host and deployment backend separately. Record compatible binaries needed from outside the build; block undeclared runtime binaries and continue independent routes.
@@ -183,7 +185,7 @@ Behavioral scenarios use fixed prompts/rubrics and fresh contexts. Preserve succ
 **Files:** Create `references/onnx.md`, `references/litert-lm.md`; update corresponding recipe and local build evidence.
 **Consumes:** P2 exporter/runtime pairs. **Produces:** concrete procedures and source-build outcomes per backend.
 
-- [ ] For ONNX, choose the matched Optimum exporter/loading class per workload. Treat ONNX Runtime GenAI as a separate recipe requiring its own supported graph layout, configuration and source build; never use it as a drop-in loader for an arbitrary Optimum output.
+- [ ] For ONNX, choose the matched Optimum exporter/loading class per workload. Treat ONNX Runtime GenAI as a separate recipe requiring its own supported graph layout, configuration and source build; never use it as a drop-in loader for an arbitrary Optimum output. **Scope (2026-09-28):** ONNX covers text-generation only (`Qwen3-0.6B` → `ORTModelForCausalLM`); the VLM ONNX tuple is deferred and recorded as out of scope, not attempted.
 - [ ] Specify source builds of exporter-side native dependencies and ONNX Runtime, including compatible execution-provider SDKs, checker version, opset/domains, cache graphs, external-data filenames, processor/tokenizer/configuration files and the generation command.
 - [ ] For LiteRT-LM, specify the exact source-built exporter/runtime pair, bundle metadata/template/image assets, profile/cache settings and supported quantization recipe. Audit prebuilt libraries fetched by the build system; either establish a supported replacement from source or record the named blocker.
 - [ ] Execute independent accepted source builds with locked dependencies and runtime health checks. Capture active provider and loaded-library provenance. Keep failures scoped to their tuple; P7 performs model-level acceptance.

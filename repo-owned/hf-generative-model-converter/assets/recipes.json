@@ -301,6 +301,157 @@
         "F16 master profile",
         "multimodal projector adds a second artifact the packaging allowlist must cover"
       ]
+    },
+    {
+      "id": "onnx-qwen3-0.6b-linux-x64-cpu",
+      "revision": 1,
+      "target": "onnx",
+      "source": {
+        "model_id": "Qwen/Qwen3-0.6B",
+        "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+        "architecture": "Qwen3ForCausalLM",
+        "model_type": "qwen3",
+        "architecture_class": "decoder-only",
+        "task": "text-generation",
+        "license": "apache-2.0",
+        "gated": false
+      },
+      "platform": {
+        "build_host": "linux-x86_64",
+        "execution": "cpu",
+        "accelerator": "none-verified"
+      },
+      "toolchain": {
+        "component": "optimum-onnx / optimum + onnxruntime",
+        "repo": "https://github.com/huggingface/optimum-onnx",
+        "revision": "optimum-onnx 0.1.0, optimum 2.1.0, onnx 1.22.0, onnxruntime 1.30.0, transformers 4.57.6, torch 2.11.0+cpu",
+        "exporter_support_evidence": "optimum.exporters.onnx.model_configs registers qwen3 via @register_tasks_manager_onnx for text-generation-with-past (verified in local pinned env 2026-09-28; mapping reads empty until the config module is imported)",
+        "native_build": "none — the onnxruntime runtime is a declared official PyPI wheel; the source policy forbids silent prebuilt binaries, and this declaration carries recorded provenance",
+        "declared_binary_exceptions": [
+          {
+            "component": "onnxruntime (CPU EP)",
+            "version": "1.30.0",
+            "authorization": "declared official PyPI wheel onnxruntime-1.30.0-cp312-cp312-manylinux_2_28_x86_64.whl sha256 fa688e7891a6aa206636fe7372e27ee75fd17713289f6b4fc7b190e0a7de9328 (MIT, first-party Microsoft distribution); installed native library verified byte-identical to the wheel payload (onnxruntime_pybind11_state.cpython-312-x86_64-linux-gnu.so sha256 0b2a6e0d6dfe7fdb04e8ddefb488f69f3c90b7552a148b0c42ff3f28a3c2b33b); hf-xet excluded per binary policy"
+          }
+        ],
+        "dependency_lock": {
+          "env": "uv (uv.lock)",
+          "sha256": "dfbf268e9db7c04970fb2b2e85bf736fa33760e3eb9784514229fb2404a317c0",
+          "key_facts": "torch 2.11.0+cpu, transformers 4.57.6 (same as GGUF env for parity fairness), optimum-onnx 0.1.0, optimum 2.1.0, onnx 1.22.0, onnxruntime 1.30.0, hf-xet excluded"
+        },
+        "build_key": "37261dde718f24a3"
+      },
+      "profile": {
+        "outtype": "fp32",
+        "quantization": "none",
+        "context_length": 4096,
+        "batch": 1,
+        "generation": {"sampling": "greedy", "seed": 42, "max_new_tokens": 32},
+        "export": {"task": "text-generation-with-past", "dtype": "fp32", "device": "cpu", "opset": "toolchain default (not tuned)"},
+        "chat_template": "chat_template.jinja staged; bypassed for raw-completion parity runs",
+        "tokenizer": "repo tokenizer.json (fast); no external merges"
+      },
+      "commands": [
+        {
+          "step": "support_check",
+          "workdir": ".hf-converter/envs/<build-key>",
+          "tool": "python",
+          "command": "import optimum.exporters.onnx.model_configs; from optimum.exporters.tasks import TasksManager; assert 'text-generation-with-past' in TasksManager.get_supported_tasks_for_model_type('qwen3', 'onnx', library_name='transformers')",
+          "note": "registration is decorator-driven: import optimum.exporters.onnx.model_configs BEFORE querying or the mapping reads empty (P9 correction)"
+        },
+        {
+          "step": "convert",
+          "workdir": ".hf-converter/runs/<run-id>",
+          "tool": "optimum-cli export onnx",
+          "command": "optimum-cli export onnx -m <model-dir> --task text-generation-with-past --dtype fp32 --device cpu <run>/work/onnx",
+          "parameters": {
+            "model-dir": "string; verified checkout of the pinned source revision",
+            "run": "string; run workspace path"
+          }
+        },
+        {
+          "step": "inference",
+          "workdir": ".hf-converter/runs/<run-id>",
+          "tool": "ORTModelForCausalLM (optimum.onnxruntime)",
+          "command": "model = ORTModelForCausalLM.from_pretrained(<onnx-dir>); model.embed_size_per_head = model.config.head_dim; model.generate(**enc, max_new_tokens=32, do_sample=False, num_beams=1)",
+          "parameters": {"onnx-dir": "string; converted package directory"},
+          "note": "Declared patch REQUIRED for qwen3 at this pin: optimum 2.1.0 sizes the KV cache as hidden_size//num_attention_heads (=64), ignoring the explicit config.head_dim (=128); only gemma/gpt_oss/nemotron are honored upstream. The exported graph is correct — without the patch the first decode step fails INVALID_ARGUMENT past_key_values Got:64 Expected:128. Disclosed in EVIDENCE.md and model-card.md; never applied silently."
+        },
+        {
+          "step": "publish",
+          "workdir": ".hf-converter/runs/<run-id>",
+          "tool": "scripts/hub_publish.py",
+          "command": "hub_publish.py publish --stage <run>/stage --manifest <run>/stage/artifact-manifest.json --repo-id rajivmehtapy/<name> --visibility private --create",
+          "note": "huggingface_hub >=0.34 authenticates via HF_TOKEN (or stored token file); the deprecated HUGGINGFACEHUB_API_TOKEN name is no longer read by get_token (P9 correction)"
+        }
+      ],
+      "required_files": ["model.onnx", "model.onnx_data"],
+      "required_files_note": "The two ONNX artifacts are the recipe's required converted files; processor sidecars (tokenizer/config/chat_template), LICENSE, model-card.md and EVIDENCE.md complete the staged package per the packaging allowlist.",
+      "validation_policy": {
+        "reference": "transformers native torch pipeline (bf16), same tokenizer/settings, pinned source revision — same protocol as the GGUF text recipe",
+        "fixtures": "3 synthetic text prompts, frozen before converted output is inspected (sha256 760b839d47582b519eb358383f19282b04794f6d118ffc358a642f41cc0b4f37 over fixtures.json); same prompts as the GGUF round for cross-target comparability",
+        "acceptance": [
+          "nonempty decoded output for every fixture; active provider CPUExecutionProvider",
+          "clean termination at EOS or the 32-token bound; no runtime errors",
+          "staged reload byte-identical to validation-run outputs, offline + foreign cwd",
+          "recorded token/text comparison against the reference; parity metric and threshold declared before conversion"
+        ],
+        "timeout_budget": "recorded per phase before first run",
+        "numerical_fidelity": "reported separately from functional smoke; failure is disclosed, never relaxed"
+      },
+      "evidence": {
+        "status": "conversion-verified",
+        "environment": {
+          "state": "passed",
+          "recorded_at": "2026-09-28",
+          "build_key": "37261dde718f24a3",
+          "detail": "uv locked env (37 packages), no native builds; declared onnxruntime wheel provenance verified byte-for-byte against the installed native library; hf-xet absent"
+        },
+        "conversion": {
+          "state": "passed",
+          "recorded_at": "2026-09-28",
+          "artifacts": [
+            {"file": "model.onnx", "sha256": "76a3ec83f3918f587092dcf7ff7f316e58b23cb1468dc40f773be9da79bfa412", "detail": "1.4 MB decoder graph with past (KV cache)"},
+            {"file": "model.onnx_data", "sha256": "aa3afc2dfa63b532d10e7dfa02f6584bd1b03cc2359098fe39f026d43616b477", "detail": "3.0 GB external fp32 weights"}
+          ],
+          "detail": "optimum-cli export onnx --task text-generation-with-past --dtype fp32; exporter's internal torch-vs-ONNX KV max-diff check passed (~3e-4)"
+        },
+        "target_inference": {
+          "state": "passed",
+          "functional_smoke": "passed",
+          "numerical_fidelity": {
+            "state": "failed",
+            "metric": "token-set Jaccard (reference vs target)",
+            "threshold": 0.5,
+            "measured": "0.300 / 0.171 / 1.000 (fixture-1 / fixture-2 / fixture-3)",
+            "reason": "Fixture-3 (near-limit, ~3900-token prefill) matched the reference exactly across all 32 generated tokens; short fixtures shared the opening token then diverged at near-tie greedy continuations (bf16 reference vs fp32 target numeric noise; both sides plausible — fixture-1 target completes 'Paris' and lists capitals correctly). Declared threshold not met; parity NOT claimed per the no-relaxation rule. Same disclosed pattern as the GGUF text round."
+          },
+          "instrument": "ORTModelForCausalLM on onnxruntime 1.30.0 with the declared embed_size_per_head=head_dim patch; active provider CPUExecutionProvider; timings recorded as observations (reference 9.4/9.0/83.9 s vs target 6.0/5.5/95.7 s per fixture)"
+        },
+        "staged_reload": {
+          "state": "passed",
+          "detail": "Staged copy alone, HF_HUB_OFFLINE=1 + HF_HUB_DISABLE_TELEMETRY=1, cwd=/; all fixtures regenerated byte-identically to the validation run. Limitation: OS-level network denial not exercised."
+        },
+        "publication": {
+          "state": "passed",
+          "recorded_at": "2026-09-28",
+          "repo_id": "rajivmehtapy/test-hf-converter-qwen3-0.6b-onnx",
+          "visibility": "private",
+          "remote_commit": "92a57de2f946 (full sha in runs/p9-qwen3-0.6b-onnx/logs/publish_receipt.json)",
+          "files_verified": "14/14 streamed and content-hashed on the remote at publish time; receipt reconstructed via read-only remote re-verification after truncated publish stdout (all 14 files re-verified)",
+          "url": "https://huggingface.co/rajivmehtapy/test-hf-converter-qwen3-0.6b-onnx"
+        },
+        "status_note": "Full pipeline executed with a declared-wheel runtime: locked env + declared onnxruntime (provenance verified) → pinned conversion → frozen-fixture validation (functional passed; numerical failed at declared threshold and is disclosed, not relaxed) → staged reload byte-identical → real private publication with remote content verification. Status 'conversion-verified' per the evidence-state table; the source-build-verified claim is NOT made for this target (no native build exists to verify).",
+        "recorded_at": "2026-09-28",
+        "notes": "Corrections made during execution are recorded in runtime-results-onnx.json: decorator-driven task registration (import before query), qwen3 head_dim cache-shape gap with declared load patch, HF_TOKEN env name for huggingface_hub >=0.34, and the manifest secret-scanner/schema conflict on binary_exceptions[].authorization (helper fixed with a narrowly scoped exemption + test)."
+      },
+      "limitations": [
+        "CPU (CPUExecutionProvider) only; GPU/other providers unverified on the build host",
+        "text-generation only: VLM ONNX is a deferred row (2026-09-28 scope decision) with no exporter/loader evidence",
+        "requires the declared embed_size_per_head=head_dim load patch until an optimum release fixes the qwen3 cache-shape gap",
+        "numerical parity not established at the declared metric; treat outputs as unverified for fidelity-critical use",
+        "no source-build-verified claim: the runtime is a declared official wheel, verified by provenance not by local compilation"
+      ]
     }
   ]
 }

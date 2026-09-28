@@ -21,7 +21,7 @@ DESCRIPTION_MAX = 1024
 COMPATIBILITY_MAX = 500
 BODY_MAX_LINES = 500
 KNOWN_LICENSES = {"Apache-2.0", "MIT"}
-ADVERTISED_TARGETS = {"gguf"}  # targets this package claims as verified
+ADVERTISED_TARGETS = {"gguf", "onnx"}  # targets this package claims as verified
 
 
 def _frontmatter():
@@ -105,7 +105,7 @@ class LinkIntegrityTests(unittest.TestCase):
 
     def test_core_files_present(self):
         for rel in (
-            "SKILL.md", "references/gguf.md", "references/compatibility.md",
+            "SKILL.md", "references/gguf.md", "references/onnx.md", "references/compatibility.md",
             "references/source-builds.md", "references/validation.md",
             "references/huggingface-upload.md", "assets/recipes.json",
             "assets/manifest.schema.json", "assets/model-card.md",
@@ -146,7 +146,10 @@ class RecipeConsistencyTests(unittest.TestCase):
         by_target = {}
         for recipe in self.recipes["recipes"]:
             ev = recipe["evidence"]
-            build_ok = self._state(ev["source_build"]) == "passed"
+            # pre-conversion gate: a source build (gguf) or, for declared-runtime routes, a
+            # verified locked environment with recorded provenance (onnx) must have passed
+            gate = ev.get("source_build", ev.get("environment"))
+            build_ok = self._state(gate) == "passed"
             conversion_ok = self._state(ev["conversion"]) == "passed"
             if build_ok and conversion_ok:
                 by_target.setdefault(recipe["target"], 0)

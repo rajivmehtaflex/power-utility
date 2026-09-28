@@ -1,0 +1,103 @@
+{
+  "round": "onnx-qwen3-0.6b (P5, ONNX half; VLM deferred by 2026-09-28 scope decision)",
+  "recorded_at": "2026-09-28",
+  "monorepo_base": "main @ cfac513",
+  "source": {
+    "model_id": "Qwen/Qwen3-0.6B",
+    "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+    "integrity": "local model.safetensors sha256 f47f7117\u202696874b == HF LFS oid at pinned revision; snapshot reused from p7 (GGUF round)"
+  },
+  "environment": {
+    "build_key": "37261dde718f24a3",
+    "lock_sha256": "dfbf268e9db7c04970fb2b2e85bf736fa33760e3eb9784514229fb2404a317c0",
+    "packages": {
+      "python": "3.12.3",
+      "torch": "2.11.0+cpu",
+      "transformers": "4.57.6",
+      "optimum": "2.1.0",
+      "optimum-onnx": "0.1.0",
+      "onnx": "1.22.0",
+      "onnxruntime": "1.30.0",
+      "huggingface-hub": "0.36.2"
+    },
+    "declared_wheel": {
+      "component": "onnxruntime (CPU EP)",
+      "wheel": "onnxruntime-1.30.0-cp312-cp312-manylinux_2_28_x86_64.whl",
+      "pypi_sha256": "fa688e7891a6aa206636fe7372e27ee75fd17713289f6b4fc7b190e0a7de9328",
+      "installed_native_lib_sha256": "0b2a6e0d6dfe7fdb04e8ddefb488f69f3c90b7552a148b0c42ff3f28a3c2b33b",
+      "verification": "downloaded the published wheel, hashed it (matches PyPI digests), extracted the native library and compared byte-for-byte with the installed one \u2014 identical",
+      "hf_xet": "absent (override-dependencies); publish/download fall back to regular HTTP (observed Xet-fallback log lines)"
+    },
+    "policy_note": "no native build in this round; 'no silent prebuilt binaries' holds via recorded declaration + provenance verification; source-build-verified is NOT claimed for this target"
+  },
+  "feasibility": {
+    "qwen3_task_support": "text-generation-with-past registered via @register_tasks_manager_onnx in optimum.exporters.onnx.model_configs (41 model types for the task); mapping reads empty until the config module is imported (correction recorded)",
+    "vlm": "deferred (2026-09-28 user decision) \u2014 no exporter/loader evidence; never attempted"
+  },
+  "fixtures": {
+    "frozen_before_inspection": true,
+    "fixtures_json_sha256": "760b839d47582b519eb358383f19282b04794f6d118ffc358a642f41cc0b4f37",
+    "prompts": "same 3 prompts as the GGUF round (p7) for cross-target comparability; threshold token-set Jaccard >= 0.5 declared before export"
+  },
+  "export": {
+    "command": "optimum-cli export onnx -m <pinned snapshot> --task text-generation-with-past --dtype fp32 --device cpu",
+    "rc": 0,
+    "artifacts": {
+      "model.onnx": "76a3ec83f3918f587092dcf7ff7f316e58b23cb1468dc40f773be9da79bfa412",
+      "model.onnx_data": "aa3afc2dfa63b532d10e7dfa02f6584bd1b03cc2359098fe39f026d43616b477"
+    },
+    "exporter_internal_check": "torch-vs-ONNX KV max-diff ~3e-4 (passed, rc=0)"
+  },
+  "validation": {
+    "reference": {
+      "runtime": "transformers 4.57.6 torch bf16 CPU, greedy, 32 new tokens",
+      "per_fixture_s": [
+        9.4,
+        9.0,
+        83.9
+      ]
+    },
+    "target": {
+      "runtime": "ORTModelForCausalLM on onnxruntime 1.30.0, CPUExecutionProvider",
+      "declared_patch": "model.embed_size_per_head = model.config.head_dim (optimum 2.1.0 qwen3 gap: uses hidden_size//num_heads=64 instead of head_dim=128; graph itself correct; without patch: INVALID_ARGUMENT past_key_values Got:64 Expected:128)",
+      "per_fixture_s": [
+        6.0,
+        5.5,
+        95.7
+      ]
+    },
+    "functional_smoke": "passed (3/3: nonempty, bound termination, no errors, coherent \u2014 fixture-1 factually correct 'Paris\u2026'; fixture-3 token-identical to reference)",
+    "numerical_fidelity": {
+      "state": "FAILED",
+      "metric": "token-set Jaccard",
+      "threshold": 0.5,
+      "measured": [
+        0.3,
+        0.171,
+        1.0
+      ],
+      "disposition": "disclosed, threshold NOT relaxed (same pattern as GGUF p7: near-limit exact match, short-fixture greedy near-tie divergence bf16-vs-fp32)"
+    },
+    "staged_reload": {
+      "state": "passed",
+      "detail": "stage only, HF_HUB_OFFLINE=1, cwd=/; all fixtures byte-identical to validation run; 106.7 s"
+    }
+  },
+  "publication": {
+    "repo_id": "rajivmehtapy/test-hf-converter-qwen3-0.6b-onnx",
+    "visibility": "private",
+    "status": "published",
+    "remote_commit": "92a57de2f946 (full sha + per-file receipt at .hf-converter/runs/p9-qwen3-0.6b-onnx/logs/publish_receipt.json)",
+    "files_verified": "14/14 streamed remote sha256 at publish time; receipt reconstructed via read-only remote re-verification (publish stdout was truncated in capture); manifest sha256 cebea0f23376caecc8d254f885804993f25488c8972137bce30802d2e2fade37",
+    "extra_remote_files": [
+      ".gitattributes (hub default)"
+    ]
+  },
+  "corrections_during_round": [
+    "task-mapping probe must import optimum.exporters.onnx.model_configs first (decorator registration) \u2014 an empty mapping is a probe artifact, not an absence of support",
+    "qwen3 head_dim cache-shape gap in optimum 2.1.0 \u2192 declared one-attribute load patch, disclosed in recipe/model-card/EVIDENCE",
+    "huggingface_hub 0.36 get_token reads HF_TOKEN; deprecated HUGGINGFACEHUB_API_TOKEN env name no longer works",
+    "manifest secret-scanner rejected the schema-mandated binary_exceptions[].authorization key \u2014 helper fixed with a narrowly scoped exemption + new test (skill tests 30/30)",
+    "venv directory rename after uv sync breaks console-script shebangs \u2014 compatibility symlink kept in envs/"
+  ]
+}
