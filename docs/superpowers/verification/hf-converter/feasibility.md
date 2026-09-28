@@ -120,3 +120,12 @@ The recon section above was confirmed by execution, with these deltas:
   `tf_lite_` prefix.
 - **Runtime:** engine init ≈0.5 s with kernel cache; runtime-download audit clean; the bundled
   `liblitert-lm.so` is the engine. Staged reload byte-identical with cache redirected.
+
+## VLM ONNX probe — 2026-09-28 (executed; BLOCKED)
+
+`idefics3` (SmolVLM-256M-Instruct's architecture) is **not registered** in optimum-onnx 0.1.0's ONNX
+export task mapping (checked after decorator registration, per the ONNX-round probe correction; also
+absent: idefics, smolvlm, smolvlm3). 0.1.0 is the latest published release. The VLM ONNX row is
+therefore **blocked** with this named obstacle — re-openable only by an upstream exporter PR. The
+deferred→blocked transition is recorded in `compatibility.md` and
+`runtime-results-vlm-onnx-probe.json`.

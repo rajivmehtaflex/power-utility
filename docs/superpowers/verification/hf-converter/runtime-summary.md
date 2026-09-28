@@ -127,3 +127,25 @@ Full record: [runtime-results-quantized.json](runtime-results-quantized.json). R
 - **Helper hardened:** `hf_hub_download(local_dir=stage)` writes `.cache/huggingface` residue that
   once packaged as junk (first upload deleted + republished clean); `_safe_rel` now rejects `.cache`
   paths and a test covers it (helper tests 31/31).
+
+## Formal behavioral matrix — completed 2026-09-28
+
+`behavior-results.json` status: **complete** — all ten scenarios now carry formal fresh-context
+runs (S2/S5 at the 5×5 sample budget). The 2026-09-28 additions:
+
+- **S6 (positive path), guided: PASS** — a fresh-context agent executed all phases and reproduced
+  the published F16 artifact **byte-identically** (`c8b740a8…` ≡ the p7 record), with self-disclosed
+  deviations (independent lock → own build key; resized near-limit fixture). Control baseline: also
+  completed, but on a fully unpinned toolchain (llama.cpp master, unconstrained deps) with no
+  evidence discipline — mechanical success without reproducibility.
+- **S8 (auth reuse), guided: PASS** — reused the skill-documented local credential store silently
+  (zero questions), verified everything read-only, and correctly defaulted to no write when the
+  package was already published. Control baseline: could not discover the credential (checked only
+  default Hub paths), would have re-prompted the user.
+- **VLM ONNX probe (same day): BLOCKED** — `idefics3` absent from optimum-onnx 0.1.0's export
+  mapping (latest release); recorded as a named obstacle in `compatibility.md` +
+  [runtime-results-vlm-onnx-probe.json](runtime-results-vlm-onnx-probe.json). Re-openable only by
+  an upstream exporter PR.
+
+Remaining open items: accelerator backends (blocked on GPU hardware), VLM LiteRT (not pursued),
+and any future quantized variants of other targets.

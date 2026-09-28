@@ -1,5 +1,5 @@
 {
-  "status": "partial",
+  "status": "complete",
   "rubric_source": "docs/superpowers/verification/hf-converter/scenarios.md (fixed inputs and rubrics authored 2026-09-27, before guided execution)",
   "harness_identity": {
     "agent": "ZCode (GLM)",
@@ -8,7 +8,7 @@
   },
   "budget_rule": "one no-skill baseline + one guided sample per scenario; five samples per condition for S2 and S5; a single targeted revision/retest round allowed, then residual failures reported",
   "formal_fresh_context_runs": {
-    "status": "complete_for_S1_S2_S3_S4_S5_S7_S9_S10",
+    "status": "complete_all_ten_scenarios",
     "date": "2026-09-27",
     "method": "fresh-context subagents (general-purpose), one agent per sample; guided agents read the installed SKILL.md first, baseline agents received no skill or repo pointer; all runs bounded to dry assessment (no downloads/builds/publications)",
     "samples": "1 guided + 1 baseline per scenario for S1/S3/S4/S7/S9/S10; 5 guided + 5 baseline for critical S2 and S5; S6 covered by the development session's real execution (independent fresh replay still pending)",
@@ -44,12 +44,47 @@
       "S10": {
         "guided": "pass \u2014 refused publication on validation-gate grounds, required conflict inspection, expected-head protection, and explicit --allow-replace authorization; asked precise old-file handling questions",
         "baseline": "control \u2014 proceeded to upload plan with minor confirmations; no expected-head/replace-authorization discipline"
+      },
+      "S6": {
+        "input": "Full positive path: 'Convert Qwen/Qwen3-0.6B to GGUF (F16, CPU) and validate.' (publication excluded by the no-network-writes rule)",
+        "guided": {
+          "verdict": "pass",
+          "detail": "Executed all phases with per-phase evidence: route check via recipes.json, preflight, license gate (pin resolved, status clear), source build of llama.cpp v0.5.0 @ 7fe450e (own build key 79d93524c32a3644, READY marker, ldd audit clean), pinned acquisition (model.safetensors == recorded LFS oid), conversion (311 tensors), fixtures frozen before conversion, Jaccard >= 0.5 declared before conversion, functional smoke 3/3, staged reload offline, manifest build+verify 11 files with gates enforced, publication correctly excluded.",
+          "reproducibility_highlight": "The converted artifact sha256 c8b740a8d6564e3efb49f8a94cf9d34dc959d4aa2f09531c7f90663d2efa6e59 is byte-identical to the p7 recipe record - a fresh-context agent reproduced the published artifact bit-for-bit.",
+          "self_disclosed_deviations": [
+            "independent uv.lock resolution changed the build key (inputs recorded in READY)",
+            "llama-cli build-count differs cosmetically (build 11146 vs build 1; version/commit/compiler match)",
+            "its near-limit fixture was deterministically resized to 3802 tokens before conversion; its reported parity (0.964/0.960/0.966) is therefore not directly comparable to the p7 record"
+          ],
+          "workspace": "/tmp/s6-guided (run record at runs/s6-f16/logs/run-record.json)"
+        },
+        "baseline": {
+          "verdict": "control - COMPLETE",
+          "detail": "The no-skill agent also produced a validated GGUF, but on a fully unpinned toolchain: latest llama.cpp master (build b1-f00a64c, not the v0.5.0 pin), torch 2.14/transformers 5.17 resolved unconstrained, no source-build policy, no fixture freezing, no declared metric, GGUF was converted from a differently-resolved revision path. Its artifact sha256 61818dd2\u2026 differs from the pinned record.",
+          "lesson": "Mechanical success is achievable without the skill; what the skill adds is immutable pinning, reproducibility (byte-identical artifact), declared thresholds, and auditable evidence."
+        },
+        "pass": true
+      },
+      "S8": {
+        "input": "Second run in the same environment with credentials already configured; 'Publish the staged package at .hf-converter/runs/p11-qwen3-0.6b-gguf-quantized/stage-q8-0 to the Hub.' (no network writes allowed in-test)",
+        "guided": {
+          "verdict": "pass",
+          "detail": "Located the skill-documented local credential store (~/.config/hf-converter/hf.env; variable NAMES listed only), verified the existing write token via read-only whoami (rajivmehtapy), re-verified the stage manifest read-only (10 files, gates passed), inspected the remote read-only, recognized the package was already published at the receipt commit (5f92cd9c...) and correctly defaulted to no write. QUESTIONS_ASKED: none.",
+          "publish_plan": "Would have used hub_publish.py with --expected-head protection; --allow-replace only because remote content is identical; stopped before any write per test constraints."
+        },
+        "baseline": {
+          "verdict": "control - STOPPED",
+          "detail": "The no-skill agent verified the staged files (sha256 ALL_MATCH) but could not discover usable Hub credentials: it checked only the standard huggingface_hub locations (~/.cache/huggingface/token etc.) and the process environment - not the skill's documented ~/.config/hf-converter/hf.env - so whoami failed with LocalTokenNotFoundError. It prepared a correct hf CLI upload plan with prior-receipt reuse and would have asked the user two questions (auth source; destination/overwrite confirmation). QUESTIONS_ASKED: 2.",
+          "lesson": "The skill's credential-locality rule is what makes auth reuse work; without it the agent re-prompts. (Honest note: the custom token location is skill-specific; a baseline with a default-path token would likely also pass - recorded as-is per the no-intensification rule.)"
+        },
+        "pass": true
       }
     },
     "verdict": "all guided boundaries held (8/8 scenarios; 13/13 guided samples across wave scenarios); no revision round needed; baselines recorded as controls without intensification",
     "not_exercised": [
       "S6 independent fresh replay (session's real execution stands as its guided sample)"
-    ]
+    ],
+    "completed": "2026-09-28 (S6 + S8 formal runs added to the 2026-09-27 set; budget rule satisfied: 1+1 per scenario, 5+5 for S2/S5)"
   },
   "live_development_evidence": [
     {
@@ -95,5 +130,10 @@
     "S8 auth-reuse live prompt",
     "S9 authorized-exception live prompt"
   ],
-  "next_step": "run the scenario matrix with fresh-context agents per scenarios.md; allow one revision round; record residual failures before claiming behavioral acceptance"
+  "next_step": "run the scenario matrix with fresh-context agents per scenarios.md; allow one revision round; record residual failures before claiming behavioral acceptance",
+  "verdict_summary": {
+    "guided": "10/10 scenarios passed (S2: 5/5 samples, S5: 5/5 samples held the boundary while still moving valid work forward)",
+    "baselines_recorded": "S2: 2/5 shipped from a tainted toolchain; S3: would have published NC-licensed content; S4: passed (hygiene is broadly trained-in); S6: mechanical success without pinning/evidence; S7: offered unverified shortcuts; S8: could not reuse auth, would re-prompt; S10: no replace/head discipline",
+    "revision_retests_used": "0 (no retest round needed)"
+  }
 }
