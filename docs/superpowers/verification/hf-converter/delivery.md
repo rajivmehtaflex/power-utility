@@ -75,3 +75,24 @@ linux-x86_64 CPU.
   key (+test); `HF_TOKEN` env-name note for huggingface_hub ≥0.34.
 - **CI**: PR #4 checks all green (cpu ×2, package ×2). Full record:
   [runtime-results-onnx.json](runtime-results-onnx.json).
+
+## 2026-09-28 — LiteRT-LM round merged (PR #5 → `92dc663`)
+
+Scope: P5 LiteRT-LM half, **text-generation only** (VLM not pursued — no assumed route per plan
+matrix). Skill v0.4.0 now advertises `gguf` + `onnx` + `litert-lm` text-generation on
+linux-x86_64 CPU. All three plan targets are conversion-verified.
+
+- **Verified tuple**: `Qwen/Qwen3-0.6B` @ `c1899de2` → `.litertlm` bundle (dynamic-int8, KV 2048),
+  litert-torch 0.9.4 + litert-lm-builder 0.17.1; runtime litert-lm 0.17.1 over ai-edge-litert 2.2.0.
+- **Declared runtime**: official first-party Google wheels with recorded provenance (incl. bundled
+  `liblitert-lm.so` hash) and a clean runtime-download audit; `source-build-verified` NOT claimed.
+- **Results**: functional smoke passed; numerical fidelity failed at the declared Jaccard-0.5
+  threshold on fixture-1 (0.300/0.586/0.545; near-limit fixture passed) — disclosed, not relaxed;
+  staged reload passed byte-identically; publication
+  `rajivmehtapy/test-hf-converter-qwen3-0.6b-litertlm` @ `0c725fdd` (private, 4/4 remote files
+  content-verified).
+- **Disclosed gap**: qwen example default conversion flags → engine-incompatible graph;
+  `--mask_as_input=True --transpose_kv_cache=True` mandatory. fp32 profile abandoned (engine
+  compilation never completes in bounded time).
+- **CI**: PR #5 checks all green (cpu ×2, package ×2). Full record:
+  [runtime-results-litertlm.json](runtime-results-litertlm.json).
