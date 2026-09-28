@@ -21,7 +21,7 @@ DESCRIPTION_MAX = 1024
 COMPATIBILITY_MAX = 500
 BODY_MAX_LINES = 500
 KNOWN_LICENSES = {"Apache-2.0", "MIT"}
-ADVERTISED_TARGETS = {"gguf", "onnx"}  # targets this package claims as verified
+ADVERTISED_TARGETS = {"gguf", "onnx", "litert-lm"}  # targets this package claims as verified
 
 
 def _frontmatter():
@@ -84,8 +84,8 @@ class FrontmatterTests(unittest.TestCase):
     def test_body_advertises_only_verified_targets(self):
         _, _, text = _frontmatter()
         body = text.split("---\n", 2)[2].lower()
-        for target in ("onnx", "litert"):
-            if target in body:
+        for target in ("gguf", "onnx", "litert"):
+            if target in body and not any(t.startswith(target) for t in ADVERTISED_TARGETS):
                 qualified = ("planned" in body) or ("no recipe exists" in body) or ("not verified" in body)
                 self.assertTrue(
                     qualified,
@@ -105,7 +105,8 @@ class LinkIntegrityTests(unittest.TestCase):
 
     def test_core_files_present(self):
         for rel in (
-            "SKILL.md", "references/gguf.md", "references/onnx.md", "references/compatibility.md",
+            "SKILL.md", "references/gguf.md", "references/onnx.md", "references/litert-lm.md",
+            "references/compatibility.md",
             "references/source-builds.md", "references/validation.md",
             "references/huggingface-upload.md", "assets/recipes.json",
             "assets/manifest.schema.json", "assets/model-card.md",
@@ -157,7 +158,7 @@ class RecipeConsistencyTests(unittest.TestCase):
         for target in ADVERTISED_TARGETS:
             self.assertGreaterEqual(by_target.get(target, 0), 1,
                                     f"{target} advertised as verified but lacks a passed recipe")
-        for target in {"onnx", "litert-lm"} - ADVERTISED_TARGETS:
+        for target in {"onnx", "litert-lm"} - ADVERTISED_TARGETS:  # (empty set once all verified)
             self.assertNotIn(target, by_target,
                              f"{target} has passed evidence; update ADVERTISED_TARGETS")
 

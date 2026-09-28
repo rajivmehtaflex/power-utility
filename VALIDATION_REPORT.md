@@ -41,3 +41,21 @@ hashed) all **passed**; numerical parity FAILED at the declared Jaccard-0.5 thre
 deferred (2026-09-28 scope decision); LiteRT-LM remains planned. Recipe evidence:
 `assets/recipes.json` (`onnx-qwen3-0.6b-linux-x64-cpu`); run record:
 `docs/superpowers/verification/hf-converter/runtime-results-onnx.json`.
+
+## 2026-09-28 addendum — hf-generative-model-converter (LiteRT-LM round)
+
+Total: 74 skills; 74 spec-compliant; 0 failed (official `skills-ref` validator re-run 2026-09-28).
+
+Repo-owned `hf-generative-model-converter` v0.4.0: spec-compliant; helper tests 30/30 and root
+package/catalog tests pass. New verified row: LiteRT-LM text-generation (`Qwen/Qwen3-0.6B` @
+`c1899de`, litert-torch 0.9.4 + litert-lm-builder 0.17.1 + litert-lm/ai-edge-litert 0.17.1/2.2.0,
+all declared official wheels with recorded provenance and a clean runtime-download audit, Linux
+x86_64 CPU): locked env, export + `.litertlm` pack, functional smoke, staged reload, and a real
+private Hub publication with remote content verification (4/4 files hashed) all **passed**;
+numerical parity FAILED at the declared Jaccard-0.5 threshold on 1/3 fixtures (0.300/0.586/0.545,
+near-limit fixture passed) and is disclosed — not relaxed. Disclosed upstream gap: the qwen example
+requires `--mask_as_input=True --transpose_kv_cache=True` for engine compatibility. All three
+targets (GGUF, ONNX, LiteRT-LM) are now conversion-verified for text-generation; VLM rows remain
+deferred/not-pursued. Recipe evidence: `assets/recipes.json`
+(`litertlm-qwen3-0.6b-linux-x64-cpu`); run record:
+`docs/superpowers/verification/hf-converter/runtime-results-litertlm.json`.
