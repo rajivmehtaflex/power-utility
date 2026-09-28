@@ -89,7 +89,10 @@ def _scan_secrets(node, path="") -> list[str]:
     if isinstance(node, dict):
         for k, v in node.items():
             here = f"{path}.{k}" if path else str(k)
-            if _SECRET_KEY_RE.search(str(k)):
+            # the schema mandates `authorization` on binary-exception entries (who authorized the
+            # declared input); it is a policy statement, not a credential
+            is_declared_exception = here.startswith("toolchain.binary_exceptions[") and k == "authorization"
+            if not is_declared_exception and _SECRET_KEY_RE.search(str(k)):
                 errors.append(f"forbidden field: {here}")
             errors += _scan_secrets(v, here)
     elif isinstance(node, list):

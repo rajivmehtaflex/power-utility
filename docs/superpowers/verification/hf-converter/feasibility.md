@@ -46,3 +46,22 @@ Recorded: 2026-09-27. Executor: this session, on the recorded build host.
    huggingface-hub 0.36.2, `gguf` 0.19.0 from the same pinned llama.cpp tree rather than PyPI).
    Build key `198232c63ac3c736` = sha256(llama.cpp commit ‖ build flags ‖ gcc 13.3.0 ‖ cmake 3.28.3 ‖
    dep-lock sha256)[:16].
+
+## ONNX round feasibility — resolved 2026-09-28
+
+- **Qwen3 export support:** confirmed at the resolved pins — `qwen3` is registered for
+  `text-generation-with-past` (plus feature-extraction/text-classification variants) via
+  `@register_tasks_manager_onnx` in `optimum.exporters.onnx.model_configs` (41 model types support
+  the task at optimum-onnx 0.1.0). Probe correction: the tasks mapping reads empty until the config
+  module is imported — registration is decorator-driven.
+- **Ecosystem split:** `optimum` 2.x is a hardware meta-package; ONNX export lives in
+  **`optimum-onnx`** (`optimum-onnx 0.1.0`, requires `optimum~=2.1.0`,
+  `transformers>=4.36,<4.58`, `onnxruntime>=1.18`). transformers 4.57.6 and onnxruntime 1.30.0 both
+  fit. Matched loading class: `ORTModelForCausalLM`.
+- **Runtime decision (user, 2026-09-28):** declared official onnxruntime PyPI wheel instead of a
+  multi-hour 4-core source build — recorded provenance (wheel sha256 + installed-native-lib byte
+  comparison) keeps the no-silent-prebuilt policy intact; `source-build-verified` is not claimed.
+- **VLM ONNX:** deferred by scope decision (2026-09-28) — no exporter/loader feasibility claimed.
+- **Discovered constraint carried into the recipe:** optimum 2.1.0 ignores qwen3's explicit
+  `head_dim` when sizing the KV cache (uses `hidden_size//num_heads`); the exported graph is
+  correct and a declared one-attribute load patch is required at inference.
