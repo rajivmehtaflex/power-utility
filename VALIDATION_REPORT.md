@@ -59,3 +59,18 @@ targets (GGUF, ONNX, LiteRT-LM) are now conversion-verified for text-generation;
 deferred/not-pursued. Recipe evidence: `assets/recipes.json`
 (`litertlm-qwen3-0.6b-linux-x64-cpu`); run record:
 `docs/superpowers/verification/hf-converter/runtime-results-litertlm.json`.
+
+## 2026-09-28 addendum — hf-generative-model-converter (quantized GGUF variants)
+
+Total: 74 skills; 74 spec-compliant; 0 failed (official `skills-ref` validator re-run 2026-09-28).
+
+Repo-owned `hf-generative-model-converter` v0.5.0: spec-compliant; helper tests 31/31 (new
+`.cache` residue guard) and root package/catalog tests pass. Two new verified rows: GGUF Q8_0
+(parity **passed** at the declared Jaccard-0.5 threshold — 0.714/0.833/1.000 — first fully-passing
+conversion) and GGUF Q4_K_M (parity **failed**, disclosed) — both functional smoke, staged reload,
+and real private publications with remote content verification (10/10 files each). Disclosed:
+llama.cpp CPU run-to-run output variance (threading) with the staged-reload gate switched to a
+Jaccard criterion; `.cache` residue guard added to the manifest helper after a caught-and-fixed
+polluted upload. Recipe evidence: `assets/recipes.json` (`gguf-qwen3-0.6b-q8-0-linux-x64-cpu`,
+`gguf-qwen3-0.6b-q4-k-m-linux-x64-cpu`); run record:
+`docs/superpowers/verification/hf-converter/runtime-results-quantized.json`.

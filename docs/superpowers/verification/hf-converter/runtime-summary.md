@@ -107,3 +107,23 @@ Full record: [runtime-results-litertlm.json](runtime-results-litertlm.json). Rec
 All three targets (GGUF, ONNX, LiteRT-LM) now carry conversion-verified evidence for
 text-generation on linux-x86_64 CPU. Remaining: VLM rows (ONNX deferred, LiteRT not pursued),
 quantized GGUF variants, accelerator backends, formal fresh-context behavioral matrix.
+
+## Quantized GGUF variant round — 2026-09-28
+
+Full record: [runtime-results-quantized.json](runtime-results-quantized.json). Run
+`p11-qwen3-0.6b-gguf-quantized`; two user-requested variants from the hash-verified F16 master.
+
+- **Q8_0** (805 MB): functional smoke passed; numerical parity **PASSED** at the declared
+  Jaccard-0.5 threshold (0.714 / 0.833 / 1.000 — near-limit fixture exact). First conversion in
+  the project to fully pass numerical fidelity. Published private @ `5f92cd9c` (10/10 verified).
+- **Q4_K_M** (484 MB): functional smoke passed; parity **FAILED** (0.368 / 0.135 / 0.500) —
+  disclosed, not relaxed; outputs remain coherent. Published private @ `48b3ec8c` (10/10 verified).
+- **Toolchain rebuilt** after the workspace wipe: llama-cli byte-identical to the p7 record;
+  llama-quantize hash difference disclosed (VLM-era flag set). Master integrity re-verified from
+  its publication before quantization (double-duty as a publication re-check).
+- **Protocol change disclosed:** llama.cpp CPU generation is not bit-deterministic across runs
+  (threading) — staged-reload gate switched from byte-identity to Jaccard ≥ 0.5 vs validation
+  outputs (reload measured 0.889–0.957).
+- **Helper hardened:** `hf_hub_download(local_dir=stage)` writes `.cache/huggingface` residue that
+  once packaged as junk (first upload deleted + republished clean); `_safe_rel` now rejects `.cache`
+  paths and a test covers it (helper tests 31/31).

@@ -57,6 +57,10 @@ def _safe_rel(rel: str) -> bool:
     parts = p.parts
     if any(part in ("..", ".") for part in parts):
         return False
+    # huggingface_hub download residue: created inside local_dir by hf_hub_download and never a
+    # legitimate package member (observed in the p11 round)
+    if any(part == ".cache" for part in parts):
+        return False
     return True
 
 
