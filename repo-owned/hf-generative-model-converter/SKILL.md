@@ -2,11 +2,11 @@
 name: hf-generative-model-converter
 description: Use when converting a Hugging Face text-generation or vision-language model into a local runtime format and validating it by real inference — GGUF for llama.cpp, ONNX for ONNX Runtime, and LiteRT-LM bundles for Google AI Edge (verified routes today) — and when packaging the verified artifacts with a SHA-256 manifest or publishing them to the Hugging Face Hub. Triggers include "convert model to GGUF", "gguf conversion", "export this model for llama.cpp", "convert model to ONNX", "publish converted model to HF Hub", "make a .litertlm bundle", "convert model to litert-lm", and "verify the converted model runs without the source weights". Enforces immutable revision pinning, provenance-verified toolchains, license checks, staged packaging, and guarded publication.
 license: Apache-2.0
-compatibility: Linux x86_64 shell with git, CMake >=3.14, a C++17 compiler, Python 3.12 with uv, and network access to github.com and huggingface.co. CPU-only inference baseline; no GPU assumed. Source builds need ~3 GB disk and run within ~12 GB RAM. Publication needs an HF write token already stored in the local Hub configuration. Verified scope today is GGUF (F16 master + Q8_0/Q4_K_M variants), ONNX and LiteRT-LM text-generation on CPU; every other target or platform is planned, not verified.
+compatibility: Linux x86_64 shell with git, CMake >=3.14, a C++17 compiler, Python 3.12 with uv, and network access to github.com and huggingface.co. CPU baseline or NVIDIA CUDA GPU (Tesla T4 CC 7.5+ verified). Source builds need ~3 GB disk and run within ~12 GB RAM. Publication needs an HF write token already stored in the local Hub configuration. Verified scope today is GGUF (CPU/CUDA), ONNX (CPU), and LiteRT-LM (CPU); every other target or platform is planned, not verified.
 metadata:
-  version: "0.5.0"
+  version: "0.6.0"
   author: rajivmehtaflex
-  verified_targets: "gguf: text-generation (Qwen/Qwen3-0.6B: F16/Q8_0/Q4_K_M) and vision-language (SmolVLM-256M-Instruct), linux-x86_64 CPU; onnx: text-generation (Qwen/Qwen3-0.6B), linux-x86_64 CPU; litert-lm: text-generation (Qwen/Qwen3-0.6B), linux-x86_64 CPU"
+  verified_targets: "gguf: text-generation (Qwen/Qwen3-0.6B: F16 CPU/CUDA, Q8_0/Q4_K_M CPU) and vision-language (SmolVLM-256M-Instruct), linux-x86_64 CPU/CUDA; onnx: text-generation (Qwen/Qwen3-0.6B), linux-x86_64 CPU; litert-lm: text-generation (Qwen/Qwen3-0.6B), linux-x86_64 CPU"
   planned_targets: "none — see references/compatibility.md for deferred/unclaimed rows"
 ---
 
@@ -48,10 +48,10 @@ rather than working around it.
 
 ## Target recipes
 
-- **GGUF** (verified route): [references/gguf.md](references/gguf.md) — F16 master recipe;
-  quantized variants (Q8_0, Q4_K_M) are separate user-requested steps validated against the same
-  frozen fixtures, each with its own recipe row and parity evidence (Q8_0 passed the declared
-  threshold; Q4_K_M failed it and is disclosed)
+- **GGUF** (verified route): [references/gguf.md](references/gguf.md) — F16 master recipe (CPU and
+  CUDA GPU verified on Tesla T4); quantized variants (Q8_0, Q4_K_M) are separate user-requested steps
+  validated against the same frozen fixtures, each with its own recipe row and parity evidence (Q8_0 passed
+  the declared threshold; Q4_K_M failed it and is disclosed)
 - **ONNX** (verified route, text-generation only): [references/onnx.md](references/onnx.md) — its
   runtime is a declared, provenance-verified official onnxruntime wheel, not a source build; the
   recipe records the required qwen3 cache-shape load patch. VLM ONNX is deferred — do not attempt it.

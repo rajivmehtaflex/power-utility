@@ -124,11 +124,12 @@ converted model by real inference against frozen fixtures, and publishes
 verified packages to the Hugging Face Hub behind a SHA-256 manifest and a
 guarded publication helper.
 
-Verified routes (linux-x86_64 CPU, every claim backed by recorded evidence):
+Verified routes (linux-x86_64 CPU and CUDA GPU, every claim backed by recorded evidence):
 
 | Route | Verified tuple(s) | Status |
 |---|---|---|
 | GGUF — text-generation (F16 master) | `Qwen/Qwen3-0.6B` | conversion-verified; numerical parity failed at the declared metric and is disclosed |
+| GGUF — text-generation (CUDA F16) | `Qwen/Qwen3-0.6B` | conversion-verified; source build with CUDA/CUBLAS, full layer offload to CUDA0 (Tesla T4); parity failed (disclosed) |
 | GGUF — text-generation (Q8_0) | `Qwen/Qwen3-0.6B` | conversion-verified; numerical parity **passed** at the declared metric (first fully-passing conversion) |
 | GGUF — text-generation (Q4_K_M) | `Qwen/Qwen3-0.6B` | conversion-verified; parity failed (disclosed) — compact size, unverified fidelity |
 | GGUF — vision-language | `HuggingFaceTB/SmolVLM-256M-Instruct` | conversion-verified; two-image protocol fully passed |
@@ -139,22 +140,20 @@ Verified routes (linux-x86_64 CPU, every claim backed by recorded evidence):
 
 ### Verification hardware requirements
 
-All rows above were verified on the project's recorded host: **Linux x86_64, 4 CPU cores,
-14 GB RAM, no GPU** — every CPU route (including source builds and fp32/int8 exports) fits that
-box plus ~15 GB of free disk for run workspaces. Model scale verified so far is 0.6B-parameter
-(text) and 256M-parameter (vision) classes.
+CPU routes were verified on the project's recorded baseline host: **Linux x86_64, 4 CPU cores,
+14 GB RAM, no GPU**. The CUDA route was verified on a host equipped with an **NVIDIA Tesla T4 GPU
+(16 GB VRAM, CC 7.5)** running driver 610.57.04 and CUDA 12.6. Model scale verified so far is
+0.6B-parameter (text) and 256M-parameter (vision) classes.
 
-Accelerator backends are the remaining unverified rows. Each needs the following hardware to be
-verified (requirements are modest because the verified models are small; VRAM scales roughly
-linearly with model size):
+Accelerator backends status:
 
-| Backend | Hardware | Software prerequisites | Notes |
-|---|---|---|---|
-| llama.cpp CUDA | Any CUDA-capable NVIDIA GPU (compute capability ≥ 6.1), ≥ 6 GB VRAM recommended (F16 0.6B inference needs ~2–3 GB; build + model cache headroom) | NVIDIA driver ≥ 535, CUDA toolkit 12.x, ~10 GB free disk for the toolkit + build tree | New build profile + build key; full validation chain re-run on `CUDAExecutionProvider`-style backend |
-| onnxruntime GPU | Same NVIDIA GPU as above (CUDA EP) | Driver ≥ 535, CUDA 12.x + cuDNN 9.x matching the `onnxruntime-gpu` wheel, declared-wheel provenance re-recorded | `CUDAExecutionProvider` becomes the recorded backend; CPU parity comparisons repeated |
-| llama.cpp Metal | Apple Silicon (M1 or later), ≥ 8 GB unified memory (16 GB comfortable) | macOS with Xcode command-line tools (Metal is built into the llama.cpp build) | Also covers the macOS-host evidence gap recorded in every recipe's limitations |
-| Vulkan (llama.cpp) | Any Vulkan 1.2+ GPU — covers AMD/Intel discrete and some integrated | Vulkan loader + SDK for the build | Cross-vendor option where CUDA is unavailable |
-| LiteRT GPU / NPU | GPU with OpenCL/OpenGL or WebGPU support; NPU per vendor SDK (Intel / Qualcomm) | ai-edge-litert GPU accelerator (bundled) or vendor NPU SDK per its `npu-sdk` extra | The engine already registers GPU/WebGPU accelerators; verification is the missing part |
+| Backend | Hardware | Software prerequisites | Status | Notes |
+|---|---|---|---|---|
+| llama.cpp CUDA | NVIDIA GPU (compute capability ≥ 6.1) | NVIDIA driver ≥ 535, CUDA toolkit 12.x | **verified** (2026-09-29) | Verified on Tesla T4 (16 GB, CC 7.5, driver 610.57.04, CUDA 12.6.85); full offload to CUDA0 |
+| onnxruntime GPU | Same NVIDIA GPU as above (CUDA EP) | Driver ≥ 535, CUDA 12.x + cuDNN 9.x matching the `onnxruntime-gpu` wheel, declared-wheel provenance re-recorded | unverified | `CUDAExecutionProvider` becomes the recorded backend; CPU parity comparisons repeated |
+| llama.cpp Metal | Apple Silicon (M1 or later), ≥ 8 GB unified memory (16 GB comfortable) | macOS with Xcode command-line tools (Metal is built into the llama.cpp build) | unverified | Also covers the macOS-host evidence gap recorded in every recipe's limitations |
+| Vulkan (llama.cpp) | Any Vulkan 1.2+ GPU — covers AMD/Intel discrete and some integrated | Vulkan loader + SDK for the build | unverified | Cross-vendor option where CUDA is unavailable |
+| LiteRT GPU / NPU | GPU with OpenCL/OpenGL or WebGPU support; NPU per vendor SDK (Intel / Qualcomm) | ai-edge-litert GPU accelerator (bundled) or vendor NPU SDK per its `npu-sdk` extra | unverified | The engine already registers GPU/WebGPU accelerators; verification is the missing part |
 
 Disk/RAM guidance for repeat runs of the verified CPU routes: 14 GB RAM is sufficient; keep
 ~20 GB free disk per active round (fp32 exports reach ~3 GB per artifact plus staging copies;
@@ -293,7 +292,7 @@ are never modified — only these copies are normalized.
 | Name | Group | Category | Spec-compliant | Description |
 |---|---|---|---|---|
 | `unsloth-workflows` | repo-owned | mlops | yes | Explain, prepare, and execute Unsloth workflows on Linux/NVIDIA machines. |
-| `hf-generative-model-converter` | repo-owned | mlops | yes | Convert pinned Hugging Face models to GGUF or ONNX, validate by real inference, and publish verified packages with a SHA-256 manifest. |
+| `hf-generative-model-converter` | repo-owned | mlops | yes | Convert pinned Hugging Face models to GGUF, ONNX, or LiteRT-LM, validate by real inference (CPU/CUDA), and publish verified packages with a SHA-256 manifest. |
 | `data-to-okf` | agents-shared | — | yes | Converts any local folder of mixed documents (docx, pdf, xlsx, duckdb, csv, imag |
 | `release-notes` | agents-shared | — | yes | >- |
 | `graph-flow` | dev-workspace | — | yes | Use when coordinating a repository implementation from a goal through approved,  |

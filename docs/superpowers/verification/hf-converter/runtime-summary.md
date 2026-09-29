@@ -147,5 +147,22 @@ runs (S2/S5 at the 5×5 sample budget). The 2026-09-28 additions:
   [runtime-results-vlm-onnx-probe.json](runtime-results-vlm-onnx-probe.json). Re-openable only by
   an upstream exporter PR.
 
-Remaining open items: accelerator backends (blocked on GPU hardware), VLM LiteRT (not pursued),
-and any future quantized variants of other targets.
+## 2026-09-29 — Accelerator round: llama.cpp CUDA on NVIDIA Tesla T4
+
+First verified accelerator backend in the catalog: `Qwen/Qwen3-0.6B` @ `c1899de` converted to F16 GGUF
+with source-built `llama.cpp` v0.5.0 compiled with `-DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=75`.
+
+- **Host**: Linux x86_64, NVIDIA Tesla T4 GPU (16 GB VRAM, CC 7.5), driver 610.57.04, CUDA 12.6.85.
+- **Build key**: `63a9b1871f60ea05`, deterministic CMake 3.30.5 build; binaries `llama-cli`, `llama-quantize`,
+  `llama-simple` verified linking to `libggml-cuda.so.0`, `libcudart.so.12`, `libcublas.so.12`.
+- **Offload gate**: `llama-simple -ngl 99` confirmed full 28/28 layer offload to `CUDA0 (Tesla T4)`.
+- **Validation**: Functional smoke passed. Numerical fidelity measured against PyTorch reference:
+  fixture 1: 0.263, fixture 2: 0.125, fixture 3 (near-limit context): 1.000 (exact match).
+  Parity recorded as `failed (disclosed)` per protocol (metric threshold 0.50 preserved).
+- **Staged reload**: `HF_HUB_OFFLINE=1`, `cwd=/`, Jaccard = 1.0 across all 3 fixtures (passed).
+- **Packaging**: `artifact-manifest.json` built and verified (schema Draft202012, no secrets).
+- **Publication**: recorded as `pending: no HF_TOKEN provided`.
+- **Catalog**: added recipe `gguf-qwen3-0.6b-linux-x64-cuda` to `assets/recipes.json`; skill bumped to `v0.6.0`.
+- Full record: [runtime-results-accel-cuda.json](runtime-results-accel-cuda.json).
+
+Remaining open items: non-CUDA accelerator backends (ROCm, Metal, Vulkan, LiteRT GPU/NPU), VLM LiteRT (not pursued).

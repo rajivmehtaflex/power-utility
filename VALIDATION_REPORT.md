@@ -74,3 +74,9 @@ Jaccard criterion; `.cache` residue guard added to the manifest helper after a c
 polluted upload. Recipe evidence: `assets/recipes.json` (`gguf-qwen3-0.6b-q8-0-linux-x64-cpu`,
 `gguf-qwen3-0.6b-q4-k-m-linux-x64-cpu`); run record:
 `docs/superpowers/verification/hf-converter/runtime-results-quantized.json`.
+
+## 2026-09-29 addendum — hf-generative-model-converter (llama.cpp CUDA accelerator)
+
+Total: 74 skills; 74 spec-compliant; 0 failed (official `skills-ref` validator re-run 2026-09-29).
+
+Repo-owned `hf-generative-model-converter` v0.6.0: spec-compliant; helper tests 31/31 and root package/catalog tests pass. New verified row: llama.cpp CUDA accelerator text-generation (`Qwen/Qwen3-0.6B` @ `c1899de`, llama.cpp `v0.5.0` @ `7fe450e` built with CUDA 12.6 / CUBLAS for sm_75, NVIDIA Tesla T4 GPU 16 GB, Linux x86_64): source build (key `63a9b1871f60ea05`), conversion to F16 GGUF (1.5 GB), functional smoke with full GPU offload to CUDA0 (28/28 layers), staged reload (Jaccard 1.0), and signed artifact manifest all **passed**; numerical parity FAILED at the declared Jaccard-0.5 threshold on 2/3 short fixtures (0.263/0.125/1.000 — near-limit fixture exact match) and is disclosed on the model card and recipe — not relaxed. Hub publication recorded as pending (no HF_TOKEN provided in runtime environment). First verified accelerator route in the catalog. Recipe evidence: `assets/recipes.json` (`gguf-qwen3-0.6b-linux-x64-cuda`); run record: `docs/superpowers/verification/hf-converter/runtime-results-accel-cuda.json`.

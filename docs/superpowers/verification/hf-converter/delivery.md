@@ -119,5 +119,22 @@ Two user-requested variants from the hash-verified F16 master; skill v0.5.0.
   credential rediscovery failure → re-prompt).
 - **VLM ONNX: BLOCKED** (probed) — `idefics3` absent from optimum-onnx 0.1.0's export mapping
   (latest release); row re-openable only by an upstream exporter PR.
-- **Remaining open**: accelerator backends (blocked on GPU hardware); VLM LiteRT (not pursued).
+- **Remaining open**: non-CUDA accelerator backends (ROCm, Metal, Vulkan, LiteRT GPU/NPU); VLM LiteRT (not pursued).
 - CI: PR #7 all green. Records: behavior-results.json, runtime-results-vlm-onnx-probe.json.
+
+## 2026-09-29 — Accelerator round: llama.cpp CUDA on NVIDIA Tesla T4 (`feat/hf-converter-accel-cuda`)
+
+First accelerator route verified on local host hardware (`NVIDIA Tesla T4`, 16 GB VRAM, CC 7.5); skill v0.6.0.
+
+- **Verified tuple**: `Qwen/Qwen3-0.6B` @ `c1899de` → F16 GGUF (`1.5 GB`), source-built `llama.cpp` v0.5.0
+  compiled with `-DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=75` (build key `63a9b1871f60ea05`).
+- **GPU offload gate**: `llama-simple -ngl 99` confirmed full 28/28 layer offload to `CUDA0 (Tesla T4)`.
+- **Parity results**: Functional smoke passed. Parity vs PyTorch reference: fixture 1: 0.263, fixture 2: 0.125,
+  fixture 3 (near-limit context): 1.000 (exact match). Parity failed (disclosed) under the unchanged 0.50 metric threshold.
+- **Staged reload**: `HF_HUB_OFFLINE=1`, `cwd=/`, Jaccard = 1.0 across all 3 fixtures (passed).
+- **Packaging**: `artifact-manifest.json` built and verified against jsonschema Draft202012 (passed).
+- **Publication**: recorded as `pending: no HF_TOKEN provided`.
+- **Monorepo sync**: recipe `gguf-qwen3-0.6b-linux-x64-cuda` added to `assets/recipes.json`; `SKILL.md` bumped
+  to `0.6.0`; `compatibility.md`, `README.md`, `VALIDATION_REPORT.md`, `MANIFEST.json` synchronized.
+- **CI & Tests**: `skills-ref validate` passed; skill unit tests (31/31) and monorepo package tests (26/26) green.
+  Record: [runtime-results-accel-cuda.json](runtime-results-accel-cuda.json).

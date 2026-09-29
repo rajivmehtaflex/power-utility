@@ -1023,6 +1023,172 @@
         "quantized variant: numerical parity not established at the declared metric; treat outputs as unverified for fidelity-critical use",
         "llama.cpp CPU run-to-run output variance observed (threading); near-tie continuations may flip"
       ]
+    },
+    {
+      "id": "gguf-qwen3-0.6b-linux-x64-cuda",
+      "revision": 1,
+      "target": "gguf",
+      "source": {
+        "model_id": "Qwen/Qwen3-0.6B",
+        "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+        "architecture": "Qwen3ForCausalLM",
+        "model_type": "qwen3",
+        "architecture_class": "decoder-only",
+        "task": "text-generation",
+        "license": "apache-2.0",
+        "gated": false
+      },
+      "platform": {
+        "build_host": "linux-x86_64",
+        "execution": "cuda",
+        "accelerator": "Tesla T4"
+      },
+      "toolchain": {
+        "component": "llama.cpp",
+        "repo": "https://github.com/ggml-org/llama.cpp",
+        "tag": "v0.5.0",
+        "revision": "7fe450e19305b828c199d602c23a8337aaa1f03b",
+        "revision_note": "annotated tag object c13fcbf684171d5e0bca3fc5c34be6a99174b05f peels to this commit",
+        "converter_support_evidence": "conversion/qwen.py:159 registers Qwen3ForCausalLM at this commit (verified in local pinned checkout 2026-09-27)",
+        "dependency_lock": {
+          "env": "uv (uv.lock)",
+          "sha256": "87ac7a849f8798bd3c584e52d45dbe5eb11be867b5d2da1cf935a5611275ad21",
+          "key_facts": "torch 2.11.0+cpu, transformers 4.57.6, numpy 2.2.6, protobuf<5, huggingface-hub 0.36.2, gguf 0.19.0 from the pinned llama.cpp tree, sentencepiece"
+        },
+        "build_key": "63a9b1871f60ea05",
+        "build_flags": [
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DGGML_CUDA=ON",
+          "-DCMAKE_CUDA_ARCHITECTURES=75",
+          "-DLLAMA_CURL=ON",
+          "-DLLAMA_BUILD_TESTS=OFF"
+        ],
+        "build_jobs": 4,
+        "compiler": "gcc/g++ 10.2.1, nvcc 12.6.85",
+        "cmake": "3.30.5",
+        "declared_binary_exceptions": []
+      },
+      "profile": {
+        "outtype": "f16",
+        "quantization": "none (F16 master)",
+        "context_length": 40960,
+        "batch": 1,
+        "generation": {
+          "sampling": "greedy",
+          "seed": 42,
+          "max_new_tokens": 32
+        },
+        "chat_template": "tokenizer_config.json template applied by runtime at inference",
+        "thinking_mode": "native to Qwen3; fixtures use default (non-forced) mode",
+        "tokenizer": "repo tokenizer.json (fast) + vocab.json; no external merges"
+      },
+      "commands": [
+        {
+          "step": "build_toolchain",
+          "workdir": ".hf-converter/builds/<build-key>",
+          "tool": "cmake",
+          "command": "cmake <sources>/llama.cpp-v0.5.0 -DCMAKE_BUILD_TYPE=Release -DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=75 -DLLAMA_CURL=ON -DLLAMA_BUILD_TESTS=OFF && cmake --build . --config Release -j 4 --target llama-cli llama-quantize llama-simple"
+        },
+        {
+          "step": "convert",
+          "workdir": ".hf-converter/envs/<build-key>",
+          "tool": "uv run python",
+          "command": "python <sources>/llama.cpp-v0.5.0/convert_hf_to_gguf.py <model-dir> --outfile <run>/work/qwen3-0.6b-f16.gguf --outtype f16",
+          "parameters": {
+            "model-dir": "string; verified checkout of the pinned source revision",
+            "outfile": "string; run workspace path"
+          }
+        },
+        {
+          "step": "runtime_health",
+          "workdir": ".hf-converter/builds/<build-key>",
+          "tool": "llama-cli",
+          "command": "./bin/llama-cli --version"
+        },
+        {
+          "step": "inference",
+          "workdir": ".hf-converter/builds/<build-key>",
+          "tool": "llama-simple",
+          "command": "./bin/llama-simple -m <gguf> -n 32 -ngl 99 <prompt-as-single-argument>",
+          "parameters": {
+            "gguf": "string; converted artifact path",
+            "prompt": "string; frozen fixture prompt, passed as ONE argv element"
+          },
+          "note": "llama-simple with -ngl 99 offloads all model layers to CUDA0 (Tesla T4). stdout = prompt echo + generation; strip the prompt prefix."
+        }
+      ],
+      "required_files": [
+        "config.json",
+        "tokenizer.json",
+        "LICENSE"
+      ],
+      "required_files_note": "Minimal verified acquisition index: the pinned conversion completed with exactly these files. LICENSE and model card are carried into the staged package for reproducibility and attribution.",
+      "validation_policy": {
+        "reference": "transformers native torch pipeline, same tokenizer/template/settings, pinned source revision",
+        "fixtures": "3 synthetic text prompts, frozen before converted output is inspected; 1 near the profile limit; expectations + tolerances recorded before evaluation",
+        "acceptance": [
+          "nonempty decoded output for every fixture",
+          "clean termination at EOS or the 32-token bound",
+          "GPU offload confirmed via CUDA0 in runtime stderr",
+          "no runtime errors; no nonfinite values where observable",
+          "recorded token/text comparison against the reference; parity metric and threshold declared before conversion"
+        ],
+        "timeout_budget": "recorded per phase before first run",
+        "numerical_fidelity": "reported separately from functional smoke; if not comparable, labeled unverified"
+      },
+      "evidence": {
+        "status": "conversion-verified",
+        "source_build": {
+          "state": "passed",
+          "recorded_at": "2026-09-29T08:00:00Z",
+          "build_key": "63a9b1871f60ea05",
+          "ready_marker": ".hf-converter/builds/63a9b1871f60ea05/READY",
+          "runtime_health": "llama-cli --version -> 0.5.0-dev (build 1, commit 7fe450e), built with GNU 10.2.1 for Linux x86_64 with CUDA",
+          "binary_sha256": {
+            "llama-cli": "b25fd9d128f4858c5a1dfc53bd671748b3d076bc9894d06699d300a00ad3a117",
+            "llama-quantize": "e6d8cfbf0430fbb98e028ce74b67774aa0a11c664d7ec5b00a3eff8bfbae9dfe",
+            "llama-simple": "ffba8d85c9f4e8726e41f514ca72b26b0898b8e117aaf8582789d2d8edc6d4c5"
+          },
+          "configure_time_downloads": "none (all ggml/native deps built in-tree from the pinned checkout)",
+          "loaded_library_provenance": "ldd: libggml-cuda.so.0, libcudart.so.12, libcublas.so.12 linked and verified on Tesla T4",
+          "env": "uv locked env, dep-lock sha256 87ac7a849f8798bd3c584e52d45dbe5eb11be867b5d2da1cf935a5611275ad21"
+        },
+        "conversion": {
+          "state": "passed",
+          "recorded_at": "2026-09-29",
+          "artifact": "qwen3-0.6b-f16.gguf",
+          "sha256": "d04bceb664d484eaf134cdbc63745f5241bea80132c458e61c9449f488fe2abc",
+          "detail": "convert_hf_to_gguf.py --outtype f16; 311 tensors, ~1.5 GiB; clean export; single output file as expected"
+        },
+        "target_inference": {
+          "state": "passed",
+          "functional_smoke": "passed",
+          "hardware_offload": "passed (CUDA0: Tesla T4, 28/28 layers offloaded)",
+          "numerical_fidelity": {
+            "state": "failed",
+            "metric": "token-set Jaccard (reference vs target)",
+            "threshold": 0.5,
+            "measured": "0.263 / 0.125 / 1.000 (fixture-1 / fixture-2 / fixture-3)",
+            "reason": "Fixture-3 (near-limit context prompt) matched the reference continuation exactly (Jaccard 1.0); short fixtures shared the first token then diverged at near-tie greedy continuations due to cross-framework differences between PyTorch and ggml-cuda. Declared threshold not met on 2/3 fixtures; parity NOT claimed per the no-relaxation rule. Functional usability is unaffected."
+          },
+          "instrument": "llama-simple -ngl 99 (greedy, raw completion) at build 63a9b1871f60ea05"
+        },
+        "staged_reload": {
+          "state": "passed",
+          "detail": "Staged copy alone, HF_HUB_OFFLINE=1, cwd=/; identical generation to validation run (Jaccard 1.0 across all 3 fixtures)."
+        },
+        "publication": {
+          "state": "pending",
+          "reason": "no HF_TOKEN provided in runtime environment"
+        },
+        "recorded_at": "2026-09-29",
+        "notes": "First verified accelerator recipe in the catalog: llama.cpp CUDA on NVIDIA Tesla T4 with full GPU offload verified. Staged reload verified. Hub publication pending conditional on HF_TOKEN."
+      },
+      "limitations": [
+        "CUDA execution on NVIDIA compute capability 7.5+ (Tesla T4 verified); other GPU architectures unverified",
+        "F16 master profile; quantized variants require their own documented acceptance",
+        "Numerical parity below 0.5 on short fixtures due to cross-framework greedy divergence; near-limit exact match"
+      ]
     }
   ]
 }

@@ -1,0 +1,86 @@
+{
+  "round": "accelerator-cuda (llama.cpp CUDA on NVIDIA Tesla T4)",
+  "recorded_at": "2026-09-29T08:10:00Z",
+  "branch": "feat/hf-converter-accel-cuda",
+  "hardware": {
+    "host": "Linux x86_64 Debian GNU/Linux 11 (bullseye)",
+    "gpu": "NVIDIA Tesla T4 (16 GB VRAM, compute capability 7.5)",
+    "driver": "610.57.04",
+    "cuda_toolkit": "12.6.85 (/usr/local/cuda-12.6)",
+    "cmake": "3.30.5"
+  },
+  "source_model": {
+    "model_id": "Qwen/Qwen3-0.6B",
+    "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+    "model_safetensors_sha256": "f47f71177f32bcd101b7573ec9171e6a57f4f4d31148d38e382306f42996874b"
+  },
+  "toolchain": {
+    "repo": "https://github.com/ggml-org/llama.cpp",
+    "tag": "v0.5.0",
+    "revision": "7fe450e19305b828c199d602c23a8337aaa1f03b",
+    "build_key": "63a9b1871f60ea05",
+    "cmake_flags": [
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DGGML_CUDA=ON",
+      "-DCMAKE_CUDA_ARCHITECTURES=75",
+      "-DLLAMA_CURL=ON",
+      "-DLLAMA_BUILD_TESTS=OFF"
+    ],
+    "binaries": {
+      "llama-cli": "b25fd9d128f4858c5a1dfc53bd671748b3d076bc9894d06699d300a00ad3a117",
+      "llama-quantize": "e6d8cfbf0430fbb98e028ce74b67774aa0a11c664d7ec5b00a3eff8bfbae9dfe",
+      "llama-simple": "ffba8d85c9f4e8726e41f514ca72b26b0898b8e117aaf8582789d2d8edc6d4c5"
+    },
+    "dynamic_linking": "libggml-cuda.so.0, libcudart.so.12, libcublas.so.12 verified via ldd",
+    "ready_marker": ".hf-converter/builds/63a9b1871f60ea05/READY"
+  },
+  "conversion": {
+    "script": "convert_hf_to_gguf.py",
+    "profile": "f16",
+    "artifact": "qwen3-0.6b-f16.gguf",
+    "bytes": 1509347584,
+    "sha256": "d04bceb664d484eaf134cdbc63745f5241bea80132c458e61c9449f488fe2abc",
+    "tensors": 311,
+    "state": "passed"
+  },
+  "target_inference": {
+    "instrument": "llama-simple -ngl 99",
+    "offload": "CUDA0 (Tesla T4), 28/28 layers offloaded",
+    "functional_smoke": "passed",
+    "numerical_fidelity": {
+      "metric": "token-set Jaccard (reference vs target)",
+      "threshold": 0.5,
+      "state": "failed (disclosed)",
+      "measured": {
+        "fixture-1-short-factual": 0.263,
+        "fixture-2-sentence-task": 0.125,
+        "fixture-3-near-limit": 1.0
+      },
+      "disclosure": "Greedy continuations diverge at near-tie tokens on short fixtures between PyTorch CPU reference and CUDA target; near-limit prompt matched exactly across all 32 generated tokens."
+    }
+  },
+  "staged_reload": {
+    "state": "passed",
+    "environment": "HF_HUB_OFFLINE=1, cwd=/, source weights inaccessible",
+    "measured_jaccard_vs_target": {
+      "fixture-1": 1.0,
+      "fixture-2": 1.0,
+      "fixture-3": 1.0
+    }
+  },
+  "packaging": {
+    "stage_files": [
+      "LICENSE",
+      "config.json",
+      "model-card.md",
+      "qwen3-0.6b-f16.gguf",
+      "tokenizer.json"
+    ],
+    "manifest": "artifact-manifest.json",
+    "manifest_verification": "passed (schema Draft202012, no secrets, no .cache residue)"
+  },
+  "publication": {
+    "state": "pending",
+    "reason": "no HF_TOKEN provided in runtime environment"
+  }
+}
