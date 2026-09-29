@@ -118,11 +118,12 @@ python repo-owned/unsloth-workflows/scripts/unsloth_workflow.py doctor --project
 ```
 
 The `hf-generative-model-converter` skill converts pinned Hugging Face
-generative models to GGUF (source-built llama.cpp toolchain) or ONNX
-(Optimum export plus a provenance-verified ONNX Runtime), validates the
-converted model by real inference against frozen fixtures, and publishes
-verified packages to the Hugging Face Hub behind a SHA-256 manifest and a
-guarded publication helper.
+generative models to GGUF (source-built llama.cpp toolchain with CPU and
+CUDA GPU backends), ONNX (Optimum export plus a provenance-verified ONNX
+Runtime), or LiteRT-LM bundles (Google AI Edge), validates the converted
+model by real inference against frozen fixtures, and publishes verified
+packages to the Hugging Face Hub behind a SHA-256 manifest and a guarded
+publication helper.
 
 Verified routes (linux-x86_64 CPU and CUDA GPU, every claim backed by recorded evidence):
 
@@ -274,6 +275,52 @@ safe next check and do not reinstall or delete anything.
 For reliable results, include the model revision, dataset paths, intended
 training method, GPU name and memory, sequence length, output directory, and
 whether the request is a smoke test or a production run.
+
+### Prompt cookbook: `hf-generative-model-converter`
+
+Use these prompts after installing the skill to convert, validate, and package generative models across supported runtimes (GGUF, ONNX, LiteRT-LM):
+
+#### Convert to GGUF with CUDA acceleration (NVIDIA Tesla T4 / CC ≥ 6.1)
+
+```text
+Convert Qwen/Qwen3-0.6B to GGUF for llama.cpp with CUDA GPU acceleration.
+Build llama.cpp v0.5.0 with -DGGML_CUDA=ON, offload 28/28 layers to GPU (-ngl 99),
+validate output against the frozen fixtures, and package the staged GGUF model with
+a SHA-256 artifact manifest.
+```
+
+#### Convert to GGUF on CPU with quantization
+
+```text
+Convert Qwen/Qwen3-0.6B to GGUF F16 master on CPU and produce a Q8_0 quantized
+variant using llama-quantize. Validate both variants against the frozen fixtures,
+disclose measured token-set Jaccard parity, and run the offline staged reload test.
+```
+
+#### Export to ONNX Runtime (CPU)
+
+```text
+Export Qwen/Qwen3-0.6B to ONNX text-generation with past using optimum-cli.
+Apply the declared head_dim cache-shape patch and verify inference outputs under
+CPUExecutionProvider against the PyTorch reference.
+```
+
+#### Export to LiteRT-LM bundle (.litertlm) for Google AI Edge
+
+```text
+Convert Qwen/Qwen3-0.6B to a .litertlm dynamic-int8 bundle using litert-torch and
+litert-lm-builder. Enforce the required --mask_as_input=True --transpose_kv_cache=True
+flags for context length 2048, and verify prefill and decode with XNNPACK CPU engine.
+```
+
+#### Package and publish to Hugging Face Hub
+
+```text
+Package the verified conversion artifacts in the stage directory, build and verify
+artifact-manifest.json against the Draft202012 schema, verify no secret tokens or
+.cache residue are present, and publish to my private Hugging Face Hub repository
+with streamed remote content verification.
+```
 
 ### Re-sync from live sources (maintainer)
 
