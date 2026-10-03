@@ -118,3 +118,18 @@ New: `repo-owned/explainify/**` (9 files), `tests/test_explainify_package.py`,
 Modified: `MANIFEST.json`, `README.md`, `VALIDATION_REPORT.md`, `.gitignore`.
 Ignored: `explainify-output/**` (13 run dirs: 5 video bundles with frames, 5 writing runs, and
 the C6/C7/C8 workflow-evidence dirs). Nothing committed.
+
+## 8. Post-push CI finding (2026-10-03, branch feat/explainify-skill)
+
+First push (`cee610a`) exposed a test-portability bug: the sibling workflows
+(unsloth-workflows, hf-generative-model-converter) also run the full root suite, and
+`PortabilityTests.test_video_preflight_json_passes_from_foreign_cwd` asserted exit 0 from the
+video preflight — which requires uv/ffmpeg on the host. Their bare runners correctly reported
+"preflight: FAIL (4 missing)", failing that one test (all other 57 passed). Fix: the test now
+asserts the preflight's contract — returncode ∈ {0,1}, valid JSON, `pass` consistent with the
+exit code and with the per-check booleans, "preflight: PASS|FAIL" line present, and actionable
+"install with" hints on the fail path — so it verifies accurate reporting on tool-rich hosts
+(pass path exercised locally) and bare runners alike, matching the plan's §8 principle that
+capability reporting must work without the video toolchain. Verified on both paths locally
+before pushing the fix.
+

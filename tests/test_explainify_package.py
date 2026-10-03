@@ -296,19 +296,34 @@ class PortabilityTests(unittest.TestCase):
                              result.stdout + result.stderr)
             self.assertNotIn("Traceback", result.stderr)
 
-    def test_video_preflight_json_passes_from_foreign_cwd(self):
+    def test_video_preflight_json_contract_from_foreign_cwd(self):
+        # The preflight must report the environment accurately from any cwd:
+        # exit 0 + pass=true on hosts with the video toolchain, exit 1 +
+        # pass=false with actionable hints where it is absent (e.g. bare CI
+        # runners of sibling workflows, which run this suite without ffmpeg).
+        # Asserting the contract — not the host's toolchain — keeps the test
+        # meaningful in both environments.
         with tempfile.TemporaryDirectory() as td:
             layout = self._copied_layout(td)
             result = self._run_preflight(
                 layout, Path(td), "--format", "explainer-video", "--json")
-            self.assertEqual(result.returncode, 0,
-                             result.stdout + result.stderr)
+            self.assertIn(result.returncode, (0, 1),
+                          result.stdout + result.stderr)
+            self.assertNotIn("Traceback", result.stderr)
             marker = result.stdout.rfind("\n{")
             self.assertGreater(marker, -1, "no JSON object in preflight output")
             payload = json.loads(result.stdout[marker + 1:])
             self.assertEqual(payload["format"], "explainer-video")
-            self.assertIs(payload["pass"], True)
-            self.assertTrue(all(check["ok"] for check in payload["checks"]))
+            self.assertIsInstance(payload["pass"], bool)
+            self.assertEqual(payload["pass"], result.returncode == 0)
+            self.assertTrue(payload["checks"])
+            self.assertEqual(all(check["ok"] for check in payload["checks"]),
+                             payload["pass"])
+            if payload["pass"]:
+                self.assertIn("preflight: PASS", result.stdout)
+            else:
+                self.assertIn("preflight: FAIL", result.stdout)
+                self.assertIn("install with", result.stdout)
 
     def test_copied_tree_references_no_monorepo_only_paths(self):
         with tempfile.TemporaryDirectory() as td:
