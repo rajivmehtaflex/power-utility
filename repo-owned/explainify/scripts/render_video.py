@@ -28,6 +28,14 @@ Usage (exactly one mode per invocation):
         explicitly. ffmpeg with an H.264 encoder must be available; both are
         checked before rendering starts.
 
+    render_video.py --storyboard PATH [--schema PATH] --preview PATH [--overwrite]
+        Validate, run the same in-memory pre-render check as --output, then
+        draw every scene once at its settled state (progress 1.0) into one
+        labeled PNG contact sheet at PATH. Catches layout problems before a
+        full render. It needs no ffmpeg and no H.264 encoder and encodes no
+        video; an existing PATH is rejected unless --overwrite was passed
+        explicitly.
+
     render_video.py --self-test
         Validate a tiny in-memory generic storyboard against the embedded
         schema and exercise draw_scene on an offscreen figure for several
@@ -53,7 +61,9 @@ Stable interface (used by the contract tests and by adapted copies):
         Parses arguments, runs exactly one mode, and returns the process
         exit code (argparse usage errors exit 2 by default).
 
-Storyboard fields are data and are never evaluated as code. The template is
+Storyboard fields are data and are never evaluated as code. A preview is a
+draft layout check drawn from one settled state per scene, never a substitute
+for inspecting frames of the encoded file. The template is
 self-contained: it imports only numpy, matplotlib, and jsonschema plus the
 standard library, reads no other file from the installed skill package, and
 embeds the exact storyboard schema used for validation (--schema overrides
@@ -80,7 +90,7 @@ matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.animation import FFMpegWriter, FuncAnimation  # noqa: E402
-from matplotlib.patches import FancyBboxPatch  # noqa: E402
+from matplotlib.patches import FancyBboxPatch, Rectangle  # noqa: E402
 
 plt.rcParams["mathtext.fontset"] = "cm"  # Computer Modern for any mathtext
 
@@ -98,6 +108,15 @@ FADE_SECONDS = 0.4              # smoothstep fade window (~12 frames at 30 fps)
 POP_STAGGER = 0.35              # seconds between staggered pop-ins
 POP_SECONDS = 0.35              # duration of each pop-in grow
 MAX_TOTAL_SECONDS = 60.0        # storyboard-level duration ceiling
+
+# --preview contact sheet: one full-frame cell per scene, laid out in a grid
+# with a label strip above each row. Cells are the same 12.8x7.2 inch, dpi-100
+# box a rendered frame uses, so a cell is pixel-identical to that scene's
+# settled frame.
+PREVIEW_COLUMNS = 3             # cells per row
+PREVIEW_GAP_IN = 0.14           # gutter between cells, inches
+PREVIEW_LABEL_IN = 0.34         # label strip above each cell row, inches
+PREVIEW_SEPARATOR = "#3A3F4B"   # thin divider drawn around every cell
 
 # Exact copy of the parsed contents of assets/storyboard.schema.json
 # (storyboard contract version 1.0). Embedding it keeps a copied template
@@ -1135,12 +1154,46 @@ def _run_self_test() -> int:
     return 0
 
 
+def _overflow_message(kind: str, artist, renderer, frame_w: float,
+                      frame_h: float, margin: float = 4.0) -> str | None:
+    """Describe how *artist* escapes the frame, or None when it stays inside.
+
+    Text is unclipped by default, so any part beyond the frame is genuinely
+    lost and is reported. Patches and lines are clipped to the axes, which
+    fills the frame here: a partially outside one still renders correctly and
+    is left alone, but one that misses the frame completely draws nothing and
+    is reported as well. Invisible and fully transparent artists are ignored.
+    """
+    if not artist.get_visible():
+        return None
+    alpha = artist.get_alpha()
+    if alpha is not None and float(alpha) <= 0.0:
+        return None
+    extent = artist.get_window_extent(renderer=renderer)
+    inside = (extent.x0 >= -margin and extent.y0 >= -margin
+              and extent.x1 <= frame_w + margin
+              and extent.y1 <= frame_h + margin)
+    if inside:
+        return None
+    where = (f"bounds {extent.x0:.0f},{extent.y0:.0f}..{extent.x1:.0f},"
+             f"{extent.y1:.0f} vs {frame_w:.0f}x{frame_h:.0f} px")
+    if artist.get_clip_on():
+        overlaps = (extent.x1 >= -margin and extent.y1 >= -margin
+                    and extent.x0 <= frame_w + margin
+                    and extent.y0 <= frame_h + margin)
+        if overlaps:
+            return None
+        return f"{kind} lying entirely outside the frame ({where})"
+    return f"{kind} extending outside the frame ({where})"
+
+
 def _prerender_check(scenes: list[dict], brief: dict) -> None:
     """Draw every supplied scene in memory before any encoding starts.
 
-    Catches malformed mathtext, adapter drawing bugs, and text escaping the
-    frame, raising ValueError with the scene id named — failures happen
-    before an output file exists, per the plan's in-memory pre-render check.
+    Catches malformed mathtext, adapter drawing bugs, and anything drawn
+    outside the frame — text, patches, and lines — raising ValueError with the
+    scene id named, so failures happen before an output file exists, per the
+    plan's in-memory pre-render check.
     """
     probe = plt.figure(figsize=(W, H), dpi=100)
     probe.patch.set_facecolor(BG)
@@ -1159,23 +1212,76 @@ def _prerender_check(scenes: list[dict], brief: dict) -> None:
                     ) from exc
             renderer = probe.canvas.get_renderer()
             frame_w, frame_h = W * probe.dpi, H * probe.dpi
-            margin = 4.0
-            for artist in ax.texts:
-                extent = artist.get_window_extent(renderer=renderer)
-                if (extent.x0 < -margin or extent.y0 < -margin
-                        or extent.x1 > frame_w + margin
-                        or extent.y1 > frame_h + margin):
-                    preview = artist.get_text()[:40].replace("\n", " / ")
+            for label, artists in (("text", ax.texts), ("a patch", ax.patches),
+                                   ("a line", ax.lines)):
+                for artist in artists:
+                    message = _overflow_message(label, artist, renderer,
+                                                frame_w, frame_h)
+                    if message is None:
+                        continue
+                    detail = ""
+                    if label == "text":
+                        preview = artist.get_text()[:40].replace("\n", " / ")
+                        detail = f"; text starts: '{preview}'"
                     raise ValueError(
-                        f"scene '{scene_id}' has text extending outside the "
-                        f"frame (bounds {extent.x0:.0f},{extent.y0:.0f}.."
-                        f"{extent.x1:.0f},{extent.y1:.0f} vs "
-                        f"{frame_w:.0f}x{frame_h:.0f} px); text starts: "
-                        f"'{preview}'"
+                        f"scene '{scene_id}' draws {message}{detail}"
                     )
             ax.clear()
     finally:
         plt.close(probe)
+
+
+def _render_contact_sheet(storyboard: dict, output_path: Path) -> int:
+    """Draw every scene once at its settled state into one labeled PNG.
+
+    One cell per scene, drawn at progress 1.0 (everything that scene will
+    show is on screen), tiled into a single contact sheet: a draft layout
+    check that costs one frame per scene instead of a full render. Every cell
+    is the same 12.8x7.2 inch, dpi-100 box a rendered frame uses, so what the
+    sheet shows is what the frame shows. No ffmpeg, no encoder, no video.
+    """
+    scenes = storyboard["scenes"]
+    brief = storyboard["brief"]
+    columns = min(PREVIEW_COLUMNS, len(scenes))
+    rows = math.ceil(len(scenes) / columns)
+    cell_w = W + PREVIEW_GAP_IN
+    cell_h = H + PREVIEW_LABEL_IN + PREVIEW_GAP_IN
+    fig_w = columns * cell_w + PREVIEW_GAP_IN
+    fig_h = rows * cell_h + PREVIEW_GAP_IN
+    fig = plt.figure(figsize=(fig_w, fig_h), dpi=100)
+    fig.patch.set_facecolor(BG)
+    try:
+        for index, scene in enumerate(scenes):
+            row, column = divmod(index, columns)
+            left_in = PREVIEW_GAP_IN + column * cell_w
+            top_in = PREVIEW_GAP_IN + row * cell_h + PREVIEW_LABEL_IN
+            bottom = 1.0 - (top_in + H) / fig_h
+            ax = fig.add_axes([left_in / fig_w, bottom, W / fig_w, H / fig_h])
+            draw_scene(ax, scene, 1.0, brief)
+            fig.add_artist(Rectangle(
+                (left_in / fig_w, bottom), W / fig_w, H / fig_h,
+                transform=fig.transFigure, fill=False,
+                edgecolor=PREVIEW_SEPARATOR, linewidth=1.0,
+            ))
+            scene_id = str(scene.get("id") or f"scene {index + 1}")
+            duration = float(scene.get("duration_seconds") or 0.0)
+            fig.text(left_in / fig_w,
+                     1.0 - (top_in - 0.5 * PREVIEW_LABEL_IN) / fig_h,
+                     f"{index + 1}/{len(scenes)}  {scene_id}  ({duration:g} s)",
+                     color=GREY, size=11, ha="left", va="center")
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(output_path, dpi=100, facecolor=BG)
+    except Exception as exc:
+        print(f"Error: could not write the preview contact sheet to "
+              f"{output_path}: {type(exc).__name__}: {exc}")
+        return 1
+    finally:
+        plt.close(fig)
+    print(f"Wrote preview contact sheet {output_path} "
+          f"({len(scenes)} scene(s) at progress 1.0, "
+          f"{int(round(fig_w * 100))}x{int(round(fig_h * 100))} px; "
+          "no video was encoded).")
+    return 0
 
 
 def _frame_schedule(durations: list[float], fps: int) -> list[tuple[int, int]]:
@@ -1282,6 +1388,10 @@ def main(argv: list[str] | None = None) -> int:
                              "storyboard schema")
     parser.add_argument("--check-only", action="store_true",
                         help="validate the storyboard and exit without rendering")
+    parser.add_argument("--preview", metavar="PATH", default=None,
+                        help="draw every scene once into a labeled PNG "
+                             "contact sheet; encodes no video and needs no "
+                             "ffmpeg")
     parser.add_argument("--output", metavar="PATH", default=None,
                         help="render the video to this new MP4 path")
     parser.add_argument("--overwrite", action="store_true",
@@ -1293,15 +1403,15 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     chosen = sum(1 for flag in (args.self_test, args.check_only,
-                                bool(args.output)) if flag)
+                                bool(args.preview), bool(args.output)) if flag)
     if chosen != 1:
         parser.error("choose exactly one mode: --self-test, --check-only, "
-                     "or --output PATH")
+                     "--preview PATH, or --output PATH")
     if args.self_test:
         return _run_self_test()
     if not args.storyboard:
-        parser.error("--storyboard PATH is required with --check-only "
-                     "and --output")
+        parser.error("--storyboard PATH is required with --check-only, "
+                     "--preview, and --output")
 
     storyboard_path = Path(args.storyboard).expanduser()
     schema_path = Path(args.schema).expanduser() if args.schema else None
@@ -1322,6 +1432,34 @@ def main(argv: list[str] | None = None) -> int:
               f"{len(storyboard['scenes'])} scene(s), "
               f"{total_seconds:.2f} s total, validated against {source}.")
         return 0
+
+    # Preview mode. Order matters: preview-path guard, then storyboard loading
+    # and validation, then the pre-render check, and only then drawing. No
+    # ffmpeg, no encoder, and no video encoding are involved.
+    if args.preview:
+        preview_path = Path(args.preview).expanduser()
+        if preview_path.exists() and not args.overwrite:
+            print(f"Error: preview file already exists: {preview_path}")
+            print("No preview was written and the existing file was left "
+                  "untouched; pass --overwrite only when replacing it was "
+                  "explicitly requested.")
+            return 1
+        try:
+            schema = _load_json(schema_path, "schema") if schema_path \
+                else EMBEDDED_SCHEMA
+            storyboard = _load_json(storyboard_path, "storyboard")
+            validate_storyboard(storyboard, schema)
+        except ValueError as exc:
+            print(f"Error: storyboard validation failed: {exc}")
+            print("No preview was written.")
+            return 1
+        try:
+            _prerender_check(storyboard["scenes"], storyboard["brief"])
+        except ValueError as exc:
+            print(f"Error: pre-render check failed: {exc}")
+            print("No preview was written and no output file was created.")
+            return 1
+        return _render_contact_sheet(storyboard, preview_path)
 
     # Render mode. Order matters: output guard, then encoder preflight, then
     # storyboard loading and validation, and only then any encoding work.

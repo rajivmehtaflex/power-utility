@@ -29,6 +29,8 @@ import copy
 import io
 import json
 import os
+import shutil
+import struct
 import sys
 import tempfile
 import time
@@ -384,6 +386,120 @@ class SelfTestTests(unittest.TestCase):
         self.assertLess(elapsed, 30.0)
 
 
+class MainPreviewTests(unittest.TestCase):
+    """--preview: one labeled PNG contact sheet; no ffmpeg and no video.
+
+    SLOW-ish: each test draws every scene of a small storyboard once and
+    rasterizes it, so a few seconds each; nothing is encoded.
+    """
+
+    def test_preview_writes_png_without_encoding_a_video(self):
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td).resolve()
+            storyboard = write_storyboard(tmp, make_tiny_storyboard())
+            preview = tmp / "sheet.png"
+            code, text = run_main(
+                ["--storyboard", str(storyboard), "--preview", str(preview)]
+            )
+            self.assertEqual(code, 0, text)
+            self.assertTrue(preview.exists(), text)
+            self.assertEqual(preview.read_bytes()[:8], b"\x89PNG\r\n\x1a\n")
+            self.assertGreater(preview.stat().st_size, 1000)
+            self.assertEqual([], list(tmp.glob("*.mp4")))
+            self.assertIn("no video was encoded", text)
+
+    def test_preview_tiles_one_cell_per_scene_in_one_row(self):
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td).resolve()
+            storyboard = write_storyboard(tmp, make_storyboard())  # 3 scenes
+            preview = tmp / "sheet.png"
+            code, text = run_main(
+                ["--storyboard", str(storyboard), "--preview", str(preview)]
+            )
+            self.assertEqual(code, 0, text)
+            width, height = struct.unpack(">II", preview.read_bytes()[16:24])
+            frame_w, frame_h = int(rv.W * 100), int(rv.H * 100)
+            # Three cells across, one row of cells plus its label strip.
+            self.assertGreaterEqual(width, 3 * frame_w)
+            self.assertGreater(height, frame_h)
+            self.assertLess(height, 2 * frame_h)
+
+    def test_preview_needs_no_ffmpeg_on_path(self):
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td).resolve()
+            storyboard = write_storyboard(tmp, make_tiny_storyboard())
+            preview = tmp / "sheet.png"
+            real_which = shutil.which
+            shutil.which = lambda name, *a, **k: (
+                None if name in ("ffmpeg", "ffprobe")
+                else real_which(name, *a, **k)
+            )
+            try:
+                code, text = run_main(
+                    ["--storyboard", str(storyboard), "--preview", str(preview)]
+                )
+            finally:
+                shutil.which = real_which
+            self.assertEqual(code, 0, text)
+            self.assertTrue(preview.exists(), text)
+
+    def test_preview_rejects_invalid_storyboard_without_writing_a_png(self):
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td).resolve()
+            storyboard = make_storyboard()
+            storyboard["scenes"][2]["claim_ids"].append("claim-99")
+            path = write_storyboard(tmp, storyboard)
+            preview = tmp / "sheet.png"
+            code, text = run_main(
+                ["--storyboard", str(path), "--preview", str(preview)]
+            )
+            self.assertNotEqual(code, 0, text)
+            self.assertIn("claim-99", text)
+            self.assertFalse(preview.exists())
+
+    def test_preview_runs_the_prerender_check_before_writing(self):
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td).resolve()
+            storyboard = make_tiny_storyboard()
+            storyboard["scenes"][0]["on_screen_text"] = "$\\brokenmath_{$_%"
+            path = write_storyboard(tmp, storyboard)
+            preview = tmp / "sheet.png"
+            code, text = run_main(
+                ["--storyboard", str(path), "--preview", str(preview)]
+            )
+            self.assertNotEqual(code, 0, text)
+            self.assertIn("pre-render", text)
+            self.assertFalse(preview.exists())
+
+    def test_preview_refuses_existing_path_without_overwrite(self):
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td).resolve()
+            storyboard = write_storyboard(tmp, make_tiny_storyboard())
+            preview = tmp / "sheet.png"
+            preview.write_bytes(b"sentinel-explainify-preview")
+            code, text = run_main(
+                ["--storyboard", str(storyboard), "--preview", str(preview)]
+            )
+            self.assertNotEqual(code, 0, text)
+            self.assertIn(str(preview), text)
+            self.assertEqual(preview.read_bytes(), b"sentinel-explainify-preview")
+
+    def test_preview_and_output_are_mutually_exclusive(self):
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td).resolve()
+            storyboard = write_storyboard(tmp, make_tiny_storyboard())
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                with self.assertRaises(SystemExit) as ctx:
+                    rv.main(["--storyboard", str(storyboard),
+                             "--preview", str(tmp / "sheet.png"),
+                             "--output", str(tmp / "out.mp4")])
+            self.assertNotEqual(ctx.exception.code, 0)
+            self.assertIn("exactly one mode", err.getvalue())
+            self.assertEqual(list(tmp.glob("*.png")), [])
+            self.assertEqual(list(tmp.glob("*.mp4")), [])
+
+
 class DrawSceneTests(unittest.TestCase):
     """draw_scene: generic topic-neutral scene drawing on a matplotlib Axes."""
 
@@ -562,6 +678,56 @@ class ReviewRound1Tests(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             rv._prerender_check(storyboard["scenes"], storyboard["brief"])
         self.assertIn("scene-", str(cm.exception))
+
+    def test_unclipped_patch_outside_frame_fails_prerender_check(self):
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as _plt
+        from matplotlib.patches import Rectangle
+
+        fig = _plt.figure(figsize=(rv.W, rv.H), dpi=100)
+        try:
+            ax = fig.add_axes([0, 0, 1, 1])
+            ax.set_xlim(0, rv.W)
+            ax.set_ylim(0, rv.H)
+            artist = Rectangle((rv.W - 0.4, 1.0), 2.0, 1.0, fc="none", ec="w")
+            artist.set_clip_on(False)
+            ax.add_patch(artist)
+            fig.canvas.draw()
+            message = rv._overflow_message("a patch", artist,
+                                           fig.canvas.get_renderer(),
+                                           rv.W * fig.dpi, rv.H * fig.dpi)
+            self.assertIsNotNone(message)
+            self.assertIn("outside the frame", message)
+        finally:
+            _plt.close(fig)
+
+    def test_clipped_artists_that_still_render_are_not_reported(self):
+        # Clipped artists are cut at the axes edge, which is the frame, so a
+        # full-bleed background or a shape half past the edge renders
+        # correctly and must not fail the check.
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as _plt
+        from matplotlib.patches import Rectangle
+
+        fig = _plt.figure(figsize=(rv.W, rv.H), dpi=100)
+        try:
+            ax = fig.add_axes([0, 0, 1, 1])
+            ax.set_xlim(0, rv.W)
+            ax.set_ylim(0, rv.H)
+            bleed = Rectangle((-1.0, -1.0), rv.W + 2.0, rv.H + 2.0,
+                              fc="none", ec="w")
+            past_edge = Rectangle((rv.W - 0.4, 1.0), 2.0, 1.0, fc="none", ec="w")
+            ax.add_patch(bleed)
+            ax.add_patch(past_edge)
+            fig.canvas.draw()
+            renderer = fig.canvas.get_renderer()
+            for artist in (bleed, past_edge):
+                self.assertIsNone(rv._overflow_message(
+                    "a patch", artist, renderer, rv.W * fig.dpi, rv.H * fig.dpi))
+        finally:
+            _plt.close(fig)
 
     def test_render_mode_rejects_broken_math_before_creating_output(self):
         with tempfile.TemporaryDirectory() as td:
