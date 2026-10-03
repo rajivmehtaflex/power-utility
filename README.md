@@ -336,6 +336,57 @@ artifact-manifest.json against the Draft202012 schema, verify no secret tokens o
 with streamed remote content verification.
 ```
 
+### Prompt cookbook: `explainify`
+
+Use these prompts after installing the skill
+(`npx skills add rajivmehtaflex/power-utility --skill explainify`; add
+`--global --copy` to install it for every project). Writing works with file
+access only. Video additionally needs `uv`, `ffmpeg`/`ffprobe` with an H.264
+encoder, and image inspection for full verification — run the skill's
+`scripts/check_env.py --format explainer-video` preflight if unsure. Videos are
+silent, at most 60 seconds, and land in a fresh
+`explainify-output/<slug>-<timestamp>/` directory together with the render
+script, storyboard, and verification notes.
+
+#### Simplified-English explanation of a topic
+
+```text
+Explainify ring attention in simplified English for a reader who knows basic
+transformer attention but nothing about distributed inference.
+```
+
+You get `<slug>-asd-ste100.md` — STE-inspired simplified English (explicitly
+approximate, not ASD-STE100-validated), with source attribution and a stated
+list of omissions.
+
+#### Explainer video of one mechanism
+
+```text
+Make an explainer video of how UTF-8 encodes a character — short byte
+sequences for common characters, longer ones for rare characters — ending on
+why old ASCII text is already valid UTF-8.
+```
+
+You get a silent MP4 (1280×720, 30 fps, H.264) plus the reproducibility
+bundle; re-render it anywhere with
+`uv run <slug>-render.py --storyboard <slug>-storyboard.json --output <new>.mp4`.
+
+#### Re-explain a URL or a local file
+
+```text
+Explainify https://www.joelonsoftware.com/2003/10/08/the-absolute-minimum-every-software-developer-absolutely-positively-must-know-about-unicode-and-character-sets-no-excuses/
+as a 40-second video for a curious reader unfamiliar with encodings.
+```
+
+```text
+Explainify ./notes/longitude-history.md in simplified English, and keep the
+teaching brief as a second file.
+```
+
+URL runs record retrieval status and never silently fall back to model
+knowledge; file runs preserve the source's dates, negations, and uncertainty
+qualifiers.
+
 ### Re-sync from live sources (maintainer)
 
 
