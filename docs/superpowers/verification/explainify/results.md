@@ -193,3 +193,38 @@ and a framemd5 regression check — the same storyboard rendered by `40c8183`'s 
 by this one decodes to **60/60 byte-identical frames**. Not verified here: no new
 topic-specific adapted copy was rendered (the generic template and its CLI are what
 changed), and suggestion 2 was not implemented.
+
+
+## 11. 2026-10-03 concurrency round — v0.2.1 (`docs/explainify-retrieval-guidance`)
+
+A second suggestion batch (parallelize source retrieval; matplotlib is not thread-safe so
+use processes for scenes; libx264 already threads; optimize static drawing first, then
+profile) was measured before any change. Host: 8 logical cores (4 performance + 4
+efficiency), 8 GB RAM, macOS; storyboard 8 scenes × 5 s = 40 s = 1,200 frames.
+
+| Measurement | Result |
+|---|---|
+| Serial render, template's own CLI | 17.96 s wall, 25.08 s CPU = **140% of 8 cores** |
+| x264 stage alone (decode + re-encode on the same content) | 1.29 s at **545% CPU** — already parallel; ~7% of render wall time |
+| Producer, isolated: `draw_scene` | 3.62 s (3.02 ms/frame) = **36%** |
+| Producer, isolated: rasterization (`canvas.draw` + `buffer_rgba`) | 6.5 s = **64%**; RGBA transport is ~free (savefig(rgba) ≡ draw+raster) |
+| PNG transport instead of RGBA | +6.6 ms/frame (worse); matplotlib 3.11 `FFMpegWriter.supported_formats == ['rgba']` |
+| Process-per-scene: 8 workers → PNGs → one ffmpeg join | **6.57 s = 2.73x**; 1,200/1,200 decoded frames **byte-identical** to the serial path; ~78 MB RSS per worker; 32 MB temp PNGs |
+| Same work in 8 threads | 11.2 s (processes: 4.66 s); matplotlib thread-safety is not guaranteed (global rcParams and font cache) |
+| Spawn safety | the first naive parallel attempt hung: macOS `multiprocessing` spawns and re-imports the module, so every worker needs the adapter copy importable and its payloads picklable |
+| Retrieval | the skill contains no fetch code (`check_env.py`/`render_video.py` have no urllib/requests/socket); Step 1 models one source, and its only multi-fetch path (blocked → alternate) is inherently sequential. Batched fetching is available agent-side (verified: one call returned two pages) |
+
+Decisions from those numbers:
+
+| Suggestion | Outcome |
+|---|---|
+| Parallelize source retrieval | **Adopted as guidance.** Step 1 now says to request several independent pages in one batched call or in parallel when the capability supports it, while keeping the blocked-source fallback sequential and provenance per retrieval. The skill has no retrieval code, so this is the only form it can take. |
+| Draw frames in threads | **Rejected.** 11.2 s against 4.66 s for processes on identical work; the GIL and matplotlib's process-global state both apply. |
+| Process-based scene rendering | **Measured, not adopted.** It works (2.73x, frame-identical output) and the design is validated, but the prize is ~11 s per full render, once or twice per task, in exchange for a second output path every adapter must preserve, spawn-safe adapter copies, a core-count fallback for 2-core runners, temp-frame management, child-process error propagation, and re-verification of Step 4's five checks against two paths. Revisit if the format grows past 60 s or batch re-renders become routine. |
+| Video encoding | **Nothing to do.** Already parallel at 545% CPU; `-preset` tuning was measured at 2.7% in §10. Its threads also contend with the Python producer for these 8 cores, part of why the serial render sits at 140%. |
+| Optimize static drawing first | **Still deferred (§10).** `draw_scene` is 36% of the producer and ~20% of the render, so a perfect cache is worth ~1 s; the serial bottleneck is rasterization, which only parallelizes across processes. |
+
+Version 0.2.0 → **0.2.1** (guidance change only; no renderer behavior changed, so no
+contract-test or smoke-test change was needed). Suite state on this branch: contract tests
+51/51 unchanged, root suite 58/58 (version assertions moved to 0.2.1), `skills-ref
+validate` PASS.
