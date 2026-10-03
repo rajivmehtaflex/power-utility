@@ -1,0 +1,276 @@
+{
+  "schema_version": "1.0",
+  "brief": {
+    "title": "How UTF-8 stores text as bytes",
+    "source": {
+      "kind": "url",
+      "requested_location": "https://www.joelonsoftware.com/2003/10/08/the-absolute-minimum-every-software-developer-absolutely-positively-must-know-about-unicode-and-character-sets-no-excuses/",
+      "resolved_location": "https://www.joelonsoftware.com/2003/10/08/the-absolute-minimum-every-software-developer-absolutely-positively-must-know-about-unicode-and-character-sets-no-excuses/",
+      "source_title": "The Absolute Minimum Every Software Developer Absolutely, Positively Must Know About Unicode and Character Sets (No Excuses!)",
+      "retrieval_status": "complete",
+      "retrieved_at": "2026-10-03"
+    },
+    "audience": "A curious viewer unfamiliar with character encodings.",
+    "learning_objective": "Understand how UTF-8 encodes a Unicode code point as a variable-length byte sequence: code points 0-127 become one byte, code points 128 and above become longer sequences, and therefore old ASCII text is already valid UTF-8.",
+    "prerequisites": [
+      "Computers store text as numbers (introduced on screen before use)",
+      "A byte holds 8 bits, so it can hold values 0-255 (introduced on screen before use)"
+    ],
+    "terms": [
+      {
+        "term": "encoding",
+        "definition": "The rule that says which number stands for which character, and how those numbers are stored as bytes."
+      },
+      {
+        "term": "code page",
+        "definition": "One agreed meaning for the byte values 128 to 255; different regions used different code pages."
+      },
+      {
+        "term": "Unicode",
+        "definition": "One list that assigns every character of every reasonable writing system a single code point."
+      },
+      {
+        "term": "code point",
+        "definition": "The number Unicode assigns to a character, written in hexadecimal like U+0041; it names the character but does not say how to store it."
+      },
+      {
+        "term": "UTF-8",
+        "definition": "An encoding that stores Unicode code points as 8-bit bytes: code points 0-127 take one byte, code points 128 and above take 2, 3, or more."
+      }
+    ],
+    "core_claim": "Unicode gives every character one abstract code point, and UTF-8 stores those code points as variable-length byte sequences - one byte for code points 0-127 and longer sequences above 127 - so existing ASCII bytes are already valid UTF-8.",
+    "mechanism": [
+      {
+        "step": 1,
+        "description": "ASCII mapped each unaccented English character to a number between 32 and 127 (A was 65), which fits in 7 bits."
+      },
+      {
+        "step": 2,
+        "description": "Different regions reused the numbers 128 to 255 differently (code pages), so one byte value no longer named one character worldwide."
+      },
+      {
+        "step": 3,
+        "description": "Unicode assigned every character in every reasonable writing system a single abstract code point such as U+0041 or U+0639."
+      },
+      {
+        "step": 4,
+        "description": "A separate encoding decides how to store each code point as bytes; UCS-2/UTF-16 stored every code point in two bytes, wasting zero bytes on English text."
+      },
+      {
+        "step": 5,
+        "description": "UTF-8 stores code points 0-127 in a single byte and code points 128 and above in 2, 3, or more bytes (the 2003 essay says up to 6)."
+      },
+      {
+        "step": 6,
+        "description": "Because ASCII used only numbers 0-127, existing ASCII text such as 'Hello' is stored in UTF-8 as exactly the same bytes."
+      }
+    ],
+    "claims": [
+      {
+        "id": "claim-ascii-numbers",
+        "statement": "Early American software used the encoding ASCII, which gave every unaccented English character a number between 32 and 127; space was 32 and the letter A was 65, fitting in 7 bits.",
+        "origin": "retrieved-source"
+      },
+      {
+        "id": "claim-128-conflict",
+        "statement": "Many groups used the numbers 128 to 255 for their own languages, so the same number meant different characters on different computers: number 130 displayed as e-acute on some PCs but as the Hebrew letter Gimel in Israel; code pages (for example 862 in Israel, 737 in Greece) standardized this but still matched only below 128.",
+        "origin": "retrieved-source",
+        "qualifications": [
+          "The e-acute/Gimel split is the essay's own example, not a new measurement."
+        ]
+      },
+      {
+        "id": "claim-unicode-code-points",
+        "statement": "Unicode is one character list for every reasonable writing system (including make-believe ones like Klingon) that assigns each character a code point written in hexadecimal, such as U+0639 for the Arabic letter Ain and U+0041 for A.",
+        "origin": "retrieved-source"
+      },
+      {
+        "id": "claim-myth-not-16-bit",
+        "statement": "The widespread belief that Unicode simply stores each character in 16 bits is not correct; Unicode defines letters without a real limit and had already gone beyond 65,536 characters when the essay was written.",
+        "origin": "retrieved-source",
+        "qualifications": [
+          "The negation must survive: the 16-bit picture is a misconception, not a fact about Unicode."
+        ]
+      },
+      {
+        "id": "claim-code-point-abstract",
+        "statement": "A code point names a character; it does not say how to store the character as bytes - that is the encoding's job.",
+        "origin": "retrieved-source",
+        "qualifications": [
+          "The negation 'does not say how to store' is the essay's central distinction and must stay."
+        ]
+      },
+      {
+        "id": "claim-ucs2-zeros",
+        "statement": "The earliest Unicode encoding stored each code point in two bytes (UCS-2 or UTF-16), and programmers complained about the wasted zero bytes in English text.",
+        "origin": "retrieved-source"
+      },
+      {
+        "id": "claim-utf8-rule",
+        "statement": "In UTF-8, every code point from 0 to 127 is stored in a single byte, and only code points 128 and above are stored using 2, 3, in fact up to 6 bytes.",
+        "origin": "retrieved-source",
+        "qualifications": [
+          "Published 2003-10-08; the 'up to 6 bytes' upper end is the essay's 2003 statement, shown on screen dated to the essay."
+        ]
+      },
+      {
+        "id": "claim-utf8-example",
+        "statement": "Illustrative byte example derived from the UTF-8 rule (not from the essay, not measured): e-acute has code point U+00E9, which is above 127, so it is stored as the two bytes C3 A9.",
+        "origin": "illustrative",
+        "qualifications": [
+          "Marked 'illustrative - derived from the rule' in the brief and on screen.",
+          "A (U+0041) shown as byte 41 is likewise derived from the same rule."
+        ]
+      },
+      {
+        "id": "claim-hello-bytes",
+        "statement": "The essay's example: Hello, the code points U+0048 U+0065 U+006C U+006C U+006F, is stored in UTF-8 as the bytes 48 65 6C 6C 6F - the same bytes ASCII used.",
+        "origin": "retrieved-source"
+      },
+      {
+        "id": "claim-ascii-payoff",
+        "statement": "English text looks exactly the same in UTF-8 as it did in ASCII, so old ASCII text needed no conversion; old string code that ends at a single 0 byte will not truncate UTF-8 strings.",
+        "origin": "retrieved-source",
+        "qualifications": [
+          "The 'will not truncate' negation must survive."
+        ]
+      },
+      {
+        "id": "claim-no-plain-text",
+        "statement": "It does not make sense to have a string without knowing what encoding it uses; in the essay's words, 'There Ain't No Such Thing As Plain Text.'",
+        "origin": "retrieved-source",
+        "qualifications": [
+          "The quoted fragment is verbatim from the retrieved text and keeps its negation."
+        ]
+      }
+    ],
+    "example": {
+      "summary": "One common and one less common character encoded under the UTF-8 rule: A (U+0041, below 128) becomes the single byte 41, and e-acute (U+00E9 = 233, above 127) becomes the two bytes C3 A9.",
+      "value_origin": "derived",
+      "detail": "Derived by applying the essay's UTF-8 rule plus the standard two-byte layout 110xxxxx 10xxxxxx. The essay itself contains the rule and the Hello example, but not the C3 A9 bytes; the bytes are computed, not quoted, and are labeled illustrative on screen.",
+      "calculation": "U+00E9 = 233 = binary 11101001. Two-byte UTF-8 carries 5 payload bits then 6: 00111 | 010011 -> 11000011 10101001 = C3 A9. Check: 'e-acute'.encode('utf-8').hex() == 'c3a9'. For A: 65 < 128, so one byte 0x41. Check: Hello -> 48 65 6C 6C 6F, identical to its ASCII bytes."
+    },
+    "analogy": null,
+    "must_preserve": [
+      "The essay was published 2003-10-08; on-screen 'up to 6 bytes' is dated to the essay, not stated as a current fact.",
+      "Negations kept: the 16-bit belief 'is not correct'; a code point 'does not say how to store' the character; old 0-byte-terminated code 'will not truncate' UTF-8; 'There Ain't No Such Thing As Plain Text'.",
+      "The e-acute to C3 A9 byte example is illustrative and derived from the rule, never presented as a quotation or measurement from the essay.",
+      "Numbers 32, 65, 130, 862, 737, and 65,536 are the essay's own values, attributed to the essay."
+    ],
+    "omissions": [
+      "The video teaches one mechanism only: how UTF-8 encodes a code point as a variable-length byte sequence. It is not a summary of the essay.",
+      "Omitted essay content: the FogBUGZ and PHP anecdotes, EBCDIC, the WordStar high-bit trick, double-byte character sets, byte-order marks and endianness, UTF-7 and UCS-4, question-mark substitution, how email and web pages declare encodings, browser encoding guessing, and the CityDesk example.",
+      "The modern 4-byte cap on UTF-8 (post-essay standardization) is not discussed on screen; the video stays with the essay's dated 2003 statement.",
+      "Byte-order-mark and endian details of UCS-2 are omitted; only the two-bytes-per-code-point cost is shown."
+    ]
+  },
+  "render": {
+    "width": 1280,
+    "height": 720,
+    "fps": 30,
+    "title": "How UTF-8 stores text as bytes"
+  },
+  "scenes": [
+    {
+      "id": "scene-1-title",
+      "duration_seconds": 4.0,
+      "purpose": "Title and hook: state that text becomes bytes and that the video shows the one rule that stores them.",
+      "on_screen_text": "How does a letter become bytes?\nFrom ASCII to Unicode to one rule: UTF-8",
+      "visual_intent": "Large title, subtitle hook, and a motif row of a letter box, a number tag, and small byte boxes popping in staggered, suggesting the letter-to-number-to-bytes arc.",
+      "claim_ids": ["claim-ascii-numbers"],
+      "data": {
+        "motif": ["A", "65", "41"],
+        "note": "essay: Joel Spolsky, 2003-10-08 · retrieved 2026-10-03"
+      }
+    },
+    {
+      "id": "scene-2-ascii",
+      "duration_seconds": 5.5,
+      "purpose": "Establish the starting state: ASCII gave every unaccented English character a number between 32 and 127.",
+      "on_screen_text": "ASCII: every English character got a number\nA = 65 · space = 32 · range 32-127, fits in 7 bits",
+      "visual_intent": "Character boxes (A, space, a few others shown as the range) each with their number below, then a 7-cell bit strip filling to 1000001 for A, labelled as derived; footer notes values are from the essay.",
+      "claim_ids": ["claim-ascii-numbers"],
+      "data": {
+        "pairs": [["A", "65"], ["space", "32"]],
+        "bit_strip": "1000001",
+        "bit_note": "65 in 7 bits (derived)",
+        "note": "A=65, space=32, range 32-127: essay values"
+      }
+    },
+    {
+      "id": "scene-3-overflow",
+      "duration_seconds": 6.0,
+      "purpose": "Show why 128 numbers were not enough: the values 128-255 meant different characters in different places.",
+      "on_screen_text": "128 numbers were not enough\nbyte 130: é here — Hebrew Gimel in Israel",
+      "visual_intent": "One byte box with the value 130 at center; two arrows to two region panels, one showing é and one showing 'Hebrew letter Gimel'; then code-page boxes 862 (Israel DOS) and 737 (Greek) with the caption 'same below 128 · different above'.",
+      "claim_ids": ["claim-128-conflict"],
+      "data": {
+        "byte": "130",
+        "left": "é",
+        "right": "Hebrew letter Gimel",
+        "code_pages": [["862", "Israel DOS"], ["737", "Greek users"]],
+        "caption": "code pages: same below 128 · different from 128 up",
+        "note": "essay's example (code 130)"
+      }
+    },
+    {
+      "id": "scene-4-unicode",
+      "duration_seconds": 6.0,
+      "purpose": "Introduce Unicode code points as abstract numbers for every writing system, and reject the 16-bit misconception.",
+      "on_screen_text": "Unicode: every character gets one code point\nA → U+0041 · é → U+00E9 · Arabic Ain → U+0639",
+      "visual_intent": "A growing list of character boxes each with its U+ number below (A, é, 'Arabic Ain'); then a crossed-out panel reading 'just 16 bits per character?' with the verdict 'that belief is not correct — beyond 65,536 already'.",
+      "claim_ids": ["claim-unicode-code-points", "claim-myth-not-16-bit"],
+      "data": {
+        "pairs": [["A", "U+0041"], ["é", "U+00E9"], ["Arabic Ain", "U+0639"]],
+        "myth": "Unicode = just 16 bits per character?",
+        "verdict": "not correct — no real limit, already beyond 65,536",
+        "note": "U+0041, U+0639: essay values · é→U+00E9 derived"
+      }
+    },
+    {
+      "id": "scene-5-store-bytes",
+      "duration_seconds": 5.5,
+      "purpose": "Separate the code point from its byte layout and show the two-byte UCS-2 attempt with its wasted zeros.",
+      "on_screen_text": "A code point is not a byte layout\nUCS-2: two bytes each — look at all those zeros",
+      "visual_intent": "Hello written once as its five code points, then as ten byte cells 00 48 00 65 00 6C 00 6C 00 6F with the 00 cells highlighted red and the complaint line fading in.",
+      "claim_ids": ["claim-code-point-abstract", "claim-ucs2-zeros"],
+      "data": {
+        "word": "Hello",
+        "code_points": ["U+0048", "U+0065", "U+006C", "U+006C", "U+006F"],
+        "bytes": ["00", "48", "00", "65", "00", "6C", "00", "6C", "00", "6F"],
+        "complaint": "programmers: look at all those zeros!",
+        "note": "essay: earliest encoding = 2 bytes per code point"
+      }
+    },
+    {
+      "id": "scene-6-utf8-rule",
+      "duration_seconds": 7.0,
+      "purpose": "Teach the selected mechanism: the UTF-8 rule that maps code points to variable-length byte sequences.",
+      "on_screen_text": "UTF-8: short sequences for common characters\n0-127 → 1 byte · 128 and above → 2, 3 … up to 6 (essay, 2003)",
+      "visual_intent": "Two encoding lanes: A (U+0041) flows through an arrow into one byte box [41]; é (U+00E9) flows through a longer, thicker arrow into two byte boxes [C3][A9]; a third ghost lane suggests longer sequences with '+ more bytes for rarer characters'. Every byte value labeled illustrative - derived from the rule.",
+      "claim_ids": ["claim-utf8-rule", "claim-utf8-example"],
+      "data": {
+        "lanes": [
+          {"char": "A", "cp": "U+0041", "bytes": ["41"], "tag": "below 128 → 1 byte"},
+          {"char": "é", "cp": "U+00E9", "bytes": ["C3", "A9"], "tag": "above 128 → 2 bytes"},
+          {"char": "rarer characters", "cp": "· · ·", "bytes": ["…", "…", "…"], "tag": "2, 3 … up to 6 bytes (essay, 2003)"}
+        ],
+        "note": "byte values illustrative — derived from the rule"
+      }
+    },
+    {
+      "id": "scene-7-payoff",
+      "duration_seconds": 5.0,
+      "purpose": "Payoff: old ASCII text is already valid UTF-8, and the closing rule that there is no plain text.",
+      "on_screen_text": "Old ASCII text is already valid UTF-8\nHello → 48 65 6C 6C 6F, the same bytes\n\"There Ain’t No Such Thing As Plain Text.\"",
+      "visual_intent": "Hello as five letter boxes, each with its code point above and its single UTF-8 byte box below, all bytes matching the ASCII row; a green check marks 'same bytes as ASCII'; the essay's closing quoted line fades in last.",
+      "claim_ids": ["claim-hello-bytes", "claim-ascii-payoff", "claim-no-plain-text"],
+      "data": {
+        "letters": [["H", "U+0048", "48"], ["e", "U+0065", "65"], ["l", "U+006C", "6C"], ["l", "U+006C", "6C"], ["o", "U+006F", "6F"]],
+        "check": "same bytes as ASCII — no conversion needed",
+        "quote": "\"There Ain’t No Such Thing As Plain Text.\" — essay, 2003",
+        "note": "essay's Hello example"
+      }
+    }
+  ]
+}

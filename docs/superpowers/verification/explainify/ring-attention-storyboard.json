@@ -1,0 +1,248 @@
+{
+  "schema_version": "1.0",
+  "brief": {
+    "title": "Ring attention",
+    "source": {
+      "kind": "topic",
+      "requested_location": null,
+      "resolved_location": null,
+      "source_title": null,
+      "retrieval_status": "not-applicable",
+      "retrieved_at": null
+    },
+    "audience": "A curious reader unfamiliar with the concept; comfortable with simple diagrams, but with no machine-learning or distributed-systems background.",
+    "learning_objective": "After watching, the learner can explain the one key mechanism of ring attention: a long sequence is cut into shards spread across devices linked in a ring, each device keeps its queries local, and the key/value blocks travel around the ring so every device attends to every block - full attention without any device holding the whole key/value data.",
+    "prerequisites": [
+      "A sequence is processed token by token (a token is one unit of text); introduced on screen before use.",
+      "Attention matches each token's query against every token's key and combines every value; introduced on screen before the mechanism starts.",
+      "A device is one processor with its own limited memory; introduced on screen before the memory problem is shown."
+    ],
+    "terms": [
+      {"term": "token", "definition": "One unit of text the model processes."},
+      {"term": "attention", "definition": "The transformer step where each token gathers information from every other token by matching its query against keys and combining values."},
+      {"term": "query", "definition": "The role vector a token uses to state what it is looking for in the other tokens."},
+      {"term": "key", "definition": "The role vector a token offers for matching against queries."},
+      {"term": "value", "definition": "The role vector holding the content a token contributes when others attend to it."},
+      {"term": "device", "definition": "One processor with its own private memory, such as one accelerator chip."},
+      {"term": "sequence shard", "definition": "One consecutive piece of the sequence, stored on one device."},
+      {"term": "key/value block", "definition": "The keys and values belonging to one sequence shard; the unit that travels around the ring."},
+      {"term": "device ring", "definition": "The closed-loop layout in which every device exchanges data only with its two neighbors."},
+      {"term": "partial attention result", "definition": "The running per-query record of what the key/value blocks that have visited a device contributed so far."}
+    ],
+    "core_claim": "Ring attention cuts a long sequence into shards stored on devices linked in a ring; each device keeps its queries local while key/value blocks travel the ring, and after one full loop every device has attended to the whole sequence without any device ever holding the whole key/value data.",
+    "mechanism": [
+      {"step": 1, "description": "Attention requires every token's query to meet every token's key and value."},
+      {"step": 2, "description": "For a very long sequence, the keys and values together outgrow one device's memory."},
+      {"step": 3, "description": "The sequence is cut into consecutive shards and each device stores one shard, including its key/value block."},
+      {"step": 4, "description": "The devices are linked in one closed ring, and each device exchanges data only with its two neighbors."},
+      {"step": 5, "description": "Each device keeps its queries at home; only the key/value blocks travel."},
+      {"step": 6, "description": "In lockstep, every device sends its held key/value block to one neighbor and receives another block from its other neighbor."},
+      {"step": 7, "description": "When a block visits a device, the device computes the attention between its local queries and that block and adds the contribution to its partial attention result."},
+      {"step": 8, "description": "After one full loop, every block has visited every device; the partial results merge into the same attention as if the whole sequence were on one device."}
+    ],
+    "claims": [
+      {
+        "id": "claim-attention-all",
+        "statement": "Attention matches each token's query against every token's key and combines every value, so every query needs access to every key and value.",
+        "origin": "model-knowledge",
+        "qualifications": [
+          "This describes the standard transformer attention requirement; the video shows the requirement, not the arithmetic."
+        ]
+      },
+      {
+        "id": "claim-kv-grows",
+        "statement": "The keys and values for a whole sequence grow with the sequence length and can become too large for one device's memory.",
+        "origin": "model-knowledge",
+        "qualifications": [
+          "Whether the data exceeds a device depends on the sequence, the model, and the device; this video claims no specific sizes, counts, or numbers."
+        ]
+      },
+      {
+        "id": "claim-shard",
+        "statement": "Ring attention cuts the sequence into consecutive shards and stores one shard per device.",
+        "origin": "model-knowledge",
+        "qualifications": [
+          "The four devices shown are an illustrative layout, not a recommended or measured configuration."
+        ]
+      },
+      {
+        "id": "claim-ring",
+        "statement": "The devices are connected in one closed loop, and each device exchanges data only with its two neighbors.",
+        "origin": "model-knowledge",
+        "qualifications": []
+      },
+      {
+        "id": "claim-queries-local",
+        "statement": "Each device keeps its own queries at home; only the key/value blocks travel around the ring.",
+        "origin": "model-knowledge",
+        "qualifications": []
+      },
+      {
+        "id": "claim-visit",
+        "statement": "When a key/value block visits a device, the device computes the attention between its local queries and that block, and adds the result to a running partial attention result.",
+        "origin": "model-knowledge",
+        "qualifications": [
+          "The coverage dots and partial-result bars in the animation are illustrative indicators of progress, not measured quantities."
+        ]
+      },
+      {
+        "id": "claim-full-loop",
+        "statement": "After one full loop, every device has combined its queries with every key/value block, giving the same attention as if the whole sequence were on one device.",
+        "origin": "model-knowledge",
+        "qualifications": [
+          "The equivalence holds in exact arithmetic; real floating-point rounding can introduce tiny differences."
+        ]
+      },
+      {
+        "id": "claim-no-replication",
+        "statement": "No device ever holds the whole sequence's keys and values at once.",
+        "origin": "model-knowledge",
+        "qualifications": []
+      },
+      {
+        "id": "claim-unchanged",
+        "statement": "Attention itself is unchanged; only the arrangement of the computation across devices changes.",
+        "origin": "model-knowledge",
+        "qualifications": []
+      }
+    ],
+    "example": {
+      "summary": "A four-device ring holding four sequence shards (illustrative layout).",
+      "value_origin": "illustrative",
+      "detail": "Four devices each store one shard's key/value block. Each device keeps its own block and receives the other three in turn as the blocks circulate.",
+      "calculation": "4 shards in total; each device sees its own 1 block + 3 received blocks = 4 blocks, which is every block; each block makes 3 hops, so one full loop suffices. The device count is an illustrative layout choice, not a measured configuration."
+    },
+    "analogy": null,
+    "must_preserve": [
+      "The negation: attention itself is unchanged - only the arrangement of computation across devices changes.",
+      "No performance numbers appear on screen; every size relationship stays qualitative.",
+      "The four-device ring and the shard layout are illustrative, not a measured or recommended configuration.",
+      "Whether the key/value data exceeds one device depends on the sequence, the model, and the device; no specific sizes are claimed.",
+      "The equivalence to single-device attention holds in exact arithmetic; floating-point rounding can introduce tiny differences."
+    ],
+    "omissions": [
+      "Training details and load balancing for shards of unequal size.",
+      "Overlapping versus non-overlapping communication schedules and their costs.",
+      "The exact arithmetic that merges partial attention results (online rescaling of attention weights).",
+      "Concrete implementations, hardware, benchmarks, or performance figures.",
+      "Causal masking for text-generation models."
+    ]
+  },
+  "render": {
+    "width": 1280,
+    "height": 720,
+    "fps": 30,
+    "title": "Ring attention"
+  },
+  "scenes": [
+    {
+      "id": "title",
+      "duration_seconds": 4.0,
+      "purpose": "Hook: name the concept and pose the problem the video will solve - attending to a sequence no single device can hold.",
+      "on_screen_text": "How do you attend to a sequence\nno single device can hold?",
+      "visual_intent": "Large title 'Ring attention' with a blue hook line underneath, and a quiet decorative motif of four dots linked in a circle with thin arrows fading in below.",
+      "claim_ids": ["claim-shard"],
+      "data": {
+        "hook_note": "silent \u00b7 rendered locally"
+      }
+    },
+    {
+      "id": "attention-needs-all",
+      "duration_seconds": 5.0,
+      "purpose": "Prerequisite: attention requires every token's query to meet every token's key and value.",
+      "on_screen_text": "attention: every query must meet\nevery key and every value",
+      "visual_intent": "A row of neutral token boxes with ellipsis ends suggesting a long sequence; thin arcs pop in staggered above the row connecting every pair, showing all-to-all access.",
+      "claim_ids": ["claim-attention-all"],
+      "data": {
+        "token_count": 9,
+        "ellipsis_ends": true,
+        "note": "each query reads every key, every value"
+      }
+    },
+    {
+      "id": "kv-too-big",
+      "duration_seconds": 4.5,
+      "purpose": "The obstacle: for a long sequence the keys and values outgrow one device's memory.",
+      "on_screen_text": "a long sequence: the keys and values\noutgrow one device's memory",
+      "visual_intent": "A dashed rounded box labeled 'one device's memory'; key/value bars pop in one by one inside it until it is full; further bars land outside the boundary in red with a 'too large' tag. No numbers shown.",
+      "claim_ids": ["claim-kv-grows"],
+      "data": {
+        "bars_inside": 6,
+        "bars_outside": 3,
+        "note": "qualitative \u2014 no sizes claimed"
+      }
+    },
+    {
+      "id": "shard-ring",
+      "duration_seconds": 5.5,
+      "purpose": "The arrangement: shard the sequence and link the devices in a ring.",
+      "on_screen_text": "cut the sequence into shards \u2014\none shard per device, linked in a ring",
+      "visual_intent": "A sequence bar at the top splits into four colored shard segments along dashed cut lines; curved arrows carry each segment down to its own device box; the four device boxes sit on a circle joined by ring arrows. Device labels are illustrative.",
+      "claim_ids": ["claim-shard", "claim-ring"],
+      "data": {
+        "devices": 4,
+        "device_labels": ["D1", "D2", "D3", "D4"],
+        "shard_colors": ["#F4D345", "#58C4DD", "#83C167", "#A78BFA"],
+        "note": "illustrative layout: 4 devices"
+      }
+    },
+    {
+      "id": "queries-local",
+      "duration_seconds": 4.0,
+      "purpose": "Centerpiece setup: queries stay home; only key/value blocks travel.",
+      "on_screen_text": "queries stay put \u2014\nkey/value blocks travel the ring",
+      "visual_intent": "The device ring returns; each device box holds a stationary yellow query icon; key/value blocks (blue K half, green V half) sit between neighboring devices with curved arrows showing one circulation direction; a two-line legend names what stays and what travels.",
+      "claim_ids": ["claim-queries-local", "claim-ring"],
+      "data": {
+        "devices": 4,
+        "device_labels": ["D1", "D2", "D3", "D4"],
+        "legend": [
+          ["Q", "queries \u2014 stay on their device"],
+          ["KV", "key/value blocks \u2014 travel the ring"]
+        ],
+        "note": "one circulation direction"
+      }
+    },
+    {
+      "id": "shard-journey",
+      "duration_seconds": 7.0,
+      "purpose": "THE mechanism: blocks circulate in lockstep; each device attends to every block that passes through and accumulates a partial result.",
+      "on_screen_text": "each device attends to every block\nthat passes through",
+      "visual_intent": "Centerpiece animation: the ring of four devices, each with stationary queries, a coverage row of dots, and a partial-result bar. The four key/value blocks hop around the ring in synchronized steps with eased motion; at every arrival the visiting block briefly flashes against that device's queries, one coverage dot fills, and the partial-result bar grows. One tracked block is drawn bolder so the eye can follow a single journey.",
+      "claim_ids": ["claim-visit", "claim-queries-local"],
+      "data": {
+        "devices": 4,
+        "hops": 3,
+        "device_labels": ["D1", "D2", "D3", "D4"],
+        "shard_colors": ["#F4D345", "#58C4DD", "#83C167", "#A78BFA"],
+        "tracked_shard": 2,
+        "note": "every device passes its block each step"
+      }
+    },
+    {
+      "id": "full-loop",
+      "duration_seconds": 5.0,
+      "purpose": "Payoff: after one loop every query has met every key and value, and nothing was replicated.",
+      "on_screen_text": "one loop later: every query has met\nevery key and value \u2014 nothing replicated",
+      "visual_intent": "The ring at rest with every coverage dot filled and every partial-result bar complete; the key/value blocks shown faded between devices to suggest the finished circulation; payoff lines centered inside the ring: 'full attention over the whole sequence' and 'no device ever held the whole key/value data'.",
+      "claim_ids": ["claim-full-loop", "claim-no-replication"],
+      "data": {
+        "devices": 4,
+        "device_labels": ["D1", "D2", "D3", "D4"],
+        "note": "same attention \u00b7 same arithmetic arrangement"
+      }
+    },
+    {
+      "id": "closing",
+      "duration_seconds": 4.5,
+      "purpose": "Takeaway and caveat: attention itself is unchanged - only the arrangement changes; costs and implementations are out of scope.",
+      "on_screen_text": "attention itself is unchanged \u2014\nonly the arrangement changes",
+      "visual_intent": "Closing composition: the takeaway line in white with its second half in blue, a grey caveat line naming what is not covered (communication costs, implementations), and a small footer noting the layout is illustrative and the video is silent and rendered locally.",
+      "claim_ids": ["claim-unchanged", "claim-no-replication"],
+      "data": {
+        "caveat": "communication costs, schedules, and implementations not covered",
+        "note": "layout illustrative \u00b7 silent \u00b7 rendered locally"
+      }
+    }
+  ]
+}

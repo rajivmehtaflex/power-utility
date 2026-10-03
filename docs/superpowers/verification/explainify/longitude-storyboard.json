@@ -1,0 +1,277 @@
+{
+  "schema_version": "1.0",
+  "brief": {
+    "title": "Finding longitude at sea",
+    "source": {
+      "kind": "file",
+      "requested_location": "/tmp/c3-fixture.md",
+      "resolved_location": "/tmp/c3-fixture.md",
+      "source_title": "Finding longitude at sea",
+      "retrieval_status": "not-applicable",
+      "retrieved_at": null
+    },
+    "audience": "A curious viewer unfamiliar with the history of navigation; comfortable with clocks, hours, and degrees, with no astronomy or horology background.",
+    "learning_objective": "After watching, the learner can state the one takeaway - knowing longitude means knowing time: longitude is the time difference between the ship and a reference meridian, one hour of difference equals fifteen degrees, and a clock that keeps time at sea supplies that difference - and can place the fixture's dates: the 1714 Longitude Act, H4's 1761 trial, and payments in stages until 1773, with the still-open uncertainty about long-term accuracy intact.",
+    "prerequisites": [
+      "Reading hours on a clock face.",
+      "A degree measures angle; a full circle is 360 degrees.",
+      "A day is 24 hours - stated on screen before the 15-degrees-per-hour rule is used."
+    ],
+    "terms": [
+      {"term": "latitude", "definition": "Position measured north or south of the equator; sailors could find it from the Sun and the stars."},
+      {"term": "longitude", "definition": "Position measured east or west of a reference meridian; it needs the time difference between the ship and that meridian."},
+      {"term": "reference meridian", "definition": "The chosen north-south line whose time the ship compares its own time against."},
+      {"term": "lunar distances", "definition": "A method that reads the position of the Moon against fixed stars as a clock in the sky."},
+      {"term": "sea watch", "definition": "A timekeeper built to keep time on a moving ship; Harrison's fourth was H4."}
+    ],
+    "core_claim": "Knowing longitude is knowing time: longitude is the time difference between the ship and a reference meridian - one hour of difference equals fifteen degrees - and Harrison's sea watch, proven on the 1761 voyage, was the timekeeper that could carry the reference meridian's time across the sea.",
+    "mechanism": [
+      {"step": 1, "description": "Keep the time of a reference meridian with a clock that runs on board, at sea."},
+      {"step": 2, "description": "Compare the ship's time with the reference meridian's time; the difference is a number of hours."},
+      {"step": 3, "description": "Turn the time difference into degrees: one hour of difference equals fifteen degrees, because Earth turns 360 degrees in 24 hours."}
+    ],
+    "claims": [
+      {
+        "id": "claim-latitude-not-longitude",
+        "statement": "Sailors could find their latitude from the Sun and the stars, but for centuries they could not find their longitude at sea reliably.",
+        "origin": "provided-source",
+        "qualifications": [
+          "Negation must survive: longitude, unlike latitude, could not be found reliably at sea."
+        ]
+      },
+      {
+        "id": "claim-time-difference-mechanism",
+        "statement": "Longitude needs the time difference between the ship and a reference meridian: one hour of difference equals fifteen degrees.",
+        "origin": "provided-source",
+        "qualifications": [
+          "The 15-degrees-per-hour rule is arithmetic: Earth turns 360 degrees in 24 hours, 360/24 = 15.",
+          "This is the video's one taught mechanism; everything else frames it."
+        ]
+      },
+      {
+        "id": "claim-longitude-act-1714",
+        "statement": "In 1714 the British Parliament passed the Longitude Act, which offered rewards for a method that could find longitude within half a degree at the end of a voyage to the West Indies.",
+        "origin": "provided-source",
+        "qualifications": [
+          "The half-a-degree condition and the end-of-voyage test must survive with the 1714 date."
+        ]
+      },
+      {
+        "id": "claim-lunar-distances",
+        "statement": "Astronomers expected the answer to come from lunar distances - reading the position of the Moon against fixed stars as a clock in the sky; that method worked, but it needed hours of calculation and a clear sky, so it was never convenient for every navigator.",
+        "origin": "provided-source",
+        "qualifications": [
+          "Negation must survive: never convenient for every navigator.",
+          "Detail kept brief; the calculation itself is an stated omission."
+        ]
+      },
+      {
+        "id": "claim-harrison-sea-watches",
+        "statement": "John Harrison, a carpenter and self-taught clockmaker, built sea watches instead.",
+        "origin": "provided-source",
+        "qualifications": []
+      },
+      {
+        "id": "claim-sea-motion-hard",
+        "statement": "A clock that keeps its beat on a rolling ship is hard to build; ordinary land clocks are disturbed by the ship's motion.",
+        "origin": "model-knowledge",
+        "qualifications": [
+          "Not stated in the fixture; shown as an explicitly illustrative pendulum contrast (steady on land, disturbed at sea)."
+        ]
+      },
+      {
+        "id": "claim-h4-trial-1761",
+        "statement": "Harrison's fourth timekeeper, H4, sailed toward Jamaica in 1761, and the recorded error of the trial was small enough to meet the Act's condition.",
+        "origin": "provided-source",
+        "qualifications": [
+          "Small enough to meet the Act's condition - not 'perfectly accurate'; the exact error size is an omission."
+        ]
+      },
+      {
+        "id": "claim-payments-until-1773",
+        "statement": "The Board of Longitude did not pay the largest reward at once; payments continued in stages until 1773.",
+        "origin": "provided-source",
+        "qualifications": [
+          "Negation must survive: the largest reward was not paid at once."
+        ]
+      },
+      {
+        "id": "claim-long-term-uncertainty",
+        "statement": "How closely H4 would have kept time over decades of ordinary service is still not known, because modern tests of copies suggest the performance may vary with oil, temperature, and care.",
+        "origin": "provided-source",
+        "qualifications": [
+          "Uncertainty must survive: 'still not known' and 'may vary' must not flatten into 'H4 was accurate'."
+        ]
+      },
+      {
+        "id": "claim-watch-weather-independent",
+        "statement": "Unlike lunar distances, the watch method does not depend on the weather, which was probably its decisive advantage.",
+        "origin": "provided-source",
+        "qualifications": [
+          "Negation and uncertainty must survive: does not depend on the weather; probably decisive."
+        ]
+      },
+      {
+        "id": "claim-worked-example",
+        "statement": "Illustrative example: a ship whose clock is 2 hours behind the reference meridian's time sits 2 x 15 = 30 degrees west of it.",
+        "origin": "illustrative",
+        "qualifications": [
+          "The 2-hour difference is a toy value for teaching, labeled illustrative on screen; the 15-degrees-per-hour factor comes from the fixture (360 degrees / 24 hours = 15)."
+        ]
+      }
+    ],
+    "example": {
+      "summary": "Turning a time difference into longitude with an illustrative 2-hour difference.",
+      "value_origin": "illustrative",
+      "detail": "Earth turns 360 degrees in 24 hours, so 360/24 = 15 degrees per hour (the fixture's rule). A ship clock reading 2 hours behind the reference meridian (illustrative toy value) places the ship 2 x 15 = 30 degrees west of that meridian.",
+      "calculation": "360 degrees / 24 hours = 15 degrees per hour; 2 hours x 15 degrees per hour = 30 degrees. Both the 2-hour offset and the 30-degree result are illustrative; the 15-degrees-per-hour factor is the fixture's provided-source rule."
+    },
+    "analogy": {
+      "description": "The reference meridian's clock travels with the ship like a letter's postmark time: whenever you open it, you know what time it is 'back home'.",
+      "stops_matching": "A postmark records one past moment, while the sea watch must keep running correctly for the whole voyage; and the analogy says nothing about converting hours into degrees."
+    },
+    "must_preserve": [
+      "Dates on screen exactly as in the fixture: 1714 (Longitude Act), 1761 (H4 sails toward Jamaica), 1773 (payments in stages until 1773).",
+      "Negations: longitude could not be found reliably at sea; lunar distances were never convenient for every navigator; the largest reward was not paid at once; the watch method does not depend on the weather.",
+      "Uncertainty: how closely H4 would have kept time over decades is still not known; performance may vary with oil, temperature, and care; the weather advantage was probably decisive.",
+      "The half-a-degree condition of the Act, tested at the end of a voyage to the West Indies.",
+      "One hour of time difference equals fifteen degrees of longitude (360 degrees / 24 hours).",
+      "The 2-hour worked example is illustrative, labeled as such on screen; it is not a measurement."
+    ],
+    "omissions": [
+      "Harrison's biography and his earlier timekeepers (H1-H3).",
+      "How lunar distances were calculated.",
+      "The reward amounts and the political detail of the Board of Longitude.",
+      "How H4 was engineered, and the exact size of its recorded 1761 error.",
+      "Other longitude methods of the period."
+    ]
+  },
+  "render": {
+    "width": 1280,
+    "height": 720,
+    "fps": 30,
+    "title": "Finding longitude at sea"
+  },
+  "scenes": [
+    {
+      "id": "problem",
+      "duration_seconds": 4.0,
+      "purpose": "Title and hook: name the concept and state the problem - latitude yes, longitude no, for centuries.",
+      "on_screen_text": "For centuries: latitude found - longitude not",
+      "visual_intent": "Ocean horizon with a small ship; a solid blue horizontal line labeled 'latitude - found from Sun and stars' crosses the frame; a dashed red vertical arc labeled 'longitude - ?' stays incomplete with a question mark; title 'Finding longitude at sea' above.",
+      "claim_ids": ["claim-latitude-not-longitude"],
+      "data": {
+        "title": "Finding longitude at sea",
+        "latitude_label": "latitude - found from the Sun and the stars",
+        "longitude_label": "longitude - could not be found reliably",
+        "question": "?"
+      }
+    },
+    {
+      "id": "act-1714",
+      "duration_seconds": 4.5,
+      "purpose": "Set the 1714 prize context with its exact condition: half a degree, at the end of a voyage to the West Indies.",
+      "on_screen_text": "1714: the Longitude Act offers rewards",
+      "visual_intent": "A parchment-style scroll box titled 'Longitude Act - 1714' with two condition lines appearing beneath it; a thin route arc from a small Britain coast shape toward a 'West Indies' dot, with a 'half a degree' tolerance band drawn around the destination.",
+      "claim_ids": ["claim-longitude-act-1714"],
+      "data": {
+        "act_title": "Longitude Act",
+        "year": "1714",
+        "line1": "rewards for a method finding longitude",
+        "line2": "within half a degree",
+        "line3": "at the end of a voyage to the West Indies"
+      }
+    },
+    {
+      "id": "time-to-longitude",
+      "duration_seconds": 6.0,
+      "purpose": "Centerpiece: the one mechanism - longitude is the time difference from a reference meridian; one hour equals fifteen degrees.",
+      "on_screen_text": "Longitude = time difference from a reference meridian\n1 hour = 15 degrees",
+      "visual_intent": "A circle (Earth from above) with radiating meridian lines; the green reference meridian carries a clock face; the ship sits on a yellow meridian carrying its own clock; the two clock readings differ; an arrow from the ship's meridian to the reference meridian is annotated 'time difference', with '1 hour = 15 degrees' and the check line '360 degrees / 24 hours = 15' underneath.",
+      "claim_ids": ["claim-time-difference-mechanism"],
+      "data": {
+        "reference_label": "reference meridian",
+        "ship_label": "ship",
+        "rule": "1 hour = 15 degrees",
+        "check": "360\u00b0 / 24 h = 15\u00b0",
+        "diff_label": "time difference"
+      }
+    },
+    {
+      "id": "lunar-distances",
+      "duration_seconds": 4.0,
+      "purpose": "Name the expected rival - the Moon as a clock in the sky - and why it was never convenient.",
+      "on_screen_text": "The Moon as a clock in the sky\nworked - but never convenient",
+      "visual_intent": "Night sky with the Moon against small fixed stars; a star-chart grid and a lens icon appear with the caption 'hours of calculation'; a grey cloud slides over the Moon with the caption 'needs a clear sky'; footer line 'never convenient for every navigator'.",
+      "claim_ids": ["claim-lunar-distances"],
+      "data": {
+        "moon_label": "Moon against fixed stars",
+        "con1": "hours of calculation",
+        "con2": "needs a clear sky",
+        "footer": "never convenient for every navigator"
+      }
+    },
+    {
+      "id": "sea-clock",
+      "duration_seconds": 5.0,
+      "purpose": "The hard part: a clock must keep its beat on a moving ship; Harrison, carpenter and self-taught clockmaker, built sea watches instead.",
+      "on_screen_text": "A clock that keeps time at sea: the hard part",
+      "visual_intent": "Split view: left, steady ground line with a pendulum clock swinging in a small regular arc (green, 'steady on land'); right, the ship rolling on waves with the same clock tilting and its pendulum thrown wide (red, 'disturbed at sea'); then the caption 'John Harrison, carpenter and self-taught clockmaker, built sea watches instead'; the pendulum contrast carries an 'illustrative' tag.",
+      "claim_ids": ["claim-harrison-sea-watches", "claim-sea-motion-hard"],
+      "data": {
+        "left_label": "on land: steady beat",
+        "right_label": "at sea: motion disturbs it",
+        "harrison": "John Harrison - carpenter, self-taught clockmaker",
+        "built": "built sea watches instead",
+        "note": "pendulum contrast - illustrative"
+      }
+    },
+    {
+      "id": "trial-1761-1773",
+      "duration_seconds": 5.5,
+      "purpose": "The sea clock succeeds, recognition is staged: 1761 trial meets the Act's condition; the largest reward was not paid at once, payments continued in stages until 1773.",
+      "on_screen_text": "1761: H4's trial error is small enough\nnot paid at once - in stages until 1773",
+      "visual_intent": "A horizontal timeline with two markers: at '1761' a ship icon sails toward a 'Jamaica' flag and a green check line 'error small enough - meets the Act's condition'; at '1773' a coin stack grows in stages with the red note 'largest reward not paid at once'; the segment between them is dotted to show staged payments.",
+      "claim_ids": ["claim-h4-trial-1761", "claim-payments-until-1773"],
+      "data": {
+        "year1": "1761",
+        "event1": "H4 sails toward Jamaica",
+        "result1": "recorded error small enough to meet the Act's condition",
+        "year2": "1773",
+        "event2": "payments continued in stages",
+        "negation": "the largest reward was not paid at once"
+      }
+    },
+    {
+      "id": "uncertainty",
+      "duration_seconds": 3.5,
+      "purpose": "Keep the uncertainty intact: long-term accuracy is still not known; performance may vary with oil, temperature, and care.",
+      "on_screen_text": "Decades of service: still not known\nmay vary with oil, temperature, and care",
+      "visual_intent": "The H4 watch drawn as a small round timekeeper box with 'H4' on it; a large question mark beside it over a faint multi-year axis; three tags pop in reading 'oil', 'temperature', 'care'; the wording keeps 'still not known' and 'may vary' visible.",
+      "claim_ids": ["claim-long-term-uncertainty"],
+      "data": {
+        "h4": "H4",
+        "axis_label": "years of ordinary service",
+        "tags": ["oil", "temperature", "care"]
+      }
+    },
+    {
+      "id": "payoff",
+      "duration_seconds": 5.0,
+      "purpose": "Payoff and takeaway: keep time at sea, compare with the reference meridian, turn the difference into degrees - with the illustrative worked example and the weather advantage.",
+      "on_screen_text": "Keep time at sea \u2192 compare \u2192 turn hours into degrees",
+      "visual_intent": "Three chained boxes 'keep time at sea' -> 'compare with reference meridian' -> 'turn the difference into degrees'; below, an illustrative worked example panel: '2 h behind (illustrative)' -> '2 x 15\u00b0 = 30\u00b0 west'; the check line '360\u00b0 / 24 h = 15\u00b0'; footer 'does not depend on the weather - probably decisive \u00b7 illustrative example \u00b7 silent video'.",
+      "claim_ids": ["claim-time-difference-mechanism", "claim-worked-example", "claim-watch-weather-independent"],
+      "data": {
+        "box1": "keep time at sea",
+        "box2": "compare with reference meridian",
+        "box3": "turn the difference into degrees",
+        "example_label": "illustrative example",
+        "example": "2 h behind \u2192 2 \u00d7 15\u00b0 = 30\u00b0 west",
+        "check": "360\u00b0 / 24 h = 15\u00b0",
+        "footer": "does not depend on the weather \u2014 probably decisive",
+        "note": "illustrative example \u00b7 silent video"
+      }
+    }
+  ]
+}
