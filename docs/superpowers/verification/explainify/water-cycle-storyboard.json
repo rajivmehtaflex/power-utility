@@ -1,0 +1,218 @@
+{
+  "schema_version": "1.0",
+  "brief": {
+    "title": "The water cycle",
+    "source": {
+      "kind": "text",
+      "requested_location": null,
+      "resolved_location": null,
+      "source_title": null,
+      "retrieval_status": "not-applicable",
+      "retrieved_at": null
+    },
+    "audience": "A curious reader unfamiliar with the water cycle.",
+    "learning_objective": "Understand how water moves between oceans, air, and land in a repeating cycle: the Sun heats oceans and lakes and water becomes vapor that rises, colder air higher up turns the vapor into clouds, the joined drops fall as rain or snow, and the water returns through the ground and rivers - a cycle with no starting point that is never perfectly closed.",
+    "prerequisites": [
+      "Everyday familiarity with the Sun, oceans, lakes, rivers, rain, snow, ice, and the ground (all named by the source paragraph).",
+      "That water can change form: the source paragraph itself shows liquid water becoming vapor, vapor becoming tiny drops, and water staying stored as ice."
+    ],
+    "terms": [
+      {
+        "term": "the water cycle",
+        "definition": "The movement of water between oceans, air, and land."
+      },
+      {
+        "term": "vapor",
+        "definition": "The form water takes when the Sun heats oceans and lakes; it rises into the air."
+      },
+      {
+        "term": "cloud",
+        "definition": "Many tiny drops that vapor changes into higher up, where the air is colder."
+      }
+    ],
+    "core_claim": "Water moves between oceans, air, and land in a repeating cycle: the Sun heats oceans and lakes so water becomes vapor and rises, colder air higher up turns the vapor into clouds, the joined drops fall as rain or snow, and the water returns through the ground and rivers.",
+    "mechanism": [
+      {
+        "step": 1,
+        "description": "The Sun heats oceans and lakes, and water changes into vapor that rises."
+      },
+      {
+        "step": 2,
+        "description": "Higher up the air is colder, so the vapor changes into tiny drops that form clouds."
+      },
+      {
+        "step": 3,
+        "description": "The drops join, become heavy, and fall as rain or snow."
+      },
+      {
+        "step": 4,
+        "description": "Some of this water soaks into the ground, and some flows back to the ocean in rivers."
+      },
+      {
+        "step": 5,
+        "description": "The cycle then repeats; it has no starting point and is never perfectly closed, because water can stay stored in ice and underground for long periods."
+      }
+    ],
+    "claims": [
+      {
+        "id": "claim-1",
+        "statement": "The water cycle moves water between oceans, air, and land.",
+        "origin": "provided-source"
+      },
+      {
+        "id": "claim-2",
+        "statement": "The Sun heats oceans and lakes, and water changes into vapor that rises.",
+        "origin": "provided-source"
+      },
+      {
+        "id": "claim-3",
+        "statement": "Higher up the air is colder, so the vapor changes into tiny drops that form clouds.",
+        "origin": "provided-source",
+        "qualifications": [
+          "The colder air higher up is the stated cause of vapor becoming drops."
+        ]
+      },
+      {
+        "id": "claim-4",
+        "statement": "The drops join, become heavy, and fall as rain or snow.",
+        "origin": "provided-source",
+        "qualifications": [
+          "Precipitation is rain or snow; neither option may be dropped."
+        ]
+      },
+      {
+        "id": "claim-5",
+        "statement": "Some of the fallen water soaks into the ground, and some flows back to the ocean in rivers.",
+        "origin": "provided-source",
+        "qualifications": [
+          "The split is partial: some water takes each path, not all of it."
+        ]
+      },
+      {
+        "id": "claim-6",
+        "statement": "The cycle then repeats, and it does not have a starting point.",
+        "origin": "provided-source",
+        "qualifications": [
+          "'Does not have a starting point' is a negation that must survive simplification."
+        ]
+      },
+      {
+        "id": "claim-7",
+        "statement": "The cycle is never perfectly closed, because water can stay stored in ice and underground for long periods.",
+        "origin": "provided-source",
+        "qualifications": [
+          "'Never perfectly closed' is a negation that must survive simplification.",
+          "Storage in ice and underground is the stated reason the cycle is not perfectly closed.",
+          "'Can' marks possibility, not certainty, and the storage lasts 'long periods'."
+        ]
+      }
+    ],
+    "example": null,
+    "analogy": null,
+    "must_preserve": [
+      "Negation: the cycle 'does not have a starting point'.",
+      "Negation: the cycle is 'never perfectly closed'.",
+      "Possibility and duration: water 'can stay stored in ice and underground for long periods'.",
+      "The disjunction 'rain or snow' must not collapse to rain alone.",
+      "The partial split 'some ... and some ...': only some water soaks into the ground, and only some flows back in rivers."
+    ],
+    "omissions": [
+      "The source paragraph contains no numbers (no temperatures, rates, or durations); none were added.",
+      "Water paths the paragraph does not mention, such as transpiration from plants, are excluded.",
+      "Cloud types, weather, and climate are not covered by the source and are not explained.",
+      "The source's plain wording is kept on screen; standard technical names (evaporation, condensation, precipitation) are not used."
+    ]
+  },
+  "render": {
+    "width": 1280,
+    "height": 720,
+    "fps": 30,
+    "title": "The water cycle"
+  },
+  "scenes": [
+    {
+      "id": "scene-1-title",
+      "duration_seconds": 5,
+      "purpose": "Title scene: name the concept and state the hook - water moving between oceans, air, and land.",
+      "on_screen_text": "The water cycle\n\nWater moves between oceans, air, and land.",
+      "visual_intent": "Show the three settings - ocean, air, land - as three labeled chips arranged around a faint circular loop arrow that previews the cycle.",
+      "claim_ids": ["claim-1"],
+      "data": {
+        "chips": ["OCEAN", "AIR", "LAND"],
+        "loop_preview": true
+      }
+    },
+    {
+      "id": "scene-2-sun-heats",
+      "duration_seconds": 6,
+      "purpose": "Show the Sun heating oceans and lakes, and water changing into vapor that rises.",
+      "on_screen_text": "The Sun heats oceans and lakes.\nWater changes into vapor that rises.",
+      "visual_intent": "Sun with rays over a water scene (ocean plus a lake on land); upward vapor arrows leave the water surfaces and small vapor dots rise continuously.",
+      "claim_ids": ["claim-1", "claim-2"],
+      "data": {
+        "labels": ["Sun", "ocean", "lake", "vapor"],
+        "vapor_sources": "ocean surface and lake surface"
+      }
+    },
+    {
+      "id": "scene-3-clouds-form",
+      "duration_seconds": 6,
+      "purpose": "Show that the air is colder higher up, so vapor changes into tiny drops that form clouds.",
+      "on_screen_text": "Higher up, the air is colder.\nVapor changes into tiny drops that form clouds.",
+      "visual_intent": "Vapor dots rise from a faint water scene into a dashed colder-air zone, shrink into tiny drops there, and cluster into a cloud built from overlapping circles.",
+      "claim_ids": ["claim-3"],
+      "data": {
+        "labels": ["colder air", "tiny drops", "cloud"],
+        "cold_zone": [2.55, 3.45, 7.7, 1.55]
+      }
+    },
+    {
+      "id": "scene-4-rain-snow",
+      "duration_seconds": 6,
+      "purpose": "Show drops joining, becoming heavy, and falling as rain or snow.",
+      "on_screen_text": "The drops join and become heavy.\nThey fall as rain or snow.",
+      "visual_intent": "Drops merge inside the cloud and the cloud darkens; blue rain streaks and white snow dots fall together toward the ocean and the land, each labeled.",
+      "claim_ids": ["claim-4"],
+      "data": {
+        "labels": ["rain", "snow"],
+        "fall_zone": [5.35, 7.45]
+      }
+    },
+    {
+      "id": "scene-5-where-water-goes",
+      "duration_seconds": 6,
+      "purpose": "Show the two paths after falling: some water soaks into the ground, some flows back to the ocean in rivers.",
+      "on_screen_text": "Some water soaks into the ground.\nSome flows back to the ocean in rivers.",
+      "visual_intent": "Landscape with faint rain; downward soak arrows enter a dashed underground region; a river band with leftward flow arrows runs from the land back into the ocean.",
+      "claim_ids": ["claim-5"],
+      "data": {
+        "labels": ["ocean", "ground", "river"],
+        "paths": ["soak into ground", "river back to ocean"]
+      }
+    },
+    {
+      "id": "scene-6-cycle-repeats",
+      "duration_seconds": 5,
+      "purpose": "Close the loop: the cycle repeats and it does not have a starting point.",
+      "on_screen_text": "The cycle repeats.\nIt does not have a starting point.",
+      "visual_intent": "Simplified loop diagram: the four stages as chips on a circular arrow that closes the loop, with direction arrowheads and no start marker anywhere on the circle.",
+      "claim_ids": ["claim-6"],
+      "data": {
+        "stages": ["oceans and lakes", "vapor rises", "clouds form", "rain and snow"],
+        "center_label": "repeats"
+      }
+    },
+    {
+      "id": "scene-7-never-closed",
+      "duration_seconds": 6,
+      "purpose": "Closing qualification: the cycle is never perfectly closed because water can stay stored in ice and underground for long periods.",
+      "on_screen_text": "Never perfectly closed: water can stay\nstored in ice and underground\nfor long periods.",
+      "visual_intent": "The loop returns with an open gap on the right where two labeled storage branches - ice and underground - leave the ring through dashed arrows.",
+      "claim_ids": ["claim-7"],
+      "data": {
+        "labels": ["ice", "underground", "for long periods"],
+        "gap_side": "right"
+      }
+    }
+  ]
+}

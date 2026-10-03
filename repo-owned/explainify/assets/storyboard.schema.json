@@ -1,0 +1,374 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "storyboard.schema.json",
+  "title": "Explainify storyboard",
+  "description": "Version 1.0 of the Explainify storyboard contract. This schema describes teaching intent and timing for a short silent explainer video; it is NOT a drawing language - the generator assigns drawing operations, and storyboard fields are data that is never evaluated as code. The schema alone is intentionally insufficient: three cross-field constraints cannot be expressed in JSON Schema and are enforced programmatically by the renderer's validate_storyboard function: (1) scene ids must be unique across the storyboard, (2) every entry in a scene's claim_ids must reference an id that exists in brief.claims, and (3) the sum of all scene duration_seconds must be at most 60 seconds. All fields are topic-neutral: the generic contract must never require attention tokens, attention weights, attention matrices, or any other machine-learning-specific concept; such topic-specific values may appear only inside a scene's optional data field.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "brief",
+    "render",
+    "scenes"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "description": "Storyboard contract version; fixed to \"1.0\" for v0.1."
+    },
+    "brief": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "source",
+        "audience",
+        "learning_objective",
+        "prerequisites",
+        "terms",
+        "core_claim",
+        "mechanism",
+        "claims",
+        "example",
+        "analogy",
+        "must_preserve",
+        "omissions"
+      ],
+      "description": "Shared teaching brief: what is taught, from which source, and which facts must survive formatting. Absent example or analogy is null.",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Title of the explanation."
+        },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "retrieval_status"
+          ],
+          "description": "Provenance of the material behind the explanation. A partially or unavailable source must not silently become a model-knowledge explanation of the same subject.",
+          "properties": {
+            "kind": {
+              "enum": [
+                "topic",
+                "url",
+                "text",
+                "file"
+              ],
+              "description": "How the source was supplied or resolved."
+            },
+            "requested_location": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "URL or path the user asked to use, when applicable; otherwise null. A user-provided local path is kept out of web citations."
+            },
+            "resolved_location": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Location actually used after redirects or mirror resolution, when applicable; otherwise null."
+            },
+            "source_title": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Title of the retrieved source when one is identifiable; otherwise null."
+            },
+            "retrieval_status": {
+              "enum": [
+                "complete",
+                "partial",
+                "unavailable",
+                "not-applicable"
+              ],
+              "description": "How much of the requested source was actually retrieved."
+            },
+            "retrieved_at": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date",
+              "description": "ISO-8601 calendar date (YYYY-MM-DD) on which web material was retrieved; null when retrieval did not occur."
+            }
+          }
+        },
+        "audience": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Who the explanation is for."
+        },
+        "learning_objective": {
+          "type": "string",
+          "minLength": 1,
+          "description": "What the learner should understand afterward."
+        },
+        "prerequisites": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Knowledge the explanation assumes and introduces before use."
+        },
+        "terms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "term",
+              "definition"
+            ],
+            "properties": {
+              "term": {
+                "type": "string",
+                "description": "The domain term being defined."
+              },
+              "definition": {
+                "type": "string",
+                "description": "Definition used consistently throughout the explanation."
+              }
+            }
+          },
+          "description": "Domain terms with consistent definitions."
+        },
+        "core_claim": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The essential claim the explanation teaches."
+        },
+        "mechanism": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "step",
+              "description"
+            ],
+            "properties": {
+              "step": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Position of this step in the ordered causal chain."
+              },
+              "description": {
+                "type": "string",
+                "description": "What happens in this causal step."
+              }
+            }
+          },
+          "description": "Ordered causal steps of the mechanism."
+        },
+        "claims": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "statement",
+              "origin"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/claim-id",
+                "description": "Stable identifier referenced by scenes."
+              },
+              "statement": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The claim itself."
+              },
+              "origin": {
+                "enum": [
+                  "provided-source",
+                  "retrieved-source",
+                  "model-knowledge",
+                  "illustrative"
+                ],
+                "description": "Where the claim comes from; a model-knowledge claim is never presented as a quotation from an unavailable source."
+              },
+              "qualifications": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Conditions, uncertainty, or limits that must be preserved with the claim."
+              }
+            }
+          },
+          "description": "Factual claims with honest origins and required qualifications."
+        },
+        "example": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "summary",
+            "value_origin"
+          ],
+          "description": "Optional worked example; null when absent.",
+          "properties": {
+            "summary": {
+              "type": "string",
+              "description": "What the example shows."
+            },
+            "value_origin": {
+              "enum": [
+                "illustrative",
+                "measured",
+                "derived"
+              ],
+              "description": "Kind of values used, so illustrative numbers are never mistaken for measurements."
+            },
+            "detail": {
+              "type": "string",
+              "description": "Additional detail about the example."
+            },
+            "calculation": {
+              "type": "string",
+              "description": "Enough of the calculation to check consistency."
+            }
+          }
+        },
+        "analogy": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": false,
+          "required": [
+            "description",
+            "stops_matching"
+          ],
+          "description": "Optional analogy used only when helpful; null when absent.",
+          "properties": {
+            "description": {
+              "type": "string",
+              "description": "The analogy itself."
+            },
+            "stops_matching": {
+              "type": "string",
+              "description": "Where the analogy stops matching the mechanism."
+            }
+          }
+        },
+        "must_preserve": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Negation, dates, uncertainty, conditions, and other facts simplification must retain."
+        },
+        "omissions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Deliberate exclusions and source-coverage limitations."
+        }
+      }
+    },
+    "render": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height",
+        "fps",
+        "title"
+      ],
+      "description": "Output configuration. Width, height, and fps are fixed v0.1 defaults, encoded as constants rather than defaults.",
+      "properties": {
+        "width": {
+          "const": 1280,
+          "description": "Video width in pixels; fixed for v0.1."
+        },
+        "height": {
+          "const": 720,
+          "description": "Video height in pixels; fixed for v0.1."
+        },
+        "fps": {
+          "const": 30,
+          "description": "Frames per second; fixed for v0.1."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Topic title shown in the video."
+        }
+      }
+    },
+    "scenes": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Ordered scenes covering the learning objective; planning roughly 6-8 scenes is a guideline, not a rule. Uniqueness of scene ids and the 60-second total-duration limit are enforced programmatically by the renderer, not by this schema.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "duration_seconds",
+          "purpose",
+          "on_screen_text",
+          "visual_intent",
+          "claim_ids"
+        ],
+        "description": "One scene of teaching intent and timing; the generator decides the actual drawing operations.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Scene identifier; must be unique across scenes (enforced programmatically)."
+          },
+          "duration_seconds": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "Scene duration in seconds, greater than 0. JSON's number type is finite by specification (NaN and Infinity are not valid JSON), so a strictly parsed document never contains non-finite values; the renderer additionally rejects non-finite Python floats."
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Teaching role of this scene."
+          },
+          "on_screen_text": {
+            "type": "string",
+            "description": "Text shown on screen during this scene; may be empty when the visual alone carries the state, but the field itself is required."
+          },
+          "visual_intent": {
+            "type": "string",
+            "minLength": 1,
+            "description": "What the animation should show; the generator assigns concrete drawing operations."
+          },
+          "claim_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/$defs/claim-id"
+            },
+            "description": "Non-empty list of claims this scene teaches; each must exist in brief.claims (enforced programmatically)."
+          },
+          "data": {
+            "description": "Optional topic-specific payload: any JSON value the scene's generated drawing code needs. This is the only open field in the schema; the generic contract never requires particular domain concepts here."
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "claim-id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "description": "Stable lowercase identifier: lowercase letters and digits in hyphen-separated groups, for example \"claim-1\"."
+    }
+  }
+}

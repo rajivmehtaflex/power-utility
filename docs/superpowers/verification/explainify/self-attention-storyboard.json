@@ -1,0 +1,263 @@
+{
+  "schema_version": "1.0",
+  "brief": {
+    "title": "Self-attention",
+    "source": {
+      "kind": "topic",
+      "requested_location": null,
+      "resolved_location": null,
+      "source_title": null,
+      "retrieval_status": "not-applicable",
+      "retrieved_at": null
+    },
+    "audience": "A curious reader unfamiliar with the concept; comfortable with sentences and simple lists of numbers, but with no machine-learning background.",
+    "learning_objective": "After watching, the learner can explain how one attention head turns each token's vector into a query, scores it against every key, normalizes the scores with softmax into weights that sum to 1, and forms a weighted sum of values - and can say how that resolves what a pronoun such as \"it\" refers to.",
+    "prerequisites": [
+      "Reading a full English sentence.",
+      "A list of numbers used as one object (a vector) - introduced on screen before it is used.",
+      "Fraction-like weights that add up to 1 - introduced on screen before they are used."
+    ],
+    "terms": [
+      {"term": "token", "definition": "One unit of text the model processes; here, roughly one word of the sentence."},
+      {"term": "vector", "definition": "An ordered list of numbers treated as a single object; each token is represented by one."},
+      {"term": "query", "definition": "A small vector projected from a token, stating what that token is looking for in the other tokens."},
+      {"term": "key", "definition": "A small vector projected from a token, stating what that token offers for matching against queries."},
+      {"term": "value", "definition": "A small vector projected from a token, holding the content it contributes when others attend to it."},
+      {"term": "score", "definition": "The dot product of one query with one key, divided by the square root of the key dimension; a raw measure of match strength."},
+      {"term": "softmax", "definition": "A function that turns a list of raw scores into positive weights that sum to exactly 1."},
+      {"term": "attention weight", "definition": "One softmax output for a query; how strongly that query attends to one token."},
+      {"term": "weighted sum", "definition": "Adding vectors after multiplying each by a weight; the weights fix each vector's share of the result."}
+    ],
+    "core_claim": "Self-attention lets every token rebuild its own representation as a weighted sum of all tokens' value vectors, where the weights come from how well its query matches each key - so context, such as what a pronoun refers to, flows into the token's new vector.",
+    "mechanism": [
+      {"step": 1, "description": "Each input token is represented as a vector of numbers."},
+      {"step": 2, "description": "Each vector is projected into three role vectors: a query, a key, and a value."},
+      {"step": 3, "description": "One token's query is dot-multiplied with every token's key and divided by the square root of the key dimension, giving one raw score per token."},
+      {"step": 4, "description": "softmax converts that query's scores into non-negative weights that sum to 1."},
+      {"step": 5, "description": "The weights multiply the value vectors and the results are added, forming that token's new, context-aware representation."},
+      {"step": 6, "description": "Every token runs steps 3-5 with its own query at the same time."},
+      {"step": 7, "description": "Stacking all queries, keys, and values into matrices, the whole step is Attention(Q, K, V) = softmax(QK^T / sqrt(d)) V."}
+    ],
+    "claims": [
+      {
+        "id": "claim-context-gather",
+        "statement": "Self-attention lets each token in a sequence build a new representation of itself by gathering information from the other tokens.",
+        "origin": "model-knowledge",
+        "qualifications": []
+      },
+      {
+        "id": "claim-token-vectors",
+        "statement": "Inside a transformer, every token is represented as a vector of numbers, and the model's operations compare and combine these vectors.",
+        "origin": "model-knowledge",
+        "qualifications": [
+          "The vector length differs between models; the video shows only a few numbers as a stand-in."
+        ]
+      },
+      {
+        "id": "claim-qkv-roles",
+        "statement": "Each token's vector is projected into a query (what it looks for), a key (what it offers for matching), and a value (what it contributes to others).",
+        "origin": "model-knowledge",
+        "qualifications": [
+          "The three projections are learned linear maps; the video shows their roles, not how they are trained."
+        ]
+      },
+      {
+        "id": "claim-scaled-dot-product",
+        "statement": "A token's query is compared with every key by a dot product divided by the square root of the key dimension, giving one raw score per token.",
+        "origin": "model-knowledge",
+        "qualifications": [
+          "The sqrt(d) scaling keeps dot products from growing large with dimension, which would push softmax toward flat gradients."
+        ]
+      },
+      {
+        "id": "claim-softmax-weights",
+        "statement": "softmax turns the scores of one query into non-negative attention weights that sum to exactly 1.",
+        "origin": "model-knowledge",
+        "qualifications": [
+          "softmax is applied separately to each query's row of scores."
+        ]
+      },
+      {
+        "id": "claim-weighted-sum",
+        "statement": "A token's new representation is the weighted sum of all value vectors, so the tokens with larger weight contribute more.",
+        "origin": "model-knowledge",
+        "qualifications": []
+      },
+      {
+        "id": "claim-example-resolution",
+        "statement": "In the example, the query for \"it\" gives the largest weight to \"cat\" (0.75 in this video), so the new vector for \"it\" is mostly the value of \"cat\"; that is how the pronoun's reference gets resolved.",
+        "origin": "model-knowledge",
+        "qualifications": [
+          "The 0.75 weight, the score row, and the full matrix in this video are illustrative teaching values, not measured outputs of any model."
+        ]
+      },
+      {
+        "id": "claim-parallel-tokens",
+        "statement": "All tokens compute their queries, keys, values, weights, and weighted sums in the same parallel step, each with its own query.",
+        "origin": "model-knowledge",
+        "qualifications": [
+          "This describes a single attention head; full transformer models run several heads in parallel and stack many layers."
+        ]
+      },
+      {
+        "id": "claim-attention-formula",
+        "statement": "One attention head computes Attention(Q, K, V) = softmax(QK^T / sqrt(d)) V.",
+        "origin": "model-knowledge",
+        "qualifications": [
+          "Q, K, and V are the per-token queries, keys, and values stacked into matrices, and d is the key dimension."
+        ]
+      }
+    ],
+    "example": {
+      "summary": "Resolving the pronoun \"it\" in the sentence \"The cat drank because it was thirsty.\"",
+      "value_origin": "illustrative",
+      "detail": "The query of \"it\" is scored against all seven keys. After softmax, the weight on \"cat\" is 0.75 and every other weight is at most 0.08, so the weighted sum that forms the new vector for \"it\" is dominated by the value of \"cat\".",
+      "calculation": "Illustrative scores for the \"it\" query: [0.8, 4.1, 1.6, 0.3, 1.9, 0.5, 1.2]. softmax gives [0.028, 0.749, 0.062, 0.017, 0.083, 0.021, 0.041], shown rounded to two decimals as [0.03, 0.75, 0.06, 0.02, 0.08, 0.02, 0.04]; the rounded row sums to 1.00."
+    },
+    "analogy": null,
+    "must_preserve": [
+      "softmax attention weights are non-negative and each query's weights sum to 1",
+      "all scores, weights, and matrix values in this video are illustrative, not measured from any model",
+      "scores are divided by sqrt(d) before softmax",
+      "this video covers one attention head; multi-head detail, training, and positional encodings are omitted"
+    ],
+    "omissions": [
+      "multi-head attention (mentioned as omitted, not detailed)",
+      "training and how the projections are learned",
+      "positional encodings",
+      "causal masking in decoders and cross-attention",
+      "layer stacking and the feed-forward blocks around attention"
+    ]
+  },
+  "render": {
+    "width": 1280,
+    "height": 720,
+    "fps": 30,
+    "title": "Self-attention"
+  },
+  "scenes": [
+    {
+      "id": "title",
+      "duration_seconds": 4.0,
+      "purpose": "Hook: pose the question the mechanism will answer - what does the pronoun \"it\" refer to - and name the concept.",
+      "on_screen_text": "How does a model know what \u201cit\u201d means?",
+      "visual_intent": "Large title \"Self-attention\" with a one-line hook underneath, then the sentence \"The cat drank because it was thirsty\" appearing word by word as token boxes, with a red ring highlighting \"it\" near the end.",
+      "claim_ids": ["claim-context-gather"],
+      "data": {
+        "tokens": ["The", "cat", "drank", "because", "it", "was", "thirsty"],
+        "token_colors": ["#9AA0A6", "#F4D345", "#58C4DD", "#A78BFA", "#FC6255", "#F472B6", "#83C167"],
+        "focus_index": 4
+      }
+    },
+    {
+      "id": "tokens-as-vectors",
+      "duration_seconds": 5.0,
+      "purpose": "Introduce the prerequisite representation: each token is not magic, it is a vector of numbers.",
+      "on_screen_text": "Each word is a vector of numbers",
+      "visual_intent": "The seven token boxes from the title scene re-appear, each with a short connector to a small colored strip standing for its vector; then one zoomed example row shows cat -> [0.20 -1.30 0.75 ... 0.42] in Computer Modern, with a grey note that real vectors hold hundreds of numbers.",
+      "claim_ids": ["claim-token-vectors"],
+      "data": {
+        "tokens": ["The", "cat", "drank", "because", "it", "was", "thirsty"],
+        "token_colors": ["#9AA0A6", "#F4D345", "#58C4DD", "#A78BFA", "#FC6255", "#F472B6", "#83C167"],
+        "example_token": "cat",
+        "example_vector_label": "[ 0.20   -1.30   0.75   \\cdots   0.42 ]"
+      }
+    },
+    {
+      "id": "qkv-projections",
+      "duration_seconds": 6.0,
+      "purpose": "Introduce the three roles every vector is split into, before any matching happens.",
+      "on_screen_text": "Each vector makes a query, a key, and a value",
+      "visual_intent": "Token row on top; below each token, three small boxes pop in row by row - yellow q, blue k, green v - connected to their token by a thin grey arrow; a staggered legend at the bottom states each role in words.",
+      "claim_ids": ["claim-qkv-roles"],
+      "data": {
+        "tokens": ["The", "cat", "drank", "because", "it", "was", "thirsty"],
+        "token_colors": ["#9AA0A6", "#F4D345", "#58C4DD", "#A78BFA", "#FC6255", "#F472B6", "#83C167"],
+        "q_color": "#F4D345",
+        "k_color": "#58C4DD",
+        "v_color": "#83C167",
+        "legend": [
+          ["q", "query \u2014 what am I looking for?"],
+          ["k", "key \u2014 what do I offer for matching?"],
+          ["v", "value \u2014 what do I hand over?"]
+        ]
+      }
+    },
+    {
+      "id": "query-scores-keys",
+      "duration_seconds": 6.5,
+      "purpose": "Centerpiece step 1: one query is compared with every key, producing raw scaled scores.",
+      "on_screen_text": "The query of \u201cit\u201d scores every key",
+      "visual_intent": "The token row with \"it\" ringed in red and its yellow q box emphasized below it; curved arrows fan out from that query to a row of blue key boxes under every token, arrow width proportional to the illustrative score, score values printed under each key, the scaling formula s_ij = q_i . k_j / sqrt(d_k) at the bottom.",
+      "claim_ids": ["claim-scaled-dot-product"],
+      "data": {
+        "tokens": ["The", "cat", "drank", "because", "it", "was", "thirsty"],
+        "token_colors": ["#9AA0A6", "#F4D345", "#58C4DD", "#A78BFA", "#FC6255", "#F472B6", "#83C167"],
+        "query_index": 4,
+        "scores": [0.8, 4.1, 1.6, 0.3, 1.9, 0.5, 1.2],
+        "note": "illustrative scores"
+      }
+    },
+    {
+      "id": "softmax-weights",
+      "duration_seconds": 6.0,
+      "purpose": "Centerpiece step 2: softmax normalizes one query's scores into weights that sum to 1; show the full illustrative matrix.",
+      "on_screen_text": "softmax turns scores into weights that sum to 1",
+      "visual_intent": "A 7x7 heatmap of illustrative attention weights grows cell by cell on the left (fill color interpolates from the dark cell color toward blue with the weight), column and row labels are the tokens, the \"it\" row is ringed in yellow; on the right, the sum-to-1 property with sum_j w_ij = 1 and the payoff line \"it\" -> \"cat\" with weight 0.75.",
+      "claim_ids": ["claim-softmax-weights", "claim-example-resolution"],
+      "data": {
+        "tokens": ["The", "cat", "drank", "because", "it", "was", "thirsty"],
+        "token_colors": ["#9AA0A6", "#F4D345", "#58C4DD", "#A78BFA", "#FC6255", "#F472B6", "#83C167"],
+        "query_index": 4,
+        "weights_matrix": [
+          [0.60, 0.18, 0.08, 0.03, 0.03, 0.04, 0.04],
+          [0.22, 0.48, 0.18, 0.02, 0.03, 0.03, 0.04],
+          [0.05, 0.42, 0.32, 0.04, 0.04, 0.06, 0.07],
+          [0.03, 0.14, 0.48, 0.16, 0.08, 0.05, 0.06],
+          [0.03, 0.75, 0.06, 0.02, 0.08, 0.02, 0.04],
+          [0.03, 0.28, 0.10, 0.05, 0.24, 0.18, 0.12],
+          [0.02, 0.34, 0.10, 0.03, 0.24, 0.09, 0.18]
+        ],
+        "note": "illustrative weights"
+      }
+    },
+    {
+      "id": "weighted-sum",
+      "duration_seconds": 6.0,
+      "purpose": "Centerpiece step 3 and payoff: the weighted sum of values forms the new vector for \"it\", resolving the pronoun.",
+      "on_screen_text": "The weighted sum builds a new vector for \u201cit\u201d",
+      "visual_intent": "A mixing bar chart - one horizontal bar per token, length proportional to that token's illustrative weight, token-colored, labeled with the weight - an arrow to an output circle whose fill color is the weighted blend of token colors, captioned \"new vector for it\", with the formula out(i) = sum_j w_ij v_j and the payoff line that \"it\" now carries mostly \"cat\".",
+      "claim_ids": ["claim-weighted-sum", "claim-example-resolution"],
+      "data": {
+        "tokens": ["The", "cat", "drank", "because", "it", "was", "thirsty"],
+        "token_colors": ["#9AA0A6", "#F4D345", "#58C4DD", "#A78BFA", "#FC6255", "#F472B6", "#83C167"],
+        "query_index": 4,
+        "weights_row": [0.03, 0.75, 0.06, 0.02, 0.08, 0.02, 0.04],
+        "note": "illustrative weights"
+      }
+    },
+    {
+      "id": "parallel-lookup",
+      "duration_seconds": 4.0,
+      "purpose": "Generalize from one query to all tokens doing the same lookup simultaneously, and state the single-head scope limit.",
+      "on_screen_text": "Every token runs the same lookup at once",
+      "visual_intent": "The token row in the middle with thin blue arcs connecting every pair of tokens, popping in staggered above the row; a grey note that each query builds its own row of weights and that this shows one attention head while real models run several.",
+      "claim_ids": ["claim-parallel-tokens"],
+      "data": {
+        "tokens": ["The", "cat", "drank", "because", "it", "was", "thirsty"],
+        "token_colors": ["#9AA0A6", "#F4D345", "#58C4DD", "#A78BFA", "#FC6255", "#F472B6", "#83C167"]
+      }
+    },
+    {
+      "id": "closing-formula",
+      "duration_seconds": 4.5,
+      "purpose": "Payoff: compress the whole mechanism into the one equation the scenes built toward, with a scope note.",
+      "on_screen_text": "The whole step, in one line",
+      "visual_intent": "The formula Attention(Q, K, V) = softmax(QK^T / sqrt(d)) V centered in Computer Modern, a one-line grey summary \"a soft, weighted lookup - each token rebuilds itself from the others\", and a small footer noting the weights are illustrative and the video is silent.",
+      "claim_ids": ["claim-attention-formula", "claim-context-gather"],
+      "data": {
+        "note": "weights illustrative \u00b7 silent video"
+      }
+    }
+  ]
+}

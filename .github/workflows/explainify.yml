@@ -1,0 +1,211 @@
+name: explainify
+
+on:
+  push:
+    paths:
+      - "repo-owned/explainify/**"
+      - "tests/test_explainify_package.py"
+      - "tests/test_import_generated_skills.py"
+      - "tools/import_generated_skills.py"
+      - "tools/skill-validation/**"
+      - ".github/workflows/explainify.yml"
+      - "MANIFEST.json"
+      - "README.md"
+      - "VALIDATION_REPORT.md"
+      - ".gitignore"
+      - "docs/superpowers/verification/explainify/**"
+  pull_request:
+    paths:
+      - "repo-owned/explainify/**"
+      - "tests/test_explainify_package.py"
+      - "tests/test_import_generated_skills.py"
+      - "tools/import_generated_skills.py"
+      - "tools/skill-validation/**"
+      - ".github/workflows/explainify.yml"
+      - "MANIFEST.json"
+      - "README.md"
+      - "VALIDATION_REPORT.md"
+      - ".gitignore"
+      - "docs/superpowers/verification/explainify/**"
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pinned uv
+        uses: astral-sh/setup-uv@v10.2.0
+        with:
+          version: "0.11.18"
+          enable-cache: false
+      # ubuntu-latest's ffmpeg provides libx264, giving the renderer an
+      # available H.264 encoder for the smoke test below.
+      - name: Install ffmpeg (H.264 encode/decode smoke test)
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Locked validator environment
+        run: uv sync --project tools/skill-validation --locked
+      - name: Validate Agent Skills package
+        run: uv run --project tools/skill-validation skills-ref validate repo-owned/explainify
+      # Node is preinstalled on ubuntu-latest and satisfies the installer's
+      # engines requirement (>=22.20.0); the repo's other workflows do not set
+      # up node either.
+      - name: Locked installer environment
+        run: npm ci --prefix tools/skill-validation
+      # Separate runtime invocation: the renderer's inline dependencies must
+      # not touch the locked validator environment.
+      - name: Renderer contract tests
+        run: uv run --no-project --with 'numpy>=1.26,<3' --with 'matplotlib>=3.8,<4' --with 'jsonschema>=4,<5' python -m unittest discover -s repo-owned/explainify/tests -v
+      - name: Root structural/catalog tests
+        run: uv run --project tools/skill-validation python -m unittest discover -s tests -v
+      - name: Validate catalog JSON
+        run: python -m json.tool MANIFEST.json > /dev/null
+      - name: Generic encode/decode smoke test
+        run: |
+          set -euo pipefail
+
+          # Build a tiny generic storyboard (2 scenes x 1.0 s) and validate it
+          # against the packaged schema before rendering, so a broken fixture
+          # fails with its own name instead of a renderer error.
+          uv run --no-project --with 'numpy>=1.26,<3' --with 'matplotlib>=3.8,<4' --with 'jsonschema>=4,<5' python - <<'PY'
+          import json
+          import os
+          import pathlib
+          import sys
+
+          import jsonschema
+
+          schema_path = pathlib.Path("repo-owned/explainify/assets/storyboard.schema.json")
+          output_path = pathlib.Path(os.environ["RUNNER_TEMP"]) / "storyboard.json"
+
+          storyboard = {
+              "schema_version": "1.0",
+              "brief": {
+                  "title": "Smoke test",
+                  "source": {
+                      "kind": "topic",
+                      "requested_location": None,
+                      "resolved_location": None,
+                      "source_title": None,
+                      "retrieval_status": "not-applicable",
+                      "retrieved_at": None,
+                  },
+                  "audience": "Continuous integration runners",
+                  "learning_objective": "Confirm the generic render and decode path end to end.",
+                  "prerequisites": [],
+                  "terms": [],
+                  "core_claim": "A minimal generic storyboard encodes to a decodable silent video.",
+                  "mechanism": [
+                      {"step": 1, "description": "Show the title state."},
+                      {"step": 2, "description": "Show the closing state."},
+                  ],
+                  "claims": [
+                      {
+                          "id": "claim-1",
+                          "statement": "The renderer produces a silent, decodable H.264 video from a generic storyboard.",
+                          "origin": "illustrative",
+                      }
+                  ],
+                  "example": None,
+                  "analogy": None,
+                  "must_preserve": [],
+                  "omissions": [],
+              },
+              "render": {"width": 1280, "height": 720, "fps": 30, "title": "Smoke test"},
+              "scenes": [
+                  {
+                      "id": "scene-1",
+                      "duration_seconds": 1.0,
+                      "purpose": "Title state",
+                      "on_screen_text": "Smoke test",
+                      "visual_intent": "Title text on a plain background.",
+                      "claim_ids": ["claim-1"],
+                  },
+                  {
+                      "id": "scene-2",
+                      "duration_seconds": 1.0,
+                      "purpose": "Closing state",
+                      "on_screen_text": "Done",
+                      "visual_intent": "Closing text on a plain background.",
+                      "claim_ids": ["claim-1"],
+                  },
+              ],
+          }
+
+          try:
+              schema = json.loads(schema_path.read_text(encoding="utf-8"))
+              jsonschema.validate(storyboard, schema)
+          except Exception as error:
+              print(f"FAILED storyboard fixture generation: {error}", file=sys.stderr)
+              sys.exit(1)
+
+          # Cross-field constraints the schema delegates to programmatic checks.
+          scene_ids = [scene["id"] for scene in storyboard["scenes"]]
+          if len(set(scene_ids)) != len(scene_ids):
+              print("FAILED storyboard fixture generation: duplicate scene ids", file=sys.stderr)
+              sys.exit(1)
+          claim_ids = {claim["id"] for claim in storyboard["brief"]["claims"]}
+          unknown = sorted(
+              {c for scene in storyboard["scenes"] for c in scene["claim_ids"]} - claim_ids
+          )
+          if unknown:
+              print(f"FAILED storyboard fixture generation: unknown claim ids {unknown}", file=sys.stderr)
+              sys.exit(1)
+          total = sum(scene["duration_seconds"] for scene in storyboard["scenes"])
+          if total > 60.0:
+              print(f"FAILED storyboard fixture generation: total duration {total}s exceeds 60s", file=sys.stderr)
+              sys.exit(1)
+
+          output_path.write_text(json.dumps(storyboard, indent=2) + "\n", encoding="utf-8")
+          print(f"wrote {output_path}")
+          PY
+
+          # Render with the packaged template and its declared runtime only.
+          uv run --no-project --with 'numpy>=1.26,<3' --with 'matplotlib>=3.8,<4' --with 'jsonschema>=4,<5' repo-owned/explainify/scripts/render_video.py --storyboard "$RUNNER_TEMP/storyboard.json" --output "$RUNNER_TEMP/smoke.mp4"
+
+          # Check 1: video stream properties (H.264, 1280x720, yuv420p, 30 fps).
+          stream=$(ffprobe -v error -select_streams v:0 -show_entries stream=codec_name,width,height,pix_fmt,r_frame_rate -of csv=p=0 "$RUNNER_TEMP/smoke.mp4")
+          echo "video stream: $stream"
+          if [ "$stream" != "h264,1280,720,yuv420p,30/1" ]; then
+            echo "FAILED check 1 (video stream properties): expected 'h264,1280,720,yuv420p,30/1', got '$stream'" >&2
+            exit 1
+          fi
+
+          # Check 2: duration is 2.0 s +/- 0.2 (two 1.0 s scenes).
+          duration=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$RUNNER_TEMP/smoke.mp4")
+          echo "duration: ${duration}s"
+          if ! awk -v d="$duration" 'BEGIN { exit !(d >= 1.8 && d <= 2.2) }'; then
+            echo "FAILED check 2 (duration): expected 2.0 +/- 0.2 s, got ${duration}s" >&2
+            exit 1
+          fi
+
+          # Check 3: full decode produces no ffmpeg error output.
+          decode_status=0
+          decode_errors=$(ffmpeg -v error -i "$RUNNER_TEMP/smoke.mp4" -f null - 2>&1) || decode_status=$?
+          if [ "$decode_status" -ne 0 ] || [ -n "$decode_errors" ]; then
+            echo "FAILED check 3 (full decode, exit ${decode_status}):" >&2
+            printf '%s\n' "$decode_errors" >&2
+            exit 1
+          fi
+
+          # Check 4: the video is silent - no audio streams at all.
+          audio=$(ffprobe -v error -select_streams a -show_entries stream=index -of csv=p=0 "$RUNNER_TEMP/smoke.mp4")
+          if [ -n "$audio" ]; then
+            echo "FAILED check 4 (silence): expected no audio streams, ffprobe reported '$audio'" >&2
+            exit 1
+          fi
+
+          echo "smoke test passed: storyboard schema-validated, rendered, and verified"
+      - name: Check Python syntax
+        run: python -m compileall -q repo-owned/explainify/scripts tests/test_explainify_package.py tests/test_import_generated_skills.py
+      # Deliberately absent: paid APIs, narration/TTS, network source
+      # retrieval, and installation into any user's global skill directory.
+      # CI also does not certify teaching quality or visual inspection;
+      # those agent-side checks are recorded in
+      # docs/superpowers/verification/explainify/.

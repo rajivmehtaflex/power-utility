@@ -1,6 +1,6 @@
 # Skill Collections — Cross-Agent Mono-Repo
 
-Spec: https://agentskills.io/specification.md · 74 skills · synced 2026-09-17
+Spec: https://agentskills.io/specification.md · 75 skills · synced 2026-09-17
 
 [![skills.sh](https://skills.sh/b/rajivmehtaflex/power-utility)](https://skills.sh/rajivmehtaflex/power-utility)
 
@@ -14,7 +14,7 @@ The [skills CLI](https://github.com/vercel-labs/skills) auto-detects installed
 agents (Claude Code, Codex, Cursor, Copilot, OpenCode, …) or takes `--agent`:
 
 ```bash
-# Install ALL 74 skills (auto-detect agents, interactive pick)
+# Install ALL 75 skills (auto-detect agents, interactive pick)
 npx skills add rajivmehtaflex/power-utility
 
 # List available skills without installing
@@ -166,6 +166,20 @@ license terms, and publication requires that license status be resolved first:
 ```bash
 npx skills add rajivmehtaflex/power-utility --skill hf-generative-model-converter
 uv run --project tools/skill-validation skills-ref validate repo-owned/hf-generative-model-converter
+```
+
+The `explainify` skill turns a topic, URL, pasted text, or UTF-8 `.md`/`.txt`
+file into an accurate, audience-appropriate explanation in two v0.1 formats:
+STE-inspired simplified English (approximate, not validated for ASD-STE100
+conformity) or a short silent explainer video (1280×720, 30 fps, H.264, at most
+60 seconds) rendered locally from an adaptable Python template via uv. Every
+run resolves source provenance, builds a shared teaching brief, and gates
+delivery on format-specific verification — meaning preservation for writing;
+storyboard validation, stream/decode checks, and scene-frame inspection for
+video:
+
+```bash
+npx skills add rajivmehtaflex/power-utility --skill explainify
 ```
 
 Generated collections must be built in a separate staging directory and then
@@ -338,6 +352,7 @@ are never modified — only these copies are normalized.
 
 | Name | Group | Category | Spec-compliant | Description |
 |---|---|---|---|---|
+| `explainify` | repo-owned | creative | yes | Turn a topic, URL, pasted text, or markdown file into STE-inspired simplified English or a verified silent explainer video. |
 | `unsloth-workflows` | repo-owned | mlops | yes | Explain, prepare, and execute Unsloth workflows on Linux/NVIDIA machines. |
 | `hf-generative-model-converter` | repo-owned | mlops | yes | Convert pinned Hugging Face models to GGUF, ONNX, or LiteRT-LM, validate by real inference (CPU/CUDA), and publish verified packages with a SHA-256 manifest. |
 | `data-to-okf` | agents-shared | — | yes | Converts any local folder of mixed documents (docx, pdf, xlsx, duckdb, csv, imag |
