@@ -115,13 +115,16 @@ def check_python(uv_path: str | None) -> dict:
     if uv_path is None:
         return _check(name, False, f"not checked: uv is missing; {_uv_hint()}")
     # Read-only discovery probe: 'uv python find' locates an installed
-    # interpreter and never installs or downloads one.
-    result = _probe([uv_path, "python", "find", "3.11"])
+    # interpreter and never installs or downloads one. The request is
+    # '>=3.11' so any 3.11-or-newer interpreter satisfies the check —
+    # a host with only 3.12/3.13 still passes, matching the skill's
+    # declared "Python 3.11+" requirement.
+    result = _probe([uv_path, "python", "find", ">=3.11"])
     if result is None:
         return _check(
             name,
             False,
-            "'uv python find 3.11' timed out or failed to launch; "
+            "'uv python find >=3.11' timed out or failed to launch; "
             "install with: uv python install 3.11 (suggested only; never run by this script)",
         )
     interpreter = _first_line(result.stdout)
@@ -129,7 +132,7 @@ def check_python(uv_path: str | None) -> dict:
         return _check(
             name,
             False,
-            "no installed Python 3.11 interpreter found via 'uv python find 3.11'; "
+            "no installed Python >=3.11 interpreter found via 'uv python find >=3.11'; "
             "install with: uv python install 3.11 (suggested only; never run by this script)",
         )
     return _check(name, True, interpreter)

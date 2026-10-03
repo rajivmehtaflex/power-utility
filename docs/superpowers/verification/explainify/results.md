@@ -133,3 +133,9 @@ exit code and with the per-check booleans, "preflight: PASS|FAIL" line present, 
 capability reporting must work without the video toolchain. Verified on both paths locally
 before pushing the fix.
 
+A second, related CI finding from the same run: the `python-3.11+-via-uv` probe used
+`uv python find 3.11`, which matches only 3.11.x — so hosts with just 3.12/3.13 (the GitHub
+runner) were falsely reported as missing Python despite satisfying the skill's declared
+"Python 3.11+" requirement. The probe now requests `>=3.11` (still read-only discovery, no
+installs), so any 3.11-or-newer interpreter passes and the runner preflight is fully green.
+
