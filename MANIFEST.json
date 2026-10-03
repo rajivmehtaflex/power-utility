@@ -1192,7 +1192,7 @@
         "license": "MIT",
         "compatibility": "Requires an agent with file access. Video requires command execution, uv, Python 3.11+, ffmpeg, ffprobe, and image inspection for full verification. URL inputs require web retrieval. First video setup may require network access.",
         "metadata_author": "rajivmehtapy",
-        "metadata_version": "0.1.1"
+        "metadata_version": "0.2.0"
       },
       "spec_compliant": true,
       "warnings": []

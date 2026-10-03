@@ -167,3 +167,29 @@ wrap assertion), root suite 58/58 (version assertions moved to 0.1.1, schema-ver
 assertion moved to the 1.0/1.1 enum), `skills-ref validate` PASS, five delivered 1.0
 storyboards re-validated PASS, regression render (fractional durations + 1,200-char text)
 → exactly 45 frames/1.500000 s, h264/yuv420p/30 fps/no audio, full decode clean.
+
+
+## 10. 2026-10-03 speed round — v0.2.0 (`feat/explainify-preview-mode`)
+
+Four performance suggestions (preview step, renderer caching, within-task reuse, keep the
+final checks) were measured against the code before anything was changed, and the
+measurements are why three of them landed differently from the suggestion.
+
+| Suggestion | Outcome | Verification |
+|---|---|---|
+| 1. Preview the scenes before rendering all frames | **Shipped.** `--preview PATH` validates, runs the same `_prerender_check` as `--output`, then draws every scene once at progress 1.0 into one labeled PNG contact sheet (one 12.8×7.2 in, dpi-100 cell per scene; no ffmpeg, no encoder, no video) | 7 new contract tests: PNG written and no MP4 (`no video was encoded` in output); 3 scenes tile as 3 cells across one row; works with `ffmpeg`/`ffprobe` removed from `PATH`; invalid storyboard and broken-mathtext rejection write nothing; existing-path guard; mode exclusivity. 3-scene 21 s storyboard: preview 0.44 s vs render 10.36 s |
+| 2. Cache static artwork instead of redrawing | **Deferred, not shipped.** `draw_scene` is 3.4 ms of an 8.1 ms frame (37%); the rasterize/PNG/pipe/x264 remainder (63%) is untouched by any drawing cache, so the realistic saving is ≈1 s on a 10 s render. Also structural: SKILL.md has each run replace `draw_scene` in its own copy, so a template-level cache stays inert until every adapter opts in | per-frame cost decomposition measured on the merged template; decision recorded here rather than coded |
+| 3. Reuse retrieved pages and the brief within a task | **Shipped as workflow text.** Step 1 gains a `refresh_sources` request field and a one-task-retrieves-once rule; no delivery-contract change (writing still ships one file unless `retain_brief`, video still four) | SKILL.md review; `skills-ref validate` PASS; no test change required |
+| 4. Keep storyboard/scene/format/decode checks | **Kept and pinned.** Step 4's five checks are textually unchanged; one new sentence and a clause in non-negotiable rule 9 state that a preview is not frame inspection | Step 4 diff is additive only; preview output says "no video was encoded"; `references/video-style.md` verification recipe leads with the same rule |
+| (found while measuring) `_prerender_check` measured `ax.texts` only | `_overflow_message` now covers patches and lines too, respecting clipping: unclipped artists that escape are reported, clipped ones only when they miss the frame entirely, so a deliberate full-bleed background still passes | rejection test for an unclipped patch past the edge; acceptance test for full-bleed and half-past-edge clipped patches; manual probe over unclipped / clipped / alpha-0 / invisible cases |
+
+Template version 0.1.1 → **0.2.0** (SKILL.md frontmatter, MANIFEST `metadata_version`, three
+root-test assertions); storyboard schema unchanged at 1.1; CLI mode count 3 → 4.
+
+Suite state on this branch: contract tests **51/51** (42 + 7 preview + 2 overflow), root
+suite **58/58**, `skills-ref validate` PASS, `MANIFEST.json` valid JSON, CI-equivalent smoke
+test 4/4 (`h264,1280,720,yuv420p,30/1`; 2.000000 s; full decode clean; no audio streams),
+and a framemd5 regression check — the same storyboard rendered by `40c8183`'s template and
+by this one decodes to **60/60 byte-identical frames**. Not verified here: no new
+topic-specific adapted copy was rendered (the generic template and its CLI are what
+changed), and suggestion 2 was not implemented.

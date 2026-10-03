@@ -86,6 +86,11 @@ scenes beat more, cramped ones.
    not the source document, assigns drawing operations.
 5. Inspect the adapted copy for unintended operations — unexpected file access,
    network calls, or shell execution — before running it.
+6. Preview before rendering. Run the copy's `--preview PATH` and read the contact
+   sheet it writes: one cell per scene at its settled state, so collisions,
+   off-frame art, empty or blank scenes, and unreadable density show up after one
+   draw per scene instead of a full encode. Fix the copy, then preview again — this
+   is the cheap loop. The preview needs no ffmpeg and encodes nothing.
 
 ## Render recipe
 
@@ -93,10 +98,12 @@ Run from the run directory with uv, which reads the script's inline PEP-723
 dependency metadata:
 
 ```text
+uv run <slug>-render.py --storyboard <slug>-storyboard.json --preview <slug>-preview.png
 uv run <slug>-render.py --storyboard <slug>-storyboard.json --output <slug>-explainer.mp4
 ```
 
-Declared dependencies (inline metadata): `numpy>=1.26,<3`, `matplotlib>=3.8,<4`,
+The preview line writes one labeled PNG contact sheet and encodes nothing; run it first
+and re-run it after each layout fix. Declared dependencies (inline metadata): `numpy>=1.26,<3`, `matplotlib>=3.8,<4`,
 `jsonschema>=4,<5`. Record the resolved versions in the verification notes.
 
 - Resolution and frame rate: 1280×720 at 30 fps. Build the matplotlib figure as
@@ -111,6 +118,10 @@ Declared dependencies (inline metadata): `numpy>=1.26,<3`, `matplotlib>=3.8,<4`,
   asked to replace an existing file.
 
 ## Verification recipe
+
+A preview contact sheet is not verification. It shows one settled state per scene, so it
+cannot establish motion, timing, transitions, or frame-level legibility, and reading it
+does not discharge any check below. They all still run, against the encoded file.
 
 1. ffprobe the encoded file: 1280×720, 30 fps, H.264, yuv420p, no audio stream,
    and duration within one frame plus 0.01 s of the storyboard total.
