@@ -11,9 +11,11 @@ The two v0.1 formats have different runtime needs:
   and an H.264-capable encoder in the ffmpeg build.
 
 Every probe is a short read-only subprocess launched without a shell. This
-script never installs anything, never downloads anything, and never writes
-anywhere. Tool permissions, web retrieval, and image inspection remain
-agent-side capability checks; this script cannot certify them.
+script never installs anything and never downloads anything; it writes no
+user or project files, though the uv interpreter probe may refresh uv's own
+cache metadata under uv's cache directory. Tool permissions, web retrieval,
+and image inspection remain agent-side capability checks; this script cannot
+certify them.
 
 CLI:
     check_env.py [--format {asd-ste100,explainer-video}] [--json]
@@ -157,6 +159,14 @@ def check_ffprobe() -> dict:
     path = shutil.which("ffprobe")
     if path is None:
         return _check("ffprobe", False, f"the ffmpeg package provides ffprobe; {_ffmpeg_hint()}")
+    result = _probe([path, "-version"])
+    if result is None:
+        return _check("ffprobe", False, f"'ffprobe -version' timed out or failed to launch; {_ffmpeg_hint()}")
+    if result.returncode != 0 or not (result.stdout or result.stderr).strip():
+        return _check("ffprobe", False,
+                      f"found at {path}, but 'ffprobe -version' failed with exit "
+                      f"{result.returncode}; the binary may be broken or a stale "
+                      f"wrapper; {_ffmpeg_hint()}")
     return _check("ffprobe", True, f"({path})")
 
 

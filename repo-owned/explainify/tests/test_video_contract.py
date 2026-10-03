@@ -450,5 +450,169 @@ class IndependenceTests(unittest.TestCase):
         self.assertEqual([], offenders)
 
 
+class ReviewRound1Tests(unittest.TestCase):
+    """Fixes from the 2026-10-03 code review (branch fix/explainify-review-round-1).
+
+    Covers: cumulative frame allocation (no rounding accumulation), sub-frame
+    duration rejection, pre-encode scene rasterization, encoder-name contract
+    (libx264 accepted; discovered encoder drives the writer), text fit guard,
+    duplicate claim-id rejection, conditional URL provenance, and schema
+    version 1.1 acceptance.
+    """
+
+    # --- gap 1: cumulative frame allocation -------------------------------
+    def test_frame_schedule_six_times_005s_totals_exactly_nine_frames(self):
+        # The reviewer's case: per-scene rounding gave 12 frames (0.40 s) for a
+        # 0.30 s storyboard; cumulative allocation must give exactly 9 (0.30 s).
+        schedule = rv._frame_schedule([0.05] * 6, 30)
+        total = sum(frames for _, frames in schedule)
+        self.assertEqual(total, 9)
+        self.assertEqual(total / 30, 0.30)
+
+    def test_frame_schedule_totals_track_round_of_cumulative_duration(self):
+        import math as _math
+        import random as _random
+        rng = _random.Random(7)
+        for _ in range(100):
+            durations = [round(rng.uniform(0.05, 2.0), 3) for _ in range(rng.randint(1, 8))]
+            schedule = rv._frame_schedule(durations, 30)
+            total = sum(frames for _, frames in schedule)
+            expected = round(_math.fsum(durations) * 30)
+            self.assertIn(total, (expected, expected + 1))
+            self.assertTrue(all(frames >= 1 for _, frames in schedule))
+
+    def test_sub_frame_duration_rejected(self):
+        storyboard = make_storyboard()
+        storyboard["scenes"][0]["duration_seconds"] = 0.02  # < 1 frame at 30 fps
+        with self.assertRaises(ValueError) as cm:
+            rv.validate_storyboard(storyboard, load_schema())
+        self.assertIn("below one frame", str(cm.exception))
+
+    # --- gap 5: duplicate claim ids ----------------------------------------
+    def test_duplicate_claim_ids_rejected(self):
+        storyboard = make_storyboard()
+        storyboard["brief"]["claims"].append(
+            {"id": "claim-1", "statement": "conflicting duplicate", "origin": "illustrative"}
+        )
+        with self.assertRaises(ValueError) as cm:
+            rv.validate_storyboard(storyboard, load_schema())
+        self.assertIn("duplicate claim id 'claim-1'", str(cm.exception))
+
+    # --- gap 6: conditional URL provenance ---------------------------------
+    def test_url_complete_without_provenance_rejected(self):
+        storyboard = make_storyboard()
+        storyboard["schema_version"] = "1.1"
+        storyboard["brief"]["source"] = {"kind": "url", "retrieval_status": "complete"}
+        with self.assertRaises(ValueError) as cm:
+            rv.validate_storyboard(storyboard, load_schema())
+        self.assertIn("resolved_location", str(cm.exception))
+
+    def test_url_complete_with_provenance_passes(self):
+        storyboard = make_storyboard()
+        storyboard["schema_version"] = "1.1"
+        storyboard["brief"]["source"] = {
+            "kind": "url",
+            "retrieval_status": "complete",
+            "requested_location": "https://example.org/a",
+            "resolved_location": "https://example.org/a",
+            "retrieved_at": "2026-10-03",
+        }
+        rv.validate_storyboard(storyboard, load_schema())  # must not raise
+
+    def test_url_unavailable_requires_requested_location(self):
+        storyboard = make_storyboard()
+        storyboard["schema_version"] = "1.1"
+        storyboard["brief"]["source"] = {"kind": "url", "retrieval_status": "unavailable"}
+        with self.assertRaises(ValueError):
+            rv.validate_storyboard(storyboard, load_schema())
+        storyboard["brief"]["source"]["requested_location"] = "https://example.org/gone"
+        rv.validate_storyboard(storyboard, load_schema())  # must not raise
+
+    def test_text_source_stays_unconditional(self):
+        storyboard = make_storyboard()  # kind topic, not-applicable, all-null locations
+        rv.validate_storyboard(storyboard, load_schema())  # must not raise
+
+    def test_schema_version_1_1_accepted(self):
+        storyboard = make_storyboard()
+        storyboard["schema_version"] = "1.1"
+        rv.validate_storyboard(storyboard, load_schema())  # must not raise
+
+    # --- gap 3: encoder contract -------------------------------------------
+    def test_select_encoder_accepts_libx264_only_listing(self):
+        listing = " V....D libx264              libx264 H.264 / AVC / MPEG-4 AVC\n"
+        self.assertEqual(rv._select_encoder(listing), "libx264")
+
+    def test_select_encoder_prefers_libx264_over_videotoolbox(self):
+        listing = (" V....D h264_videotoolbox VideoToolbox H.264\n"
+                   " V....D libx264              libx264 H.264\n")
+        self.assertEqual(rv._select_encoder(listing), "libx264")
+
+    def test_select_encoder_returns_none_without_h264(self):
+        self.assertIsNone(rv._select_encoder(" V....D mpeg4 mpeg4\n V.S... ffv1 FFV1\n"))
+
+    def test_encoder_extra_args_match_encoder(self):
+        self.assertIn("-crf", rv._encoder_extra_args("libx264"))
+        self.assertIn("-q:v", rv._encoder_extra_args("h264_videotoolbox"))
+        self.assertEqual(rv._encoder_extra_args("unknownenc"), ["-pix_fmt", "yuv420p"])
+
+    # --- gap 2: pre-encode scene rasterization ------------------------------
+    def test_broken_mathtext_fails_prerender_check(self):
+        storyboard = make_storyboard()
+        storyboard["scenes"][0]["on_screen_text"] = "$\\brokenmath_{$_%"
+        with self.assertRaises(ValueError) as cm:
+            rv._prerender_check(storyboard["scenes"], storyboard["brief"])
+        self.assertIn("scene-", str(cm.exception))
+
+    def test_render_mode_rejects_broken_math_before_creating_output(self):
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td).resolve()
+            storyboard = make_tiny_storyboard()
+            storyboard["scenes"][0]["on_screen_text"] = "$\\brokenmath_{$_%"
+            path = write_storyboard(tmp, storyboard)
+            output = tmp / "out.mp4"
+            code, text = run_main(
+                ["--storyboard", str(path), "--output", str(output)]
+            )
+            self.assertNotEqual(code, 0, text)
+            self.assertIn("pre-render", text)
+            self.assertFalse(output.exists(), "a partial output file was created")
+
+    # --- gap 4: text fit guard ----------------------------------------------
+    def test_oversized_text_renders_wrapped_and_truncated_not_off_frame(self):
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td).resolve()
+            storyboard = make_tiny_storyboard()
+            storyboard["scenes"][0]["on_screen_text"] = "word " * 400
+            path = write_storyboard(tmp, storyboard)
+            output = tmp / "wrapped.mp4"
+            code, text = run_main(
+                ["--storyboard", str(path), "--output", str(output)]
+            )
+            self.assertEqual(code, 0, text)
+            self.assertTrue(output.exists())
+
+    def test_fit_scene_text_wraps_and_steps_down(self):
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as _plt
+        fig = _plt.figure(figsize=(rv.W, rv.H), dpi=100)
+        try:
+            text, size = rv._fit_scene_text(fig, "word " * 60)
+            usable_px = 0.92 * rv.W * fig.dpi
+            px_per_char = size * fig.dpi / 72.0 * 0.58
+            longest = max(len(l) for l in text.splitlines())
+            self.assertLessEqual(longest * px_per_char, usable_px)
+            self.assertIn(size, rv._TEXT_SIZES)
+            huge, small = rv._fit_scene_text(fig, "word " * 400)
+            self.assertEqual(small, rv._TEXT_SIZES[-1])
+            self.assertTrue(huge.endswith("…"))
+        finally:
+            _plt.close(fig)
+
+    # --- embedded schema sync ------------------------------------------------
+    def test_embedded_schema_matches_packaged_schema(self):
+        self.assertEqual(rv.EMBEDDED_SCHEMA, load_schema())
+
+
 if __name__ == "__main__":
     unittest.main()

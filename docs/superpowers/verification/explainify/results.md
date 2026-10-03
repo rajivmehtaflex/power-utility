@@ -3,6 +3,7 @@
 - **Implemented:** 2026-10-02 → 2026-10-03, from `docs/superpowers/plans/2026-10-02-explainify-skill-plan.md`
 - **Base revision:** `2fbc06ba41a12aa7320e1ac15db636b53f5f3921` (main); working tree carries the
   changes below, **nothing committed** (commit/push/PR follow the user's separately authorized scope)
+  — *superseded 2026-10-03: this change-set was committed, reviewed (PR #8), and merged; see §8 and §9*
 - **Method:** task-by-task subagent-driven development (per the plan's required execution style;
   20 subagents across 7 dependency-ordered waves, each task spec'd + independently verified)
 - **Scope:** milestones M1–M3 complete; M4 (diagram/HTML/narration) intentionally untouched
@@ -64,9 +65,9 @@ validator env Python 3.13.14) · npm `skills 1.7.0` (node v26.10.0) · render ru
 | C3 .md fixture (both) | **pass** | Fixture byte-identical to frozen block (SHA-256 `9f3ad6bb…3aae`); 3/3 dates, 4/4 negations, 3/3 uncertainty preserved; video 37.5 s, 12 frames, 1 repair (Jamaica-label collision), re-verified |
 | C4 water cycle (both) | **pass** | Video: 40.0 s, 16 frames, 1 repair, 11/11 inspected PASS, zero ML artifacts (anti-stale-assumption case). Writing: 5/5 must-preserve groups, 0 sentences >20 words |
 | C5 date/negation/uncertainty + embedded instruction | **pass** | 3/3 dates, 4/4 negations, 3/3 uncertainty; instruction quoted as content, before/after listings prove nothing deleted |
-| C6 blocked URL | **pass** | Real DNS failure (`.invalid`), `retrieval_status: unavailable` stated, two documented paths offered, **no explanation file created — no silent substitution** |
+| C6 blocked URL | **pass** | Real DNS failure (`.invalid`), `retrieval_status: unavailable` stated, two documented paths offered, **no explanation file created — no silent substitution**. `retrieval_status: partial` was **not observed** in any run and is recorded as not observed per the case's own rule (schema 1.1 now enforces the same provenance discipline programmatically) |
 | C7 long input + reserved format | **pass** | 2,116-word source → focused brief + full omission record (11 sections listed); `diagram` request refused with both supported formats offered |
-| C8 capability handling | **pass** | Writing completed with zero video-tool invocations (`check_env --format asd-ste100` exit 0); visually-unverified delivery statement modeled with visible status line |
+| C8 capability handling | **pass (partly modeled)** | Writing completed with zero video-tool invocations (`check_env --format asd-ste100` exit 0). The visually-unverified delivery statement was **modeled, not executed** — every producing agent on this host has image inspection, so an uninspected video could not occur here; the modeled statement (`c8-visual-unverified-demo.md`) shows the exact wording a real delivery would carry |
 | C9 invalid storyboard + existing output | **pass** | Contract tests reject malformed storyboards before rendering; overwrite guard verified in tests + live (T12: existing file untouched, exit 1) |
 | C10 listing + copied installation | **pass** | `skills add … --list`: exactly one `explainify` of 75; `--skill explainify --agent claude-code --copy -y` in a temp project → byte-identical 9-file copy, preflights exit 0 from foreign cwd; no live/global installs |
 | C11 refresh + name collision | **pass** | Normal refresh: owned bytes + manifest entry identical after; staged `explainify` duplicate → `ValueError: duplicate skill name(s)` before any group replaced; disposable copies only |
@@ -139,3 +140,30 @@ runner) were falsely reported as missing Python despite satisfying the skill's d
 "Python 3.11+" requirement. The probe now requests `>=3.11` (still read-only discovery, no
 installs), so any 3.11-or-newer interpreter passes and the runner preflight is fully green.
 
+
+## 9. 2026-10-03 review round — v0.1.1 (`fix/explainify-review-round-1`)
+
+An external code review raised 8 P2 and 3 P3 gaps; all 11 were confirmed against the code
+(two were worse than reported) and fixed on this branch. Version 0.1.0 → **0.1.1**;
+storyboard schema 1.0 → **1.1** (1.0 documents remain valid; all five delivered bundles
+re-validated against the new schema, PASS).
+
+| Gap | Fix | Verification |
+|---|---|---|
+| P2 frame rounding accumulated (0.30 s → 0.40 s, reproduced as 6×0.05 s → 12 frames) | `_frame_schedule` allocates boundaries from cumulative timing; total = round(total×fps) exactly | 6×0.05 s → 9 frames (0.30 s); 100-trial fractional property test; regression render 1.5 s → exactly 45 frames |
+| P2 supplied scenes never drawn before encoding (malformed math produced partial MP4s) | `_prerender_check` rasterizes every scene at two progress values and measures all text extents before the output figure exists | broken-mathtext storyboard → nonzero exit, scene named, no output file; `--check-only`/`--self-test` unchanged |
+| P2 `libx264`-only builds rejected ("h264" ∉ "libx264"); writer ignored the discovered encoder | `_select_encoder` matches h264/x264 variants with software-first preference; writer gets the selected codec; per-encoder `-crf`/`-q:v` args (conservative minimum for unknowns) | table tests incl. libx264-only, videotoolbox-only, none; Mac regression render used the selected encoder end-to-end |
+| P2 long text drew past the frame (≈4,810 px overflow) | `_fit_scene_text` wraps (hard-breaking unbreakable tokens), steps 27→16 pt by line budget, truncates with ellipsis + warning; pre-render extent check rejects any residual overflow before encoding | 1,200-char text → wrapped/truncated, render exit 0; extent measurement enforced in `_prerender_check` |
+| P2 duplicate claim IDs accepted | `validate_storyboard` rejects duplicate `brief.claims[].id`, naming the id | rejection test; ambiguous-reference scenario gone |
+| P2 URL provenance unenforced | schema 1.1 `allOf` conditionals: url+complete/partial requires non-null `resolved_location`+`retrieved_at`; url+unavailable requires `requested_location` | 8-case behavioral matrix; topic/text/file inputs unaffected (test-pinned) |
+| P2 broken `ffprobe` passed preflight (existence check only) | `check_ffprobe` now executes `ffprobe -version` and checks the exit code, mirroring `check_ffmpeg` | code inspection + sandboxable fail path (same technique as T09) |
+| P2 SKILL.md said the storyboard embeds the schema (rejected by `additionalProperties: false`) | wording corrected: the render script embeds the schema as its validation default (as the plan §7 assigns) | `skills-ref validate` PASS; link/frontmatter tests green |
+| P3 results.md stale (said "nothing committed", CI unexecuted) | header annotated as superseded with pointers; this section records commits/PR/CI | this section |
+| P3 coverage gaps (visually-unverified modeled not executed; html-page refusal; partial not observed) | C8 row relabeled "partly modeled" with reason; dedicated `html-page-refusal.md` added; partial-not-observed recorded on the C6 row | this section + new evidence file |
+| P3 preflight "never writes anywhere" inaccurate (uv cache metadata) | docstring reworded: no user/project writes; uv probe may refresh uv's own cache | wording review |
+
+Post-fix suite state on this branch: contract tests 42/42 (24 original + 16 new + adjusted
+wrap assertion), root suite 58/58 (version assertions moved to 0.1.1, schema-version
+assertion moved to the 1.0/1.1 enum), `skills-ref validate` PASS, five delivered 1.0
+storyboards re-validated PASS, regression render (fractional durations + 1,200-char text)
+→ exactly 45 frames/1.500000 s, h264/yuv420p/30 fps/no audio, full decode clean.

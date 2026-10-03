@@ -65,8 +65,10 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 import shutil
 import subprocess
+import textwrap
 from bisect import bisect_right
 from pathlib import Path
 
@@ -104,27 +106,32 @@ MAX_TOTAL_SECONDS = 60.0        # storyboard-level duration ceiling
 EMBEDDED_SCHEMA: dict = {'$schema': 'https://json-schema.org/draft/2020-12/schema',
  '$id': 'storyboard.schema.json',
  'title': 'Explainify storyboard',
- 'description': 'Version 1.0 of the Explainify storyboard contract. This schema '
-                'describes teaching intent and timing for a short silent explainer '
-                'video; it is NOT a drawing language - the generator assigns drawing '
-                'operations, and storyboard fields are data that is never evaluated as '
-                'code. The schema alone is intentionally insufficient: three '
-                'cross-field constraints cannot be expressed in JSON Schema and are '
-                "enforced programmatically by the renderer's validate_storyboard "
-                'function: (1) scene ids must be unique across the storyboard, (2) '
-                "every entry in a scene's claim_ids must reference an id that exists "
-                'in brief.claims, and (3) the sum of all scene duration_seconds must '
-                'be at most 60 seconds. All fields are topic-neutral: the generic '
-                'contract must never require attention tokens, attention weights, '
-                'attention matrices, or any other machine-learning-specific concept; '
-                "such topic-specific values may appear only inside a scene's optional "
-                'data field.',
+ 'description': 'Version 1.1 of the Explainify storyboard contract (1.0 documents '
+                'remain valid; 1.1 adds conditional URL provenance requirements). This '
+                'schema describes teaching intent and timing for a short silent '
+                'explainer video; it is NOT a drawing language - the generator assigns '
+                'drawing operations, and storyboard fields are data that is never '
+                'evaluated as code. The schema alone is intentionally insufficient: '
+                'four cross-field constraints cannot be expressed in JSON Schema (or, '
+                'for subfield uniqueness, not portably) and are enforced '
+                "programmatically by the renderer's validate_storyboard function: (1) "
+                'scene ids must be unique across the storyboard, (2) claim ids inside '
+                "brief.claims must be unique, (3) every entry in a scene's claim_ids "
+                'must reference an id that exists in brief.claims, and (4) the sum of '
+                'all scene duration_seconds must be at most 60 seconds. All fields are '
+                'topic-neutral: the generic contract must never require attention '
+                'tokens, attention weights, attention matrices, or any other '
+                'machine-learning-specific concept; such topic-specific values may '
+                "appear only inside a scene's optional data field.",
  'type': 'object',
  'additionalProperties': False,
  'required': ['schema_version', 'brief', 'render', 'scenes'],
- 'properties': {'schema_version': {'const': '1.0',
-                                   'description': 'Storyboard contract version; fixed '
-                                                  'to "1.0" for v0.1.'},
+ 'properties': {'schema_version': {'enum': ['1.0', '1.1'],
+                                   'description': 'Storyboard contract version. "1.1" '
+                                                  'adds conditional URL provenance '
+                                                  'requirements (see the brief allOf '
+                                                  'rules); "1.0" documents remain '
+                                                  'valid.'},
                 'brief': {'type': 'object',
                           'additionalProperties': False,
                           'required': ['title',
@@ -383,11 +390,20 @@ EMBEDDED_SCHEMA: dict = {'$schema': 'https://json-schema.org/draft/2020-12/schem
                                                                                                                'with '
                                                                                                                'the '
                                                                                                                'claim.'}}},
-                                                    'description': 'Factual claims '
-                                                                   'with honest '
-                                                                   'origins and '
-                                                                   'required '
-                                                                   'qualifications.'},
+                                                    'description': 'The claims taught '
+                                                                   'by this '
+                                                                   'explanation. Claim '
+                                                                   'ids must be unique '
+                                                                   'across this array; '
+                                                                   'uniqueness is '
+                                                                   'enforced '
+                                                                   'programmatically '
+                                                                   "by the renderer's "
+                                                                   'validate_storyboard, '
+                                                                   'since JSON Schema '
+                                                                   'cannot portably '
+                                                                   'enforce uniqueness '
+                                                                   'of a subfield.'},
                                          'example': {'type': ['object', 'null'],
                                                      'additionalProperties': False,
                                                      'required': ['summary',
@@ -465,7 +481,30 @@ EMBEDDED_SCHEMA: dict = {'$schema': 'https://json-schema.org/draft/2020-12/schem
                                                        'description': 'Deliberate '
                                                                       'exclusions and '
                                                                       'source-coverage '
-                                                                      'limitations.'}}},
+                                                                      'limitations.'}},
+                          'allOf': [{'if': {'properties': {'source': {'properties': {'kind': {'const': 'url'},
+                                                                                     'retrieval_status': {'enum': ['complete',
+                                                                                                                   'partial']}}}},
+                                            'required': ['source']},
+                                     'then': {'properties': {'source': {'properties': {'resolved_location': {'type': 'string',
+                                                                                                             'minLength': 1},
+                                                                                       'retrieved_at': {'type': 'string',
+                                                                                                        'format': 'date'}},
+                                                                        'required': ['resolved_location',
+                                                                                     'retrieved_at']}}},
+                                     'description': 'A URL source that was (even '
+                                                    'partly) retrieved must record '
+                                                    'where the content actually came '
+                                                    'from and when it was retrieved.'},
+                                    {'if': {'properties': {'source': {'properties': {'kind': {'const': 'url'},
+                                                                                     'retrieval_status': {'const': 'unavailable'}}}},
+                                            'required': ['source']},
+                                     'then': {'properties': {'source': {'properties': {'requested_location': {'type': 'string',
+                                                                                                              'minLength': 1}},
+                                                                        'required': ['requested_location']}}},
+                                     'description': 'An unavailable URL source must '
+                                                    'still record what was requested, '
+                                                    'so the failure is traceable.'}]},
                 'render': {'type': 'object',
                            'additionalProperties': False,
                            'required': ['width', 'height', 'fps', 'title'],
@@ -648,10 +687,6 @@ EMBEDDED_SCHEMA: dict = {'$schema': 'https://json-schema.org/draft/2020-12/schem
                                        'example "claim-1".'}}}
 
 
-# ---------------------------------------------------------------------------
-# Small generic helpers
-# ---------------------------------------------------------------------------
-
 def _clamp01(value: float) -> float:
     """Clamp to [0, 1]; non-finite values collapse to 0 so drawing never raises."""
     if not math.isfinite(value):
@@ -715,9 +750,12 @@ def validate_storyboard(data: dict, schema: dict) -> None:
     ValueError whose message lists each offending location and message
     (capped at 12 lines, with a count of the remainder).
 
-    Layer 2: cross-field rules the schema cannot express:
-      - every duration_seconds must be a finite number greater than 0;
+    Layer 2: cross-field rules the schema cannot express (or, for subfield
+    uniqueness, cannot express portably):
+      - every duration_seconds must be a finite number of at least one frame
+        (1/fps); shorter scenes cannot be scheduled without stretching;
       - scene ids must be unique across the storyboard;
+      - claim ids in brief.claims must be unique across the brief;
       - every claim_ids entry must exist in brief.claims;
       - the sum of duration_seconds must be at most 60.0 seconds.
 
@@ -740,7 +778,17 @@ def validate_storyboard(data: dict, schema: dict) -> None:
         raise ValueError("storyboard fails schema validation:\n" + "\n".join(lines))
 
     scenes = data["scenes"]
-    known_claim_ids = {claim.get("id") for claim in data["brief"]["claims"]}
+    fps = float(data.get("render", {}).get("fps") or DEFAULT_FPS)
+    min_duration = 1.0 / fps
+    known_claim_ids: set = set()
+    for claim in data["brief"]["claims"]:
+        claim_id = claim.get("id")
+        if claim_id in known_claim_ids:
+            raise ValueError(
+                f"duplicate claim id '{claim_id}' in brief.claims; claim ids "
+                "must be unique so scene claim_ids references are unambiguous"
+            )
+        known_claim_ids.add(claim_id)
 
     seen_ids: dict[str, int] = {}
     for index, scene in enumerate(scenes):
@@ -758,6 +806,13 @@ def validate_storyboard(data: dict, schema: dict) -> None:
             raise ValueError(
                 f"scene '{scene_id}' (index {index}) has duration_seconds "
                 f"{duration}; scene duration must be greater than 0"
+            )
+        if duration < min_duration:
+            raise ValueError(
+                f"scene '{scene_id}' (index {index}) has duration_seconds "
+                f"{duration}, below one frame at {fps:g} fps ({min_duration:.4f} "
+                "s); such a scene cannot be scheduled without being stretched "
+                "or dropped — give it at least one frame"
             )
         if scene_id in seen_ids:
             raise ValueError(
@@ -787,6 +842,46 @@ def validate_storyboard(data: dict, schema: dict) -> None:
 # ---------------------------------------------------------------------------
 # Generic scene drawing (the part adapters replace)
 # ---------------------------------------------------------------------------
+
+_TEXT_SIZES = (27, 22, 18, 16)      # step-down ladder for on-screen text
+_MAX_TEXT_LINES = {27: 5, 22: 7, 18: 9, 16: 11}
+
+
+def _fit_scene_text(fig, raw_text: str) -> tuple[str, int]:
+    """Wrap and size on-screen text so it fits the frame.
+
+    Each explicit line is wrapped with textwrap at a per-size character
+    budget estimated from the frame width (textwrap hard-breaks unbreakable
+    tokens, so horizontal fit holds by construction), stepping the size down
+    until the wrapped line count fits the vertical budget; anything still too
+    tall at the smallest size is truncated with an ellipsis and a warning.
+    The pre-render check additionally measures real extents before encoding.
+    """
+    usable_px = 0.92 * W * fig.dpi
+
+    def wrap_at(size: int) -> list[str]:
+        px_per_char = size * fig.dpi / 72.0 * 0.58   # ~0.58 em average glyph
+        width_chars = max(12, int(usable_px / px_per_char))
+        lines: list[str] = []
+        for paragraph in raw_text.splitlines():
+            if not paragraph.strip():
+                if lines and lines[-1] != "":
+                    lines.append("")
+                continue
+            lines.extend(textwrap.wrap(paragraph, width=width_chars) or [""])
+        return lines
+
+    for size in _TEXT_SIZES:
+        lines = wrap_at(size)
+        if len(lines) <= _MAX_TEXT_LINES[size]:
+            return "\n".join(lines), size
+    size = _TEXT_SIZES[-1]
+    lines = wrap_at(size)[:_MAX_TEXT_LINES[size]]
+    lines[-1] = lines[-1].rstrip() + "…"
+    print("warning: on-screen text exceeded the readable line budget and was "
+          "truncated to fit the frame")
+    return "\n".join(lines), size
+
 
 def draw_scene(ax, scene: dict, progress: float, brief: dict) -> None:
     """Draw one generic placeholder scene on *ax* (fully owns the axes).
@@ -835,8 +930,8 @@ def draw_scene(ax, scene: dict, progress: float, brief: dict) -> None:
     while raw_lines and not raw_lines[-1].strip():
         raw_lines.pop()
     if raw_lines:
-        size = 27 if len(raw_lines) <= 2 else 22
-        _text(ax, W / 2.0, H * 0.62, "\n".join(raw_lines), size=size,
+        fitted_text, size = _fit_scene_text(ax.figure, "\n".join(raw_lines))
+        _text(ax, W / 2.0, H * 0.62, fitted_text, size=size,
               color=WHITE, alpha=fade, linespacing=1.25)
 
     # Neutral placeholder visual: rounded boxes, one per referenced claim.
@@ -908,6 +1003,47 @@ def _load_json(path: Path, kind: str) -> dict:
     return data
 
 
+_ENCODER_PREFERENCE = ("libx264", "h264", "openh264", "h264_videotoolbox",
+                       "h264_qsv", "h264_nvenc", "h264_omx")
+
+
+def _select_encoder(encoder_listing: str) -> str | None:
+    """Pick the best H.264 encoder name from `ffmpeg -encoders` output.
+
+    Accepts any encoder whose name contains an h264/x264 variant (libx264,
+    h264, h264_videotoolbox, openh264, h264_nvenc, ...), preferring software
+    encoders with predictable rate control. Returns None when nothing matches.
+    """
+    names: list[str] = []
+    for line in encoder_listing.splitlines():
+        fields = line.split()
+        if len(fields) >= 2 and re.search(r"h\.?264|x264", fields[1].lower()):
+            names.append(fields[1])
+    if not names:
+        return None
+
+    def rank(name: str) -> tuple[int, str]:
+        lowered = name.lower()
+        for index, preferred in enumerate(_ENCODER_PREFERENCE):
+            if lowered == preferred or lowered.startswith(preferred):
+                return (index, name)
+        return (len(_ENCODER_PREFERENCE), name)
+
+    return sorted(names, key=rank)[0]
+
+
+def _encoder_extra_args(encoder_name: str) -> list[str]:
+    """Encoder-appropriate ffmpeg args: yuv420p everywhere; rate-control flags
+    only where the encoder understands them (a mismatched flag fails the
+    encode, so unknown encoders get the conservative minimum)."""
+    lowered = encoder_name.lower()
+    if lowered in ("libx264", "h264"):
+        return ["-pix_fmt", "yuv420p", "-preset", "medium", "-crf", "20"]
+    if lowered.startswith("h264_videotoolbox"):
+        return ["-pix_fmt", "yuv420p", "-q:v", "65"]
+    return ["-pix_fmt", "yuv420p"]
+
+
 def _find_h264_encoder(ffmpeg_path: str) -> str | None:
     """Return the name of an available H.264 encoder, or None (with a message)."""
     try:
@@ -923,11 +1059,7 @@ def _find_h264_encoder(ffmpeg_path: str) -> str | None:
         print(f"Error: ffmpeg failed to list encoders "
               f"(exit {proc.returncode}): {detail}")
         return None
-    for line in (proc.stdout + "\n" + proc.stderr).splitlines():
-        fields = line.split()
-        if len(fields) >= 2 and "h264" in fields[1].lower():
-            return fields[1]
-    return None
+    return _select_encoder(proc.stdout + "\n" + proc.stderr)
 
 
 def _self_test_fixture() -> dict:
@@ -1003,6 +1135,72 @@ def _run_self_test() -> int:
     return 0
 
 
+def _prerender_check(scenes: list[dict], brief: dict) -> None:
+    """Draw every supplied scene in memory before any encoding starts.
+
+    Catches malformed mathtext, adapter drawing bugs, and text escaping the
+    frame, raising ValueError with the scene id named — failures happen
+    before an output file exists, per the plan's in-memory pre-render check.
+    """
+    probe = plt.figure(figsize=(W, H), dpi=100)
+    probe.patch.set_facecolor(BG)
+    ax = probe.add_axes([0, 0, 1, 1])
+    try:
+        for scene in scenes:
+            scene_id = str(scene.get("id", "<unnamed>"))
+            for progress in (0.35, 1.0):
+                try:
+                    draw_scene(ax, scene, progress, brief)
+                    probe.canvas.draw()
+                except Exception as exc:
+                    raise ValueError(
+                        f"scene '{scene_id}' failed the pre-render draw check "
+                        f"at progress {progress:.2f}: {type(exc).__name__}: {exc}"
+                    ) from exc
+            renderer = probe.canvas.get_renderer()
+            frame_w, frame_h = W * probe.dpi, H * probe.dpi
+            margin = 4.0
+            for artist in ax.texts:
+                extent = artist.get_window_extent(renderer=renderer)
+                if (extent.x0 < -margin or extent.y0 < -margin
+                        or extent.x1 > frame_w + margin
+                        or extent.y1 > frame_h + margin):
+                    preview = artist.get_text()[:40].replace("\n", " / ")
+                    raise ValueError(
+                        f"scene '{scene_id}' has text extending outside the "
+                        f"frame (bounds {extent.x0:.0f},{extent.y0:.0f}.."
+                        f"{extent.x1:.0f},{extent.y1:.0f} vs "
+                        f"{frame_w:.0f}x{frame_h:.0f} px); text starts: "
+                        f"'{preview}'"
+                    )
+            ax.clear()
+    finally:
+        plt.close(probe)
+
+
+def _frame_schedule(durations: list[float], fps: int) -> list[tuple[int, int]]:
+    """Allocate whole frames from cumulative timing.
+
+    Each scene boundary is rounded from the cumulative duration rather than
+    per scene, so rounding error never accumulates: total frames equals
+    round(total_duration * fps), and every scene keeps at least the one frame
+    its validated minimum duration guarantees.
+    """
+    schedule: list[tuple[int, int]] = []
+    previous_boundary = 0
+    cumulative = 0.0
+    for duration in durations:
+        cumulative = math.fsum([cumulative, duration])
+        boundary = int(round(cumulative * fps))
+        if boundary <= previous_boundary:
+            # Safety net for float dust; validated durations are >= 1 frame,
+            # so this can cost at most one frame in total, never per scene.
+            boundary = previous_boundary + 1
+        schedule.append((previous_boundary, boundary - previous_boundary))
+        previous_boundary = boundary
+    return schedule
+
+
 def _render_storyboard(storyboard: dict, output_path: Path, ffmpeg_path: str,
                        encoder_name: str) -> int:
     """Render a validated storyboard to a silent H.264 MP4; return exit code."""
@@ -1012,13 +1210,11 @@ def _render_storyboard(storyboard: dict, output_path: Path, ffmpeg_path: str,
     fps = int(render_cfg["fps"])
     width_px, height_px = int(render_cfg["width"]), int(render_cfg["height"])
 
-    # Frame schedule: round each scene to whole frames; track cumulative starts.
-    schedule: list[tuple[int, int]] = []
-    total_frames = 0
-    for scene in scenes:
-        scene_frames = max(1, int(round(float(scene["duration_seconds"]) * fps)))
-        schedule.append((total_frames, scene_frames))
-        total_frames += scene_frames
+    # Frame schedule: allocate whole frames from cumulative timing so per-scene
+    # rounding error never accumulates — total frames equals round(total*fps).
+    schedule = _frame_schedule(
+        [float(scene["duration_seconds"]) for scene in scenes], fps)
+    total_frames = schedule[-1][0] + schedule[-1][1] if schedule else 0
     scene_starts = [start for start, _ in schedule]
 
     matplotlib.rcParams["animation.ffmpeg_path"] = ffmpeg_path
@@ -1044,8 +1240,8 @@ def _render_storyboard(storyboard: dict, output_path: Path, ffmpeg_path: str,
     animation = FuncAnimation(fig, draw_frame, frames=total_frames,
                               cache_frame_data=False)
     writer = FFMpegWriter(
-        fps=fps, codec="h264",
-        extra_args=["-pix_fmt", "yuv420p", "-preset", "medium", "-crf", "20"],
+        fps=fps, codec=encoder_name,
+        extra_args=_encoder_extra_args(encoder_name),
         metadata={"title": str(render_cfg.get("title", ""))},
     )
     try:
@@ -1157,6 +1353,13 @@ def main(argv: list[str] | None = None) -> int:
     except ValueError as exc:
         print(f"Error: storyboard validation failed: {exc}")
         print("Nothing was rendered.")
+        return 1
+
+    try:
+        _prerender_check(storyboard["scenes"], storyboard["brief"])
+    except ValueError as exc:
+        print(f"Error: pre-render check failed: {exc}")
+        print("Nothing was rendered and no output file was created.")
         return 1
 
     return _render_storyboard(storyboard, output_path, ffmpeg_path,

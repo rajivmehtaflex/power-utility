@@ -5,7 +5,7 @@ license: MIT
 compatibility: Requires an agent with file access. Video requires command execution, uv, Python 3.11+, ffmpeg, ffprobe, and image inspection for full verification. URL inputs require web retrieval. First video setup may require network access.
 metadata:
   author: rajivmehtapy
-  version: "0.1.0"
+  version: "0.1.1"
 ---
 
 # Explainify
@@ -164,8 +164,8 @@ Build the slug from the title using lowercase letters, digits, and hyphens; fall
   `<slug>-brief.md` only when `retain_brief` was requested.
 - **Video** delivers four files: `<slug>-explainer.mp4`; `<slug>-render.py`
   (topic-specific, inline dependency metadata, imports nothing from the installed skill);
-  `<slug>-storyboard.json` (brief and provenance; embeds, and expects, the exact schema
-  used for this run); `<slug>-verification.md` (teaching and scene checks, limitations,
+  `<slug>-storyboard.json` (brief and provenance; validated by the render script,
+  which embeds the exact schema used for this run as its default); `<slug>-verification.md` (teaching and scene checks, limitations,
   runtime versions, reproduction instructions).
 
 The video bundle must reproduce standalone:
