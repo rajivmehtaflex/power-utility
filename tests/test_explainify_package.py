@@ -165,7 +165,7 @@ class FrontmatterTests(unittest.TestCase):
     def test_metadata_author_and_version_are_strings(self):
         _, meta, _, _ = _frontmatter()
         self.assertEqual(meta.get("author"), "rajivmehtapy")
-        self.assertEqual(meta.get("version"), "0.1.0")
+        self.assertEqual(meta.get("version"), "0.1.1")
         self.assertIsInstance(meta.get("author"), str)
         self.assertIsInstance(meta.get("version"), str)
 
@@ -194,7 +194,7 @@ class PackageResourceTests(unittest.TestCase):
     def test_storyboard_schema_contract(self):
         schema = json.loads((SKILL / "assets" / "storyboard.schema.json").read_text())
         self.assertIn("2020-12", schema["$schema"])
-        self.assertEqual(schema["properties"]["schema_version"]["const"], "1.0")
+        self.assertEqual(sorted(schema["properties"]["schema_version"]["enum"]), ["1.0", "1.1"])
 
 
 class LinkIntegrityTests(unittest.TestCase):
@@ -241,7 +241,7 @@ class CatalogConsistencyTests(unittest.TestCase):
         self.assertEqual(original["license"], "MIT")
         self.assertEqual(original["compatibility"], fields["compatibility"])
         self.assertEqual(original["metadata_author"], "rajivmehtapy")
-        self.assertEqual(original["metadata_version"], "0.1.0")
+        self.assertEqual(original["metadata_version"], "0.1.1")
 
     def test_manifest_count_matches_skill_tree(self):
         manifest = json.loads((REPO / "MANIFEST.json").read_text())
@@ -458,7 +458,7 @@ class RefreshPreservationTests(unittest.TestCase):
             self.assertEqual(entry["original_fields"]["license"], "MIT")
             self.assertEqual(entry["original_fields"]["metadata_author"],
                              "rajivmehtapy")
-            self.assertEqual(entry["original_fields"]["metadata_version"], "0.1.0")
+            self.assertEqual(entry["original_fields"]["metadata_version"], "0.1.1")
 
     def test_rebuild_catalog_preserves_seeded_entry(self):
         with tempfile.TemporaryDirectory() as tmp:

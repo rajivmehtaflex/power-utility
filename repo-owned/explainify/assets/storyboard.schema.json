@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "storyboard.schema.json",
   "title": "Explainify storyboard",
-  "description": "Version 1.0 of the Explainify storyboard contract. This schema describes teaching intent and timing for a short silent explainer video; it is NOT a drawing language - the generator assigns drawing operations, and storyboard fields are data that is never evaluated as code. The schema alone is intentionally insufficient: three cross-field constraints cannot be expressed in JSON Schema and are enforced programmatically by the renderer's validate_storyboard function: (1) scene ids must be unique across the storyboard, (2) every entry in a scene's claim_ids must reference an id that exists in brief.claims, and (3) the sum of all scene duration_seconds must be at most 60 seconds. All fields are topic-neutral: the generic contract must never require attention tokens, attention weights, attention matrices, or any other machine-learning-specific concept; such topic-specific values may appear only inside a scene's optional data field.",
+  "description": "Version 1.1 of the Explainify storyboard contract (1.0 documents remain valid; 1.1 adds conditional URL provenance requirements). This schema describes teaching intent and timing for a short silent explainer video; it is NOT a drawing language - the generator assigns drawing operations, and storyboard fields are data that is never evaluated as code. The schema alone is intentionally insufficient: four cross-field constraints cannot be expressed in JSON Schema (or, for subfield uniqueness, not portably) and are enforced programmatically by the renderer's validate_storyboard function: (1) scene ids must be unique across the storyboard, (2) claim ids inside brief.claims must be unique, (3) every entry in a scene's claim_ids must reference an id that exists in brief.claims, and (4) the sum of all scene duration_seconds must be at most 60 seconds. All fields are topic-neutral: the generic contract must never require attention tokens, attention weights, attention matrices, or any other machine-learning-specific concept; such topic-specific values may appear only inside a scene's optional data field.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -13,8 +13,11 @@
   ],
   "properties": {
     "schema_version": {
-      "const": "1.0",
-      "description": "Storyboard contract version; fixed to \"1.0\" for v0.1."
+      "enum": [
+        "1.0",
+        "1.1"
+      ],
+      "description": "Storyboard contract version. \"1.1\" adds conditional URL provenance requirements (see the brief allOf rules); \"1.0\" documents remain valid."
     },
     "brief": {
       "type": "object",
@@ -204,7 +207,7 @@
               }
             }
           },
-          "description": "Factual claims with honest origins and required qualifications."
+          "description": "The claims taught by this explanation. Claim ids must be unique across this array; uniqueness is enforced programmatically by the renderer's validate_storyboard, since JSON Schema cannot portably enforce uniqueness of a subfield."
         },
         "example": {
           "type": [
@@ -276,7 +279,87 @@
           },
           "description": "Deliberate exclusions and source-coverage limitations."
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "properties": {
+                  "kind": {
+                    "const": "url"
+                  },
+                  "retrieval_status": {
+                    "enum": [
+                      "complete",
+                      "partial"
+                    ]
+                  }
+                }
+              }
+            },
+            "required": [
+              "source"
+            ]
+          },
+          "then": {
+            "properties": {
+              "source": {
+                "properties": {
+                  "resolved_location": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "retrieved_at": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                },
+                "required": [
+                  "resolved_location",
+                  "retrieved_at"
+                ]
+              }
+            }
+          },
+          "description": "A URL source that was (even partly) retrieved must record where the content actually came from and when it was retrieved."
+        },
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "properties": {
+                  "kind": {
+                    "const": "url"
+                  },
+                  "retrieval_status": {
+                    "const": "unavailable"
+                  }
+                }
+              }
+            },
+            "required": [
+              "source"
+            ]
+          },
+          "then": {
+            "properties": {
+              "source": {
+                "properties": {
+                  "requested_location": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "requested_location"
+                ]
+              }
+            }
+          },
+          "description": "An unavailable URL source must still record what was requested, so the failure is traceable."
+        }
+      ]
     },
     "render": {
       "type": "object",
