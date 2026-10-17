@@ -1,6 +1,6 @@
 # Skill Collections — Cross-Agent Mono-Repo
 
-Spec: https://agentskills.io/specification.md · 75 skills · synced 2026-09-17
+Spec: https://agentskills.io/specification.md · 76 skills · synced 2026-10-17
 
 [![skills.sh](https://skills.sh/b/rajivmehtaflex/power-utility)](https://skills.sh/rajivmehtaflex/power-utility)
 
@@ -14,7 +14,7 @@ The [skills CLI](https://github.com/vercel-labs/skills) auto-detects installed
 agents (Claude Code, Codex, Cursor, Copilot, OpenCode, …) or takes `--agent`:
 
 ```bash
-# Install ALL 75 skills (auto-detect agents, interactive pick)
+# Install ALL 76 skills (auto-detect agents, interactive pick)
 npx skills add rajivmehtaflex/power-utility
 
 # List available skills without installing
@@ -430,6 +430,7 @@ are never modified — only these copies are normalized.
 | `kanban-profile-manager` | profile | devops | yes | Use when managing Kanban profile reuse or provisioning. |
 | `kanban-worker` | profile | devops | yes | Pitfalls, examples, and edge cases for Hermes Kanban workers. The lifecycle itse |
 | `modal-deploy` | profile | devops | yes | Deploy GPU-enabled applications to Modal with pre-check workflow, optimization p |
+| `modal-deploy-ssh` | profile | devops | yes | Launch and tear down named Modal SSH sessions wired into VS Code Remote-SSH. |
 | `python-version-management` | profile | devops | yes | Force Python versions via uv for cloud compatibility. |
 | `system-update` | profile | devops | yes | Use when the user asks to update/upgrade system packages and CLI tools — Homebre |
 | `web-service-launch` | profile | devops | yes | Launch a web service (e.g., Chainlit, FastAPI) on a specific port, handling port |

@@ -86,3 +86,10 @@ Repo-owned `hf-generative-model-converter` v0.6.0: spec-compliant; helper tests 
 Total: 75 skills; 75 spec-compliant; 0 failed (official `skills-ref` validator re-run 2026-10-02; renderer contract tests 24/24 via uv --no-project runtime; pinned skills-ref f130f34, skills 1.7.0).
 
 Repo-owned `explainify` v0.1.0: spec-compliant. Package ships `SKILL.md` (single-line description and compatibility), the `scripts/check_env.py` preflight and adaptable `scripts/render_video.py` template, `references/asd-ste100.md` and `references/video-style.md`, `assets/storyboard.schema.json`, `tests/test_video_contract.py`, a package README, and an MIT LICENSE. Validation performed: `skills-ref validate` PASS; renderer contract tests 24/24 via the separate `uv --no-project` runtime (shared validator lock untouched); two-topic render and teaching verification recorded under `docs/superpowers/verification/explainify/`. Catalog category `creative`; MIT at package scope (README and LICENSE present) — a deliberate deviation from the Apache-2.0 siblings, disclosed here. Evidence: `docs/superpowers/verification/explainify/`.
+
+## 2026-10-17 addendum — modal-deploy-ssh
+
+Total: 76 skills; 76 spec-compliant; 0 failed (official `skills-ref` validator run 2026-10-17 on `modal-deploy-ssh`; earlier skills retain their 2026-10-02 validation status).
+
+Profile skill `modal-deploy-ssh` v0.1.0: spec-compliant; `npx skills-ref validate profile/devops/modal-deploy-ssh` PASS. `SKILL.md` is 198 lines with a 644-character description and 206-character compatibility field; the name matches its directory. Ships `scripts/session_app.py` (env-parameterized Modal app: sshd on port 22, raw-TCP relay, key-only auth), `scripts/modal_ssh_session.py` (stdlib-only launch/stop/status with a managed `~/.ssh/config` block), a README, and `references/TROUBLESHOOTING.md`. End-to-end verified on Modal CLI 1.2.6 on 2026-10-17: launch → config upsert → SSH login → respawn rewrite (single block, new endpoint) → stop by app ID → block removal. Apache-2.0 declared at skill scope via the `license` field (name-only; no bundled LICENSE file). Catalog category `devops`.
+

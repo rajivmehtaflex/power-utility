@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-02T16:40:39+00:00",
+  "generated": "2026-10-17T17:19:04+00:00",
   "spec": "https://agentskills.io/specification.md",
   "skills": [
     {
@@ -24,7 +24,7 @@
       "source_path": "/Users/rajivmehtapy/.agents/skills/release-notes",
       "category": null,
       "dest": "agents-shared/release-notes",
-      "description": ">-",
+      "description": "\">-\"",
       "original_fields": {},
       "spec_compliant": true,
       "warnings": []
@@ -151,7 +151,7 @@
       "source_path": "/Users/rajivmehtapy/.hermes/skills/creative/interactive-3d-web",
       "category": "creative",
       "dest": "profile/creative/interactive-3d-web",
-      "description": "Build self-contained interactive 3D scenes with Three.js: orbit controls, translucent materials, lighting rigs, procedural environment maps. Single HTML file from CDN, no build step.",
+      "description": "\"Build self-contained interactive 3D scenes with Three.js: orbit controls, translucent materials, lighting rigs, procedural environment maps. Single HTML file from CDN, no build step.\"",
       "original_fields": {
         "version": "1.0.0",
         "author": "Hermes Agent",
@@ -391,6 +391,17 @@
       ]
     },
     {
+      "name": "modal-deploy-ssh",
+      "source": "profile",
+      "source_path": "profile/devops/modal-deploy-ssh",
+      "category": "devops",
+      "dest": "profile/devops/modal-deploy-ssh",
+      "description": "Launch, reconnect to, and tear down named Modal cloud sessions with direct SSH access, then wire them into VS Code Remote-SSH automatically. Use when the user asks to create, start, relaunch, or destroy a Modal VM/session (often named g-* like g-data-linkup), to connect VS Code or another editor to a Modal instance, to SSH into a Modal container, or to run a CPU or GPU session on Modal. Also use when a Modal session's SSH connection stopped working after a restart, or when the user wants a persistent cloud dev box with a volume. The skill rewrites ~/.ssh/config on every respawn, so the SSH alias and VS Code connection name never change.",
+      "original_fields": {},
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
       "name": "python-version-management",
       "source": "profile",
       "source_path": "/Users/rajivmehtapy/.hermes/skills/devops/python-version-management",
@@ -481,7 +492,7 @@
       "source_path": "/Users/rajivmehtapy/.hermes/skills/hermes/hermes-model-management",
       "category": "hermes",
       "dest": "profile/hermes/hermes-model-management",
-      "description": "Add, find, and use models in Hermes that are NOT in the interactive provider picker (OpenRouter especially, but applies to any provider). Covers the critical picker-vs-runtime gap: the picker shows a curated subset while the runtime accepts any valid model ID.",
+      "description": "\"Add, find, and use models in Hermes that are NOT in the interactive provider picker (OpenRouter especially, but applies to any provider). Covers the critical picker-vs-runtime gap: the picker shows a curated subset while the runtime accepts any valid model ID.\"",
       "original_fields": {
         "version": "1.0.0",
         "author": "Hermes Agent",
@@ -497,7 +508,7 @@
       "source_path": "/Users/rajivmehtapy/.hermes/skills/hermes/hermes-token-usage",
       "category": "hermes",
       "dest": "profile/hermes/hermes-token-usage",
-      "description": "Query Hermes's token, cost, and model-usage telemetry. Two paths: SQLite state.db for historical/model-wise reports, and live gateway RPC (session.usage, session.context_breakdown, usage.bars) for real-time in-app widgets. Use for any usage report, token count, cost breakdown, or building a live usage UI.",
+      "description": "\"Query Hermes's token, cost, and model-usage telemetry. Two paths: SQLite state.db for historical/model-wise reports, and live gateway RPC (session.usage, session.context_breakdown, usage.bars) for real-time in-app widgets. Use for any usage report, token count, cost breakdown, or building a live usage UI.\"",
       "original_fields": {},
       "spec_compliant": true,
       "warnings": []
@@ -552,7 +563,7 @@
       "source_path": "/Users/rajivmehtapy/.hermes/skills/media/heartmula",
       "category": "media",
       "dest": "profile/media/heartmula",
-      "description": "HeartMuLa: Suno-like song generation from lyrics + tags.",
+      "description": "\"HeartMuLa: Suno-like song generation from lyrics + tags.\"",
       "original_fields": {
         "version": "1.0.0",
         "platforms": "linux, macos, windows",
@@ -636,7 +647,7 @@
       "source_path": "/Users/rajivmehtapy/.hermes/skills/yuanbao",
       "category": "misc",
       "dest": "profile/misc/yuanbao",
-      "description": "Yuanbao (\u5143\u5b9d) groups: @mention users, query info/members.",
+      "description": "\"Yuanbao (\u5143\u5b9d) groups: @mention users, query info/members.\"",
       "original_fields": {
         "version": "1.0.0",
         "platforms": "linux, macos, windows",
@@ -701,7 +712,7 @@
       "source_path": "/Users/rajivmehtapy/.hermes/skills/mlops/models/audiocraft",
       "category": "mlops",
       "dest": "profile/mlops/models/audiocraft",
-      "description": "AudioCraft: MusicGen text-to-music, AudioGen text-to-sound.",
+      "description": "\"AudioCraft: MusicGen text-to-music, AudioGen text-to-sound.\"",
       "original_fields": {
         "version": "1.0.0",
         "author": "Orchestra Research",
@@ -721,7 +732,7 @@
       "source_path": "/Users/rajivmehtapy/.hermes/skills/mlops/models/segment-anything",
       "category": "mlops",
       "dest": "profile/mlops/models/segment-anything",
-      "description": "SAM: zero-shot image segmentation via points, boxes, masks.",
+      "description": "\"SAM: zero-shot image segmentation via points, boxes, masks.\"",
       "original_fields": {
         "version": "1.0.0",
         "author": "Orchestra Research",
@@ -880,7 +891,7 @@
       "source_path": "/Users/rajivmehtapy/.hermes/skills/research/get-info",
       "category": "research",
       "dest": "profile/research/get-info",
-      "description": "Use when the user asks for news, information, or research on any topic within a specific time window. Searches the Exa MCP server (web_search_exa) and returns results in a clean tabular format with Date, Title, and Content columns. Accepts two parameters: topic and timespan.",
+      "description": "\"Use when the user asks for news, information, or research on any topic within a specific time window. Searches the Exa MCP server (web_search_exa) and returns results in a clean tabular format with Date, Title, and Content columns. Accepts two parameters: topic and timespan.\"",
       "original_fields": {
         "version": "1.0.0",
         "author": "Hermes Agent",
@@ -912,7 +923,7 @@
       "source_path": "/Users/rajivmehtapy/.hermes/skills/research/polymarket",
       "category": "research",
       "dest": "profile/research/polymarket",
-      "description": "Query Polymarket: markets, prices, orderbooks, history.",
+      "description": "\"Query Polymarket: markets, prices, orderbooks, history.\"",
       "original_fields": {
         "version": "1.0.0",
         "author": "Hermes Agent + Teknium",
@@ -1008,7 +1019,7 @@
       "source_path": "/Users/rajivmehtapy/.hermes/skills/software-development/codebase-exploration",
       "category": "software-development",
       "dest": "profile/software-development/codebase-exploration",
-      "description": "Explore codebases with CodeGraph: symbols, calls, impact.",
+      "description": "\"Explore codebases with CodeGraph: symbols, calls, impact.\"",
       "original_fields": {
         "version": "1.0.0",
         "author": "Hermes Agent",
