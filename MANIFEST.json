@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-17T17:19:04+00:00",
+  "generated": "2026-10-24T08:37:26+00:00",
   "spec": "https://agentskills.io/specification.md",
   "skills": [
     {
@@ -26,6 +26,23 @@
       "dest": "agents-shared/release-notes",
       "description": "\">-\"",
       "original_fields": {},
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "gemini-api-cli",
+      "source": "dev-workspace",
+      "source_path": "dev-workspace/gemini-api-cli",
+      "category": null,
+      "dest": "dev-workspace/gemini-api-cli",
+      "description": "Drive the Google Gemini API from the shell with the stateless gemini-api CLI. Generate text (second opinions, code review, explanations), create and edit images, generate voiceovers (TTS, multi-speaker), music, and video, analyze PDFs, images, audio, video, CSVs, and YouTube URLs, transcribe recordings to SRT/JSON/markdown, and delegate long multi-step work to background managed agents (Deep Research, Antigravity) with interaction-ID capture and polling. Use this whenever a task needs media generation, multimodal file understanding, captions or transcripts, a Gemini model's opinion, or a background research/coding run \u2014 even when the user does not name Gemini. The CLI is self-describing (--help, --usage, --schema); validate any call offline with --dry-run; script results out with --output-format json and --jq.",
+      "original_fields": {
+        "license": "Apache-2.0",
+        "compatibility": "Requires the gemini-api CLI binary on PATH (v0.4+), network access to the Gemini API, and a GEMINI_API_KEY (env var, OS keychain, or `gemini-api configure`). Check any time with scripts/check_setup.sh.",
+        "metadata_author": "rajivmehtaflex",
+        "metadata_version": "1.1.0",
+        "metadata_upstream": "https://github.com/google-gemini/gemini-api-cli"
+      },
       "spec_compliant": true,
       "warnings": []
     },

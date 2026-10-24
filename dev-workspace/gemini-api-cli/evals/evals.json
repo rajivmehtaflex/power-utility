@@ -1,0 +1,42 @@
+{
+  "skill_name": "gemini-api-cli",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Add a hero image to the README in the current directory: an isometric illustration of a distributed database, then update the markdown to reference the generated file. Verify the request first with a dry run, then generate for real.",
+      "expected_output": "Agent verifies with gemini-api image ... --dry-run, then runs it live with --out (or default path), captures the printed file path from stdout, and embeds that exact path in README markdown.",
+      "files": [],
+      "assertions": [
+        "A `gemini-api image ... --dry-run` command appears in RESULT.md BEFORE any live image-generation call",
+        "Live generation uses `gemini-api image` (not raw curl or an SDK script)",
+        "The generated image file exists on disk in the outputs directory",
+        "The updated README.md references the exact generated image filename (not a placeholder path)",
+        "The generated file path is captured programmatically (stdout capture, command substitution, or `--jq`) and used verbatim"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Research the current state of solid-state battery recycling and give me the report when it's done. Don't block while it runs.",
+      "expected_output": "Agent uses gemini-api agent run --background (likely with the deep-research managed agent), captures the interaction ID via --jq, polls agent status instead of blocking, and retrieves the final report.",
+      "files": [],
+      "assertions": [
+        "The background run is started with `gemini-api agent run` including `--background`",
+        "The interaction ID is captured programmatically via `--jq` (command substitution or equivalent), not hand-copied",
+        "Status/output is retrieved via `gemini-api agent status <id>` (polling), not a blocking foreground run",
+        "A report file or a documented exact retrieval command is delivered in the outputs"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Make SRT captions for this lecture recording: meeting-notes/interview.wav",
+      "expected_output": "Agent runs gemini-api transcribe -i meeting-notes/interview.wav --format srt (with --out for a predictable path) and reports the artifact path. Dry-run validation is acceptable if live transcription is not desired.",
+      "files": [],
+      "assertions": [
+        "Uses `gemini-api transcribe` with `--format srt` (or `--format captions`)",
+        "Input file passed via `-i`/`--input` flag",
+        "The .srt artifact exists on disk and is structurally valid SRT (numbered cues + `-->` timestamp lines)",
+        "RESULT.md reports the final artifact path"
+      ]
+    }
+  ]
+}

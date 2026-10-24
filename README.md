@@ -408,6 +408,7 @@ are never modified — only these copies are normalized.
 | `hf-generative-model-converter` | repo-owned | mlops | yes | Convert pinned Hugging Face models to GGUF, ONNX, or LiteRT-LM, validate by real inference (CPU/CUDA), and publish verified packages with a SHA-256 manifest. |
 | `data-to-okf` | agents-shared | — | yes | Converts any local folder of mixed documents (docx, pdf, xlsx, duckdb, csv, imag |
 | `release-notes` | agents-shared | — | yes | >- |
+| `gemini-api-cli` | dev-workspace | — | yes | Drive the Google Gemini API from a shell: text, image, TTS, music, video, file/YouTube analysis, SRT transcripts, and background managed agents. |
 | `graph-flow` | dev-workspace | — | yes | Use when coordinating a repository implementation from a goal through approved,  |
 | `intent-first-action-boundaries` | profile | assistant-behavior | yes | Use for question-vs-action intent routing. |
 | `hermes-agent-api-bridge` | profile | autonomous-ai-agents | yes | Bridge Hermes Agent to external apps via subprocess or HTTP. |
