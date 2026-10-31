@@ -387,6 +387,47 @@ URL runs record retrieval status and never silently fall back to model
 knowledge; file runs preserve the source's dates, negations, and uncertainty
 qualifiers.
 
+### Prompt cookbook: `rust-to-python-bridge`
+
+Use these prompts after installing the skill
+(`npx skills add rajivmehtaflex/power-utility --skill rust-to-python-bridge`;
+add `--global --copy` to install it for every project). Study, feasibility,
+and environment preflight are strictly read-only — the skill always reports and
+**pauses for your approval** before any file is edited, dependency installed,
+or build run. Implementation requires the project's Rust toolchain (`cargo`)
+and a Python interpreter; the workflow was verified end-to-end with a PyO3 +
+Maturin bridge (Rust `sum_as_string` / `count_primes` callable from Python).
+
+#### Assess whether Rust is worth it (read-only)
+
+```text
+Our Python image decoder is too slow for the batch job. Don't change anything
+yet — assess whether a Rust bridge is worth it for this workload and show me
+what you would propose.
+```
+
+You get a feasibility report (Feasible / Conditional / Not recommended), a
+read-only environment preflight table with evidence, and a proposed Rust
+responsibility plus Python-callable API — then the skill stops at the approval
+gate instead of implementing.
+
+#### Implement a new bridge after approving the proposal
+
+```text
+Expose the checksum code in rust/ to Python as verify_checksum(path) -> str.
+```
+
+#### Extend an existing bridge
+
+```text
+Add hash_file(path, algorithm) to our existing sample_bridge Rust extension
+and keep the type stubs in sync.
+```
+
+Mid-implementation findings that change the approved API or scope send the
+skill back to the approval gate; the completion report claims only measured
+performance and states remaining limitations.
+
 ### Re-sync from live sources (maintainer)
 
 
@@ -406,6 +447,7 @@ are never modified — only these copies are normalized.
 | `explainify` | repo-owned | creative | yes | Turn a topic, URL, pasted text, or markdown file into STE-inspired simplified English or a verified silent explainer video. |
 | `unsloth-workflows` | repo-owned | mlops | yes | Explain, prepare, and execute Unsloth workflows on Linux/NVIDIA machines. |
 | `hf-generative-model-converter` | repo-owned | mlops | yes | Convert pinned Hugging Face models to GGUF, ONNX, or LiteRT-LM, validate by real inference (CPU/CUDA), and publish verified packages with a SHA-256 manifest. |
+| `rust-to-python-bridge` | repo-owned | software-development | yes | Assess feasibility, preflight the build environment read-only, then implement Python-callable Rust (FFI) bridges behind a user-approved scope. |
 | `data-to-okf` | agents-shared | — | yes | Converts any local folder of mixed documents (docx, pdf, xlsx, duckdb, csv, imag |
 | `release-notes` | agents-shared | — | yes | >- |
 | `gemini-api-cli` | dev-workspace | — | yes | Drive the Google Gemini API from a shell: text, image, TTS, music, video, file/YouTube analysis, SRT transcripts, and background managed agents. |

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-24T08:37:26+00:00",
+  "generated": "2026-10-31T05:30:00+00:00",
   "spec": "https://agentskills.io/specification.md",
   "skills": [
     {
@@ -1255,6 +1255,22 @@
         "compatibility": "Requires a Linux shell for execution; training requires NVIDIA drivers, a visible CUDA GPU, Python 3.12, network access for package/model downloads, and enough disk/VRAM for the selected model. Discuss and dry-run modes are CPU/read-only.",
         "metadata_author": "rajivmehtaflex",
         "metadata_version": "1.1.0"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "rust-to-python-bridge",
+      "source": "repo-owned",
+      "source_path": "repo-owned/rust-to-python-bridge",
+      "category": "software-development",
+      "dest": "repo-owned/rust-to-python-bridge",
+      "description": "Use when a user requests Rust functionality callable from Python, asks to add or extend a Python/Rust FFI, or wants to assess whether a task fits an existing Rust extension.",
+      "original_fields": {
+        "license": "MIT",
+        "compatibility": "Requires an agent with file access and terminal command execution. Study, feasibility, and environment-preflight steps are read-only. Implementation requires the project's Rust toolchain (cargo) and a Python interpreter; network access is only needed if build dependencies are not already cached locally.",
+        "metadata_author": "rajivmehtapy",
+        "metadata_version": "1.0.0"
       },
       "spec_compliant": true,
       "warnings": []
