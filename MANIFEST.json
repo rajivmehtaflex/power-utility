@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-31T05:30:00+00:00",
+  "generated": "2026-11-02T06:09:21+00:00",
   "spec": "https://agentskills.io/specification.md",
   "skills": [
     {
@@ -441,7 +441,7 @@
       "source_path": "/Users/rajivmehtapy/.hermes/skills/devops/system-update",
       "category": "devops",
       "dest": "profile/devops/system-update",
-      "description": "Use when the user asks to update/upgrade system packages and CLI tools \u2014 Homebrew, npm globals, Claude Code, Codex CLI, agy, pi, prime-agent, and ori. Runs them sequentially as a single chain and reports results.",
+      "description": "\"Use when the user asks to update/upgrade system packages and CLI tools \u2014 Homebrew, npm globals, Claude Code, Codex CLI, agy, pi, and ori. Runs them sequentially as a single chain and reports results.\"",
       "original_fields": {
         "version": "1.2.0",
         "author": "Hermes Agent",
@@ -1244,18 +1244,13 @@
       "warnings": []
     },
     {
-      "name": "unsloth-workflows",
+      "name": "hf-model-evaluator",
       "source": "repo-owned",
-      "source_path": "repo-owned/unsloth-workflows",
-      "category": "mlops",
-      "dest": "repo-owned/unsloth-workflows",
-      "description": "Explain, prepare, and execute Unsloth workflows on Linux/NVIDIA machines. Covers Unsloth Studio/Desktop, environment setup, datasets/Data Recipes, SFT, LoRA/QLoRA/QAT, CPT, GRPO/GSPO/RL, multimodal models, evaluation, export, Dynamic 3.0 GGUFs, and local/agent serving (OpenAI/Anthropic APIs, Claude Code, Hermes Agent).",
-      "original_fields": {
-        "license": "Apache-2.0",
-        "compatibility": "Requires a Linux shell for execution; training requires NVIDIA drivers, a visible CUDA GPU, Python 3.12, network access for package/model downloads, and enough disk/VRAM for the selected model. Discuss and dry-run modes are CPU/read-only.",
-        "metadata_author": "rajivmehtaflex",
-        "metadata_version": "1.1.0"
-      },
+      "source_path": "repo-owned/hf-model-evaluator",
+      "category": null,
+      "dest": "repo-owned/hf-model-evaluator",
+      "description": "Use when evaluating any Hugging Face model URL, collection link, or repo ID, or checking whether a model fits local hardware (RAM, VRAM, Disk) and Colibri/GGUF engines.",
+      "original_fields": {},
       "spec_compliant": true,
       "warnings": []
     },
@@ -1271,6 +1266,22 @@
         "compatibility": "Requires an agent with file access and terminal command execution. Study, feasibility, and environment-preflight steps are read-only. Implementation requires the project's Rust toolchain (cargo) and a Python interpreter; network access is only needed if build dependencies are not already cached locally.",
         "metadata_author": "rajivmehtapy",
         "metadata_version": "1.0.0"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "unsloth-workflows",
+      "source": "repo-owned",
+      "source_path": "repo-owned/unsloth-workflows",
+      "category": "mlops",
+      "dest": "repo-owned/unsloth-workflows",
+      "description": "Explain, prepare, and execute Unsloth workflows on Linux/NVIDIA machines. Covers Unsloth Studio/Desktop, environment setup, datasets/Data Recipes, SFT, LoRA/QLoRA/QAT, CPT, GRPO/GSPO/RL, multimodal models, evaluation, export, Dynamic 3.0 GGUFs, and local/agent serving (OpenAI/Anthropic APIs, Claude Code, Hermes Agent).",
+      "original_fields": {
+        "license": "Apache-2.0",
+        "compatibility": "Requires a Linux shell for execution; training requires NVIDIA drivers, a visible CUDA GPU, Python 3.12, network access for package/model downloads, and enough disk/VRAM for the selected model. Discuss and dry-run modes are CPU/read-only.",
+        "metadata_author": "rajivmehtaflex",
+        "metadata_version": "1.1.0"
       },
       "spec_compliant": true,
       "warnings": []

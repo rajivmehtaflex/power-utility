@@ -93,3 +93,9 @@ Total: 76 skills; 76 spec-compliant; 0 failed (official `skills-ref` validator r
 
 Profile skill `modal-deploy-ssh` v0.1.0: spec-compliant; `npx skills-ref validate profile/devops/modal-deploy-ssh` PASS. `SKILL.md` is 198 lines with a 644-character description and 206-character compatibility field; the name matches its directory. Ships `scripts/session_app.py` (env-parameterized Modal app: sshd on port 22, raw-TCP relay, key-only auth), `scripts/modal_ssh_session.py` (stdlib-only launch/stop/status with a managed `~/.ssh/config` block), a README, and `references/TROUBLESHOOTING.md`. End-to-end verified on Modal CLI 1.2.6 on 2026-10-17: launch → config upsert → SSH login → respawn rewrite (single block, new endpoint) → stop by app ID → block removal. Apache-2.0 declared at skill scope via the `license` field (name-only; no bundled LICENSE file). Catalog category `devops`.
 
+## 2026-11-02 addendum — hf-model-evaluator (Hugging Face Model & Collection Hardware Evaluator)
+
+Total: 77 skills; 77 spec-compliant; 0 failed.
+
+Repo-owned `hf-model-evaluator` v1.0.0: spec-compliant; unit tests 6/6 pass via `python3 -m unittest`. Package ships `SKILL.md` (metadata author rajivmehtaflex, Apache-2.0 license, single-line description), `scripts/check_hf_model.py` (zero-dependency preflight and hardware evaluator for CPU RAM, GPU VRAM, and disk space with Colibri and GGUF runtime mapping and hf CLI v2.4+ integration), and unit tests under `tests/test_check_hf_model.py`. Catalog category `mlops`; spec-compliant.
+

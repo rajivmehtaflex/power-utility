@@ -1,6 +1,6 @@
 # Skill Collections — Cross-Agent Mono-Repo
 
-Spec: https://agentskills.io/specification.md · 76 skills · synced 2026-10-17
+Spec: https://agentskills.io/specification.md · 79 skills · synced 2026-10-17
 
 [![skills.sh](https://skills.sh/b/rajivmehtaflex/power-utility)](https://skills.sh/rajivmehtaflex/power-utility)
 
@@ -14,7 +14,7 @@ The [skills CLI](https://github.com/vercel-labs/skills) auto-detects installed
 agents (Claude Code, Codex, Cursor, Copilot, OpenCode, …) or takes `--agent`:
 
 ```bash
-# Install ALL 76 skills (auto-detect agents, interactive pick)
+# Install ALL 79 skills (auto-detect agents, interactive pick)
 npx skills add rajivmehtaflex/power-utility
 
 # List available skills without installing
@@ -166,6 +166,17 @@ license terms, and publication requires that license status be resolved first:
 ```bash
 npx skills add rajivmehtaflex/power-utility --skill hf-generative-model-converter
 uv run --project tools/skill-validation skills-ref validate repo-owned/hf-generative-model-converter
+```
+
+The `hf-model-evaluator` skill inspects any Hugging Face model repository or
+collection URL, probes the host system's hardware (CPU RAM, NVIDIA GPU VRAM, and
+free disk), and evaluates whether the model can run locally. It maps models to
+Colibri native execution engines (RAM-resident vs SSD expert streaming) and GGUF
+runtimes, generating tailored `hf download` and execution commands.
+
+```bash
+npx skills add rajivmehtaflex/power-utility --skill hf-model-evaluator
+python repo-owned/hf-model-evaluator/scripts/check_hf_model.py --check-env
 ```
 
 The `explainify` skill turns a topic, URL, pasted text, or UTF-8 `.md`/`.txt`
@@ -447,6 +458,7 @@ are never modified — only these copies are normalized.
 | `explainify` | repo-owned | creative | yes | Turn a topic, URL, pasted text, or markdown file into STE-inspired simplified English or a verified silent explainer video. |
 | `unsloth-workflows` | repo-owned | mlops | yes | Explain, prepare, and execute Unsloth workflows on Linux/NVIDIA machines. |
 | `hf-generative-model-converter` | repo-owned | mlops | yes | Convert pinned Hugging Face models to GGUF, ONNX, or LiteRT-LM, validate by real inference (CPU/CUDA), and publish verified packages with a SHA-256 manifest. |
+| `hf-model-evaluator` | repo-owned | mlops | yes | Evaluate any Hugging Face model or collection against local hardware (RAM, VRAM, Disk) and Colibri/GGUF engines. |
 | `rust-to-python-bridge` | repo-owned | software-development | yes | Assess feasibility, preflight the build environment read-only, then implement Python-callable Rust (FFI) bridges behind a user-approved scope. |
 | `data-to-okf` | agents-shared | — | yes | Converts any local folder of mixed documents (docx, pdf, xlsx, duckdb, csv, imag |
 | `release-notes` | agents-shared | — | yes | >- |
