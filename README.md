@@ -1,6 +1,6 @@
 # Skill Collections — Cross-Agent Mono-Repo
 
-Spec: https://agentskills.io/specification.md · 79 skills · synced 2026-10-17
+Spec: https://agentskills.io/specification.md · 79 skills · synced 2026-11-02
 
 [![skills.sh](https://skills.sh/b/rajivmehtaflex/power-utility)](https://skills.sh/rajivmehtaflex/power-utility)
 
@@ -438,6 +438,47 @@ and keep the type stubs in sync.
 Mid-implementation findings that change the approved API or scope send the
 skill back to the approval gate; the completion report claims only measured
 performance and states remaining limitations.
+
+### Prompt cookbook: `hf-model-evaluator`
+
+Use these prompts after installing the skill
+(`npx skills add rajivmehtaflex/power-utility --skill hf-model-evaluator`;
+add `--global --copy` to install it across all coding agents on the machine).
+The tool uses Python's standard library and the official `hf` CLI for preflight
+diagnostics, zero-download architecture and size extraction, hardware fit checking
+(CPU RAM, NVIDIA GPU VRAM, free disk), and Colibri/GGUF runner selection.
+
+#### 1. Assess a Hugging Face model against local hardware
+
+```text
+/hf-model-evaluator can my machine run https://huggingface.co/Qwen/Qwen2.5-Coder-32B-Instruct?
+```
+
+The agent runs the preflight diagnostic, inspects the repository's configuration and weights, compares RAM/VRAM/Disk thresholds, and returns an actionable verdict (`PASS`, `TIGHT`, or `NEEDS_RAM`/`NEEDS_DISK`) along with exact download and run commands.
+
+#### 2. Evaluate a GGUF quantization repository
+
+```text
+/hf-model-evaluator check https://huggingface.co/mradermacher/Ornith-1.5-27B-A3B-CoderX-GGUF and pick the best quantization for my GPU
+```
+
+The agent lists all available quantizations (e.g. `Q4_K_M`, `IQ4_XS`, `Q8_0`), identifies which variants fit into your GPU VRAM vs CPU RAM, and generates tailored `hf download` and `coli import` commands.
+
+#### 3. Batch evaluate an entire Hugging Face Collection
+
+```text
+/hf-model-evaluator evaluate collection https://huggingface.co/collections/LiquidAI/lfm3-6adc03dcfe62bfd2fcd8eea7
+```
+
+The agent resolves all models in the collection, evaluates each against available RAM, VRAM, and storage, and presents a comparison table showing which models fit your machine and how to run them.
+
+#### 4. Automated agent planning with JSON output
+
+```text
+Inspect https://huggingface.co/puwaer/DeepSeek-V4-Flash-0731-reap-150b with hf-model-evaluator --json and create an execution plan for Colibri
+```
+
+The agent queries the model in `--json` mode to programmatically extract the MoE expert count, dense layer residency requirements, and expert streaming storage paths to prepare the serving environment.
 
 ### Re-sync from live sources (maintainer)
 

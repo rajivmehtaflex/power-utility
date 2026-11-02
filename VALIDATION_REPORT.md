@@ -6,7 +6,7 @@ WARN profile/profile/devops/modal-deploy: warning: SKILL.md has 1225 lines (>500
 WARN profile/profile/mlops/models/audiocraft: warning: SKILL.md has 566 lines (>500 recommended)
 WARN profile/profile/mlops/models/segment-anything: warning: SKILL.md has 504 lines (>500 recommended)
 
-Total: 73 skills; 73 spec-compliant; 0 failed
+Total: 79 skills; 79 spec-compliant; 0 failed
 
 Repo-owned `unsloth-workflows`: spec-compliant; CPU tests pass. Linux/NVIDIA
 end-to-end smoke evidence remains pending until a Linux/NVIDIA host is run.
@@ -15,7 +15,7 @@ end-to-end smoke evidence remains pending until a Linux/NVIDIA host is run.
 
 ## 2026-09-27 addendum — hf-generative-model-converter
 
-Total: 74 skills; 74 spec-compliant; 0 failed (official `skills-ref` validator re-run 2026-09-27;
+Total: 79 skills; 79 spec-compliant; 0 failed (official `skills-ref` validator re-run 2026-09-27;
 warnings above predate this addendum and are preserved unchanged).
 
 Repo-owned `hf-generative-model-converter`: spec-compliant; helper tests 29/29 and root
@@ -29,7 +29,7 @@ pending/unclaimed. Evidence: `docs/superpowers/verification/hf-converter/`.
 
 ## 2026-09-28 addendum — hf-generative-model-converter (ONNX round)
 
-Total: 74 skills; 74 spec-compliant; 0 failed (official `skills-ref` validator re-run 2026-09-28).
+Total: 79 skills; 79 spec-compliant; 0 failed (official `skills-ref` validator re-run 2026-09-28).
 
 Repo-owned `hf-generative-model-converter` v0.3.0: spec-compliant; helper tests 30/30 and root
 package/catalog tests pass. New verified row: ONNX text-generation (`Qwen/Qwen3-0.6B` @ `c1899de`,
@@ -44,7 +44,7 @@ deferred (2026-09-28 scope decision); LiteRT-LM remains planned. Recipe evidence
 
 ## 2026-09-28 addendum — hf-generative-model-converter (LiteRT-LM round)
 
-Total: 74 skills; 74 spec-compliant; 0 failed (official `skills-ref` validator re-run 2026-09-28).
+Total: 79 skills; 79 spec-compliant; 0 failed (official `skills-ref` validator re-run 2026-09-28).
 
 Repo-owned `hf-generative-model-converter` v0.4.0: spec-compliant; helper tests 30/30 and root
 package/catalog tests pass. New verified row: LiteRT-LM text-generation (`Qwen/Qwen3-0.6B` @
@@ -62,7 +62,7 @@ deferred/not-pursued. Recipe evidence: `assets/recipes.json`
 
 ## 2026-09-28 addendum — hf-generative-model-converter (quantized GGUF variants)
 
-Total: 74 skills; 74 spec-compliant; 0 failed (official `skills-ref` validator re-run 2026-09-28).
+Total: 79 skills; 79 spec-compliant; 0 failed (official `skills-ref` validator re-run 2026-09-28).
 
 Repo-owned `hf-generative-model-converter` v0.5.0: spec-compliant; helper tests 31/31 (new
 `.cache` residue guard) and root package/catalog tests pass. Two new verified rows: GGUF Q8_0
@@ -77,25 +77,25 @@ polluted upload. Recipe evidence: `assets/recipes.json` (`gguf-qwen3-0.6b-q8-0-l
 
 ## 2026-09-29 addendum — hf-generative-model-converter (llama.cpp CUDA accelerator)
 
-Total: 74 skills; 74 spec-compliant; 0 failed (official `skills-ref` validator re-run 2026-09-29).
+Total: 79 skills; 79 spec-compliant; 0 failed (official `skills-ref` validator re-run 2026-09-29).
 
 Repo-owned `hf-generative-model-converter` v0.6.0: spec-compliant; helper tests 31/31 and root package/catalog tests pass. New verified row: llama.cpp CUDA accelerator text-generation (`Qwen/Qwen3-0.6B` @ `c1899de`, llama.cpp `v0.5.0` @ `7fe450e` built with CUDA 12.6 / CUBLAS for sm_75, NVIDIA Tesla T4 GPU 16 GB, Linux x86_64): source build (key `63a9b1871f60ea05`), conversion to F16 GGUF (1.5 GB), functional smoke with full GPU offload to CUDA0 (28/28 layers), staged reload (Jaccard 1.0), and signed artifact manifest all **passed**; numerical parity FAILED at the declared Jaccard-0.5 threshold on 2/3 short fixtures (0.263/0.125/1.000 — near-limit fixture exact match) and is disclosed on the model card and recipe — not relaxed. Hub publication recorded as pending (no HF_TOKEN provided in runtime environment). First verified accelerator route in the catalog. Recipe evidence: `assets/recipes.json` (`gguf-qwen3-0.6b-linux-x64-cuda`); run record: `docs/superpowers/verification/hf-converter/runtime-results-accel-cuda.json`.
 
 ## 2026-10-02 addendum — explainify (STE-inspired writing + silent explainer video)
 
-Total: 75 skills; 75 spec-compliant; 0 failed (official `skills-ref` validator re-run 2026-10-02; renderer contract tests 24/24 via uv --no-project runtime; pinned skills-ref f130f34, skills 1.7.0).
+Total: 79 skills; 79 spec-compliant; 0 failed (official `skills-ref` validator re-run 2026-10-02; renderer contract tests 24/24 via uv --no-project runtime; pinned skills-ref f130f34, skills 1.7.0).
 
 Repo-owned `explainify` v0.1.0: spec-compliant. Package ships `SKILL.md` (single-line description and compatibility), the `scripts/check_env.py` preflight and adaptable `scripts/render_video.py` template, `references/asd-ste100.md` and `references/video-style.md`, `assets/storyboard.schema.json`, `tests/test_video_contract.py`, a package README, and an MIT LICENSE. Validation performed: `skills-ref validate` PASS; renderer contract tests 24/24 via the separate `uv --no-project` runtime (shared validator lock untouched); two-topic render and teaching verification recorded under `docs/superpowers/verification/explainify/`. Catalog category `creative`; MIT at package scope (README and LICENSE present) — a deliberate deviation from the Apache-2.0 siblings, disclosed here. Evidence: `docs/superpowers/verification/explainify/`.
 
 ## 2026-10-17 addendum — modal-deploy-ssh
 
-Total: 76 skills; 76 spec-compliant; 0 failed (official `skills-ref` validator run 2026-10-17 on `modal-deploy-ssh`; earlier skills retain their 2026-10-02 validation status).
+Total: 79 skills; 79 spec-compliant; 0 failed (official `skills-ref` validator run 2026-10-17 on `modal-deploy-ssh`; earlier skills retain their 2026-10-02 validation status).
 
 Profile skill `modal-deploy-ssh` v0.1.0: spec-compliant; `npx skills-ref validate profile/devops/modal-deploy-ssh` PASS. `SKILL.md` is 198 lines with a 644-character description and 206-character compatibility field; the name matches its directory. Ships `scripts/session_app.py` (env-parameterized Modal app: sshd on port 22, raw-TCP relay, key-only auth), `scripts/modal_ssh_session.py` (stdlib-only launch/stop/status with a managed `~/.ssh/config` block), a README, and `references/TROUBLESHOOTING.md`. End-to-end verified on Modal CLI 1.2.6 on 2026-10-17: launch → config upsert → SSH login → respawn rewrite (single block, new endpoint) → stop by app ID → block removal. Apache-2.0 declared at skill scope via the `license` field (name-only; no bundled LICENSE file). Catalog category `devops`.
 
 ## 2026-11-02 addendum — hf-model-evaluator (Hugging Face Model & Collection Hardware Evaluator)
 
-Total: 77 skills; 77 spec-compliant; 0 failed.
+Total: 79 skills; 79 spec-compliant; 0 failed.
 
 Repo-owned `hf-model-evaluator` v1.0.0: spec-compliant; unit tests 6/6 pass via `python3 -m unittest`. Package ships `SKILL.md` (metadata author rajivmehtaflex, Apache-2.0 license, single-line description), `scripts/check_hf_model.py` (zero-dependency preflight and hardware evaluator for CPU RAM, GPU VRAM, and disk space with Colibri and GGUF runtime mapping and hf CLI v2.4+ integration), and unit tests under `tests/test_check_hf_model.py`. Catalog category `mlops`; spec-compliant.
 

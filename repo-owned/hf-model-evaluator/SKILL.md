@@ -102,3 +102,18 @@ The JSON response contains:
   ```bash
   python3 c/coli import <model.gguf>
   ```
+
+---
+
+## Example Prompts for Users
+
+End-users can trigger this skill with natural language or slash commands:
+
+* **Hardware fit check**:
+  `"Can my machine run https://huggingface.co/Qwen/Qwen2.5-Coder-32B-Instruct?"`
+* **GGUF quant recommendation**:
+  `"Check https://huggingface.co/mradermacher/Ornith-1.5-27B-A3B-CoderX-GGUF and pick the best quantization for my GPU."`
+* **Collection evaluation**:
+  `"Batch evaluate collection https://huggingface.co/collections/LiquidAI/lfm3-6adc03dcfe62bfd2fcd8eea7 and tell me which models fit."`
+* **Automated agent planning**:
+  `"Inspect https://huggingface.co/puwaer/DeepSeek-V4-Flash-0731-reap-150b with hf-model-evaluator --json and give me an execution plan."`
