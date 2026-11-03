@@ -99,3 +99,9 @@ Total: 79 skills; 79 spec-compliant; 0 failed.
 
 Repo-owned `hf-model-evaluator` v1.0.0: spec-compliant; unit tests 6/6 pass via `python3 -m unittest`. Package ships `SKILL.md` (metadata author rajivmehtaflex, Apache-2.0 license, single-line description), `scripts/check_hf_model.py` (zero-dependency preflight and hardware evaluator for CPU RAM, GPU VRAM, and disk space with Colibri and GGUF runtime mapping and hf CLI v2.4+ integration), and unit tests under `tests/test_check_hf_model.py`. Catalog category `mlops`; spec-compliant.
 
+## 2026-11-03 addendum — modal-deploy-ssh (persistent SSH function & uvx wrapper)
+
+Total: 79 skills; 79 spec-compliant; 0 failed (official `skills-ref` validator re-run 2026-11-03 on `modal-deploy-ssh`).
+
+Profile skill `modal-deploy-ssh` v0.2.0: spec-compliant; `npx skills-ref validate profile/devops/modal-deploy-ssh` PASS. Switched from detached Modal sandbox to persistent Modal function (`modal.forward(port=22, unencrypted=True)`). Added `MIN_MODAL_VERSION = (1, 6, 3)` check and automatic `uvx --python 3.14 --from modal modal` fallback wrapper. Remote image pre-installs `gcc` in the base setup layer for `python:3.12-slim-bookworm` to ensure `aiohttp` builds succeed cleanly. Ships updated `scripts/modal_ssh_session.py`, `scripts/session_app.py`, `SKILL.md`, and `references/TROUBLESHOOTING.md`. Catalog category `devops`.
+

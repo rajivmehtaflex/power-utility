@@ -12,17 +12,17 @@ python3 scripts/modal_ssh_session.py status --name g-data-linkup
 python3 scripts/modal_ssh_session.py stop   --name g-data-linkup
 ```
 
-`launch` starts a detached Modal sandbox, waits for the raw-TCP SSH relay,
-writes or replaces a managed `Host` block in `~/.ssh/config`, and verifies a
-real login. Because the config block is rewritten on every launch, a respawn
-with the same name keeps the same SSH alias — the endpoint changes, your
-commands do not.
+`launch` starts a long-running Modal function with an SSH server and raw-TCP
+`modal.forward` tunnel, writes or replaces a managed `Host` block in
+`~/.ssh/config`, and verifies a real login. The function stays alive until its
+timeout, so the endpoint remains usable after the short launcher exits.
 
 ## What you get
 
 - CPU-only or GPU sessions (L4, A10, L40S, A100, H100, H200, B200, multi-GPU)
 - Direct SSH with your existing key; password auth disabled
-- A persistent Modal volume mounted at `/workspace` (default `<name>-ws`)
+- A Modal volume mounted at `/workspace` (default `<name>-ws`; use
+  `--existing-volume` when the volume must already exist)
 - Automatic `~/.ssh/config` management with clear begin/end markers
 - A verified connection before the command returns
 - Optional one-shot provisioning script (`--provision`)
@@ -68,7 +68,8 @@ cp -R profile/devops/modal-deploy-ssh ~/.agents/skills/modal-deploy-ssh
 ## Requirements
 
 - Python 3.9+ (the manager is stdlib-only)
-- An authenticated Modal CLI: `modal profile list` lists a profile
+- An authenticated Modal CLI version 1.6.3 or newer; if an older CLI is found,
+  the manager uses `uvx` when available
 - An SSH keypair, by default `~/.ssh/id_ed25519`
 - macOS or Linux with network access to `modal.com`
 
@@ -102,12 +103,14 @@ python3 scripts/modal_ssh_session.py stop --name g-data-linkup
 | `--cpu` | `8` | CPU cores (float allowed) |
 | `--memory` | `32768` | Memory in MiB |
 | `--gpu` | none | GPU spec: `L4`, `A10`, `H100`, `H100:2`, ... |
-| `--timeout` | `86400` | Sandbox lifetime in seconds |
+| `--timeout` | `86400` | SSH function lifetime in seconds |
 | `--volume` | `<name>-ws` | Persistent volume name |
+| `--existing-volume` | off | Require the selected volume to exist; never create it |
 | `--pubkey` | `~/.ssh/id_ed25519.pub` | Public key authorized in the container |
 | `--pubkey2` | none | Optional second public key |
-| `--provision` | off | Run `cd /workspace && curl -fsSL URL \| bash`; no URL uses the maintainer script |
+| `--provision` | off | Run `cd /root && curl -fsSL URL \| bash`; no URL uses the maintainer script |
 | `--modal` | auto | Explicit modal CLI path |
+| `--verify-attempts` | `1` | SSH checks before stopping on a connection error |
 
 ### `status`
 
@@ -134,11 +137,11 @@ L4 for a 24 GB workload:
 python3 scripts/modal_ssh_session.py launch --name g-train --gpu L4
 ```
 
-Large session with two GPUs and a 48 h lifetime:
+Large session with two GPUs and the maximum 24 h lifetime:
 
 ```sh
 python3 scripts/modal_ssh_session.py launch --name g-big \
-  --gpu H100:2 --cpu 32 --memory 65536 --timeout 172800 --volume g-big-ws
+  --gpu H100:2 --cpu 32 --memory 65536 --timeout 86400 --volume g-big-ws
 ```
 
 Launch and provision in one step:
@@ -149,9 +152,13 @@ python3 scripts/modal_ssh_session.py launch --name g-data-linkup --provision
 
 ## Lifecycle
 
-- The sandbox runs until `--timeout` expires or the app is stopped.
+- The SSH function runs until `--timeout` expires or the app is stopped.
 - Every launch gets a new relay host/port. The managed `~/.ssh/config` block is
   replaced in place, so the alias and VS Code host stay stable.
+- With a cached image and available CPU capacity, allocation plus SSH
+  verification targets three minutes. Cold image builds and provisioning
+  scripts can take longer; arbitrary package downloads cannot be guaranteed
+  to finish within three minutes.
 - Only `/workspace` (the volume) survives a respawn. System packages, Node,
   Python environments outside `/workspace`, and running processes do not —
   re-run `--provision` after relaunching.
@@ -160,25 +167,16 @@ python3 scripts/modal_ssh_session.py launch --name g-data-linkup --provision
 
 ## Cost
 
-Approximate Modal list prices at the time of writing (2026-10):
-
-| Session | Approx. cost/hour |
-|---|---|
-| 8 CPU + 32 GB (CPU-only) | ~$0.6 |
-| 8 CPU + 32 GB + L4 | ~$1.6 |
-| 32 CPU + 64 GB + H100 | ~$7 |
-
-Idle sessions bill until stopped or until the timeout expires. Stop sessions
-when you are done.
+Modal usage is billed until the session is stopped or its timeout expires.
+Check the current workspace pricing before choosing resources, and stop
+sessions when they are no longer needed.
 
 ## How SSH works on Modal
 
-Modal containers have no public IP. The app starts `sshd` and requests
-`unencrypted_ports=[22]`, which makes Modal relay raw TCP from its edge to port
-22 inside the container. "Unencrypted" refers to Modal not terminating TLS on
-that relay; SSH still encrypts the session end to end, and only the public
-keys injected at startup can log in. Modal's own `modal launch machine`
-command uses the same mechanism.
+Modal containers have no public IP. A long-running Modal function starts
+`sshd` and keeps `modal.forward(port=22, unencrypted=True)` open. The relay
+does not terminate TLS; SSH encrypts the session end to end, and password
+authentication is disabled.
 
 ## Troubleshooting
 

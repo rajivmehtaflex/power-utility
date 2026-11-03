@@ -1,152 +1,111 @@
 # Troubleshooting
 
-Recovery procedures for common failures. Each item states the symptom, the
-cause, and the fix. These were verified against Modal CLI 1.2.6 on
-2026-10-17.
+Use these checks to identify the failure before relaunching. The lifecycle
+manager uses Modal CLI 1.6.3 or newer; when it finds an older CLI, it uses
+uvx if available.
 
-## `modal: command not found`
+## Modal CLI not found or too old
 
-The manager searches `PATH`, then `~/Library/Python/3.*/bin/modal`,
-`~/.local/bin/modal`, `/usr/local/bin/modal`, and `/opt/homebrew/bin/modal`.
-If your install is elsewhere:
+Check that `uvx` is available, or install a current Modal CLI and authenticate it
+with the intended profile. `--modal` accepts an explicit current CLI path. The manager
+does not upgrade the user's global installation.
 
-```sh
-python3 scripts/modal_ssh_session.py launch --name g-demo --modal /path/to/modal
-```
+## Modal authentication failure
 
-Install Modal with `pip install modal` or `uv tool install modal`, then run
-`modal setup` once.
+`modal profile list` must show the intended profile/workspace. Credentials are read from
+Modal's normal local configuration. Never print token files or secrets.
 
-## "Token missing. Could not authenticate client."
+## SSH connection refused or timed out
 
-`modal profile list` exists but no profile is active, or the token was
-removed. Re-run `modal setup`. Check for multiple accounts:
+1. Read `modal app list` and `modal container list`. The named app should have one
+   active task/container.
+2. Confirm the managed host uses the newest endpoint with
+   `ssh -G <session-name>`.
+3. Run `ssh -vvv <session-name>` once and preserve the connection error.
+4. Check Modal function logs for sshd or tunnel startup failures.
+5. Stop and report if the function or relay is gone. Correct the observed cause
+   before launching again; each launch receives a new endpoint.
 
-```sh
-modal profile list
-modal profile activate <profile>
-```
+The SSH function keeps `modal.forward(port=22, unencrypted=True)` open while it sleeps for
+the session timeout. Do not return from the function while the tunnel is needed.
 
-Credentials live in `~/.modal.toml`. Do not print the secret value in logs.
+## Public-key authentication failed
 
-## `Could not find a deployed app named '<name>'`
+Confirm the managed SSH block's `IdentityFile` matches the public key passed with
+`--pubkey`. The public key is passed as a function argument and written to
+`/root/.ssh/authorized_keys`. Do not pass the private key to Modal.
 
-Detached `modal run` apps are ephemeral, not deployed, so `modal app stop
-<name>` cannot resolve them. Resolve the app ID first:
+## Persistent function does not receive the key
 
-```sh
-modal app list --json
-modal app stop <app-id>
-```
+The local launcher and Modal function run in different processes. Do not check
+`MODAL_SSH_PUBKEY1` at module import time inside the remote function. Validate it in the
+local entrypoint, then pass the public key to `Function.spawn`.
 
-`modal_ssh_session.py stop --name <name>` does this automatically.
+## Image build failure
 
-## SSH connection refused or times out
+- Use `python:3.12-slim-bookworm`, not Debian 11 (bullseye); the old security pool
+  returns 404.
+- The base setup layer installs gcc before Modal's bootstrap dependencies.
+  If a custom image fails building `aiohttp` with `gcc: No such file or directory`,
+  move gcc installation into the base setup layer before Modal bootstraps its
+  pinned packages.
+- Retrieve image build details with `modal image logs <image-id>` before changing
+  the image definition.
 
-1. Confirm the app is still running: `modal app list` (state should not be
-   `stopped`).
-2. Confirm the relay endpoint is current: `status --name <name>` and compare
-   with the app's launch output.
-3. Retry after a few seconds. Relay DNS can lag briefly after allocation.
-4. Check verbose output:
+## Existing volume not found
 
-   ```sh
-   ssh -vvv <name>
-   ```
+Use `modal volume list` to inspect names. With `--existing-volume`, the manager
+fails before launch if the selected name is absent and the app references the
+volume without auto-creation. Never use `modal volume delete` unless the user
+explicitly asks to erase that volume.
 
-5. If the app restarted, the old `HostName`/`Port` are dead. Re-run `launch
-   --name <name>`; the managed block is rewritten.
+## Provisioning reports nvtop unavailable
 
-## Permission denied (publickey)
+On Debian Bookworm, `nvtop` is in the `contrib` component. If the user requires every
+optional package in the provisioning summary, enable that component in the
+container's apt sources before rerunning the installer. The default full
+installer can report `Overall: PARTIAL` for optional packages while exiting 0;
+report both the exit code and the script summary.
 
-- The container authorizes the key passed at launch (`--pubkey`, default
-  `~/.ssh/id_ed25519.pub`). Confirm the config block's `IdentityFile` points
-  at the matching private key.
-- If the key was generated after the launch, relaunch with `--pubkey`.
-- `ssh-add -l` shows what the agent offers. Prefer explicit `IdentityFile`
-  over agent-only auth in containers.
+Provisioning downloads and installs packages, CLIs, Node, and Ollama. A warm
+cached image can make allocation and SSH verification fit a three-minute
+target, but the full cold provisioning run is not guaranteed to do so. For
+repeat launches that need the toolchain immediately, bake reusable
+dependencies into a cached image.
 
-## `WARNING: private key ... not found next to the public key`
+## Packages disappeared after a respawn
 
-The public key exists but its private half does not (for example a key copied
-from another machine). Either copy the private key to `~/.ssh/`, use a keypair
-that exists locally via `--pubkey`, or rely on the SSH agent.
-
-## `modal run` fails during image build
-
-- The template builds from `debian_slim(python_version="3.12")` (Debian 12,
-  bookworm). Do not switch the base to Debian 11 (bullseye): its security
-  package pool was purged after EOL and `apt` returns 404s.
-- If a package name is unavailable, remove it from the `apt_install` list.
-  Required packages are only `openssh-server`; the rest are conveniences.
-- Build logs are printed by `modal run`; the failing layer is named.
-
-## GPU allocation takes forever
-
-H100/H200/B200 have limited capacity. `modal run` waits in the allocation
-queue; L4/T4/A10 are usually fast. Use a fallback list in a custom app
-(`gpu=["H100", "A100-40GB:2", "L4"]`) or deploy CPU-only while waiting.
-
-If a GPU deploy is stuck, cancel it and check with:
-
-```sh
-modal app list
-modal app logs <app-id>
-```
-
-## Installed packages disappeared after relaunch
-
-Expected. Only the volume at `/workspace` persists. System packages, Node,
-Python environments outside `/workspace`, and running services live in the
-ephemeral container root filesystem. Re-run `--provision` after each launch.
-
-To persist tool state across relaunches, write it under `/workspace` and point
-the tool at that path (for example `NVM_DIR=/workspace/.nvm`).
-
-## Volume data is missing
-
-- Confirm the same `--volume` name is used. A new name creates a new empty
-  volume.
-- Confirm the path is `/workspace` inside the container.
-- List the volume from the host:
-
-  ```sh
-  modal volume list
-  modal volume ls <volume>
-  ```
-
-Never run `modal volume delete` unless the user explicitly asked for the data
-to be erased.
-
-## VS Code Remote-SSH still points at the old host
-
-VS Code caches host details and an SSH ControlMaster socket can hold the old
-connection. Close the remote window, then:
-
-```sh
-ssh -O exit <name> 2>/dev/null || true
-```
-
-Reconnect. If it persists, run the VS Code command "Remote-SSH: Kill VS Code
-Server on Host" and reconnect.
+Expected for packages installed at runtime. Only the Modal volume persists.
+Re-run provisioning after a new container starts, or build the reusable tools
+into a cached image. To preserve the user's volume contents, run
+current-directory installers from `/root` and inspect any script that writes
+explicitly to `/workspace`.
 
 ## Duplicate sessions
 
-Launching the same name twice creates two apps with the same description. Both
-bill until stopped. `stop --name <name>` stops every non-stopped app with that
-description. Check first with `status`.
+Launching a name that already has an active task can create another app with
+the same description. Check `modal app list` first. Stop a failed app by app ID
+or use `modal_ssh_session.py stop --name <name>`; stopping does not delete
+the volume.
 
-## macOS: SSH config permissions
+## VS Code still uses an old endpoint
 
-`~/.ssh/config` must not be group/world writable. The manager sets `0600` when
-it writes the file. If SSH refuses to read it:
+The manager replaces its marked SSH config block on each launch. If VS Code
+retains a stale control connection, close the remote window and run:
 
 ```sh
-chmod 600 ~/.ssh/config
+ssh -O exit <session-name> 2>/dev/null || true
 ```
+
+Then reconnect through Remote-SSH.
+
+## macOS SSH config permissions
+
+The manager sets `~/.ssh/config` to mode `0600`. If SSH refuses to read it, check
+that it is not group/world writable.
 
 ## Windows
 
-The manager targets macOS/Linux. On Windows, use OpenSSH in WSL2 or Git Bash
-and pass `--pubkey` explicitly; VS Code Remote-SSH reads the same
-`~/.ssh/config` inside WSL if launched there.
+The manager targets macOS/Linux. Use OpenSSH in WSL2 or Git Bash and pass
+`--pubkey` explicitly; VS Code Remote-SSH must use the same environment.
+

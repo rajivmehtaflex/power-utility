@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-02T06:22:50+00:00",
+  "generated": "2026-11-03T14:01:27+00:00",
   "spec": "https://agentskills.io/specification.md",
   "skills": [
     {
@@ -413,7 +413,7 @@
       "source_path": "profile/devops/modal-deploy-ssh",
       "category": "devops",
       "dest": "profile/devops/modal-deploy-ssh",
-      "description": "Launch, reconnect to, and tear down named Modal cloud sessions with direct SSH access, then wire them into VS Code Remote-SSH automatically. Use when the user asks to create, start, relaunch, or destroy a Modal VM/session (often named g-* like g-data-linkup), to connect VS Code or another editor to a Modal instance, to SSH into a Modal container, or to run a CPU or GPU session on Modal. Also use when a Modal session's SSH connection stopped working after a restart, or when the user wants a persistent cloud dev box with a volume. The skill rewrites ~/.ssh/config on every respawn, so the SSH alias and VS Code connection name never change.",
+      "description": "Use when the user wants a named Modal CPU or GPU session reachable by SSH or VS Code Remote-SSH, including launch, reconnect, provisioning, status, or stop. The session uses a long-running Modal function, a raw TCP SSH tunnel, and a persistent volume mounted at /workspace.",
       "original_fields": {},
       "spec_compliant": true,
       "warnings": []

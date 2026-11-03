@@ -4,7 +4,7 @@
 This wrapper handles the full lifecycle so the connection command never
 changes:
 
-    launch  Start a detached Modal sandbox and write/refresh the SSH config
+    launch  Start a persistent SSH function and write/refresh the SSH config
     stop    Stop the running app(s) by app ID and remove the managed block
     status  Show app state, the SSH config block, and the relay endpoint
 
@@ -27,6 +27,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -39,6 +40,7 @@ DEFAULT_PROVISION_URL = (
     "aa9975e92049d2bfa62264eee4397fe9/raw/"
     "d1d8bc3d74231de2f2d87335c321697eec57e269/tunnel_ext.sh"
 )
+MIN_MODAL_VERSION = (1, 6, 3)
 
 
 def die(message: str) -> None:
@@ -48,6 +50,27 @@ def die(message: str) -> None:
 
 def info(message: str) -> None:
     print("[modal-deploy-ssh] " + message)
+
+
+def modal_version(modal: str) -> Optional[tuple]:
+    result = subprocess.run([modal, "--version"], capture_output=True, text=True)
+    match = re.search(r"(\d+)\.(\d+)\.(\d+)", result.stdout + result.stderr)
+    if result.returncode != 0 or not match:
+        return None
+    return tuple(int(part) for part in match.groups())
+
+
+def uvx_modal_wrapper(uvx: str) -> str:
+    """Return a temporary command that runs the current Modal CLI via uvx."""
+    wrapper_dir = Path(tempfile.mkdtemp(prefix="modal-deploy-ssh-"))
+    wrapper = wrapper_dir / "modal"
+    wrapper.write_text(
+        "#!/bin/sh\nexec {} --python 3.14 --from modal modal \"$@\"\n".format(
+            shlex.quote(uvx)
+        )
+    )
+    os.chmod(str(wrapper), 0o700)
+    return str(wrapper)
 
 
 def validate_name(name: str) -> str:
@@ -64,12 +87,41 @@ def find_modal(explicit: Optional[str] = None) -> str:
     if explicit:
         candidate = Path(explicit).expanduser()
         if candidate.exists() and os.access(str(candidate), os.X_OK):
-            return str(candidate)
+            version = modal_version(str(candidate))
+            if version and version >= MIN_MODAL_VERSION:
+                return str(candidate)
+            die(
+                "Modal CLI {} is too old for persistent SSH sessions; use "
+                "version 1.6.3 or newer, or omit --modal and install uvx.".format(
+                    version or "(unknown version)"
+                )
+            )
         die("modal CLI not found or not executable at {}".format(candidate))
 
     found = shutil.which("modal")
     if found:
-        return found
+        version = modal_version(found)
+        if version and version >= MIN_MODAL_VERSION:
+            return found
+        uvx = shutil.which("uvx")
+        if uvx:
+            info(
+                "Modal CLI {} is older than 1.6.3; using the current CLI via uvx.".format(
+                    version or "(unknown version)"
+                )
+            )
+            return uvx_modal_wrapper(uvx)
+        die(
+            "Modal CLI {} is too old for persistent SSH sessions. Install uvx "
+            "or upgrade Modal to version 1.6.3 or newer.".format(
+                version or "(unknown version)"
+            )
+        )
+
+    uvx = shutil.which("uvx")
+    if uvx:
+        info("modal is not on PATH; using the current Modal CLI via uvx.")
+        return uvx_modal_wrapper(uvx)
 
     candidates = []  # type: List[str]
     candidates.extend(
@@ -84,7 +136,23 @@ def find_modal(explicit: Optional[str] = None) -> str:
     )
     for candidate in candidates:
         if os.path.exists(candidate) and os.access(candidate, os.X_OK):
-            return candidate
+            version = modal_version(candidate)
+            if version and version >= MIN_MODAL_VERSION:
+                return candidate
+            uvx = shutil.which("uvx")
+            if uvx:
+                info(
+                    "Modal CLI {} is older than 1.6.3; using the current CLI via uvx.".format(
+                        version or "(unknown version)"
+                    )
+                )
+                return uvx_modal_wrapper(uvx)
+            die(
+                "Modal CLI {} is too old for persistent SSH sessions. Install uvx "
+                "or upgrade Modal to version 1.6.3 or newer.".format(
+                    version or "(unknown version)"
+                )
+            )
 
     die(
         "modal CLI not found.\n"
@@ -154,6 +222,27 @@ def app_records(modal: str) -> List[Dict[str, Any]]:
                 return parsed[key]
         return [parsed]
     return parsed
+
+
+def volume_names(modal: str) -> set:
+    """Return names from the current Modal CLI's machine-readable volume list."""
+    raw = capture([modal, "volume", "list", "--json"])
+    try:
+        parsed = json.loads(raw)
+    except ValueError:
+        die("could not parse `modal volume list --json` output: {!r}".format(raw[:200]))
+    if isinstance(parsed, dict):
+        for key in ("volumes", "items", "data"):
+            if isinstance(parsed.get(key), list):
+                parsed = parsed[key]
+                break
+    if not isinstance(parsed, list):
+        die("unexpected `modal volume list --json` output: {!r}".format(raw[:200]))
+    return {
+        first_value(record, ["name", "Name"])
+        for record in parsed
+        if isinstance(record, dict)
+    }
 
 
 def first_value(record: Dict[str, Any], names: List[str], default: str = "") -> str:
@@ -285,7 +374,7 @@ def preflight(modal: str, pubkey: Path) -> None:
         )
 
 
-def verify_ssh(name: str, attempts: int = 12, delay: int = 3) -> bool:
+def verify_ssh(name: str, attempts: int = 1, delay: int = 3) -> bool:
     cmd = [
         "ssh",
         "-o",
@@ -295,21 +384,32 @@ def verify_ssh(name: str, attempts: int = 12, delay: int = 3) -> bool:
         name,
         "printf 'SSH_OK %s@%s\\n' \"$(whoami)\" \"$(hostname)\"",
     ]
+    last_result = None
     for attempt in range(1, attempts + 1):
         info("verifying SSH connection (attempt {}/{}) ...".format(attempt, attempts))
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode == 0 and "SSH_OK" in result.stdout:
             print(result.stdout.strip())
             return True
+        last_result = result
         if attempt < attempts:
             import time
 
             time.sleep(delay)
+    if last_result is not None:
+        output = (last_result.stderr or last_result.stdout).strip()
+        if output:
+            print(
+                "[modal-deploy-ssh] SSH verification error (exit {}):\n{}".format(
+                    last_result.returncode, output
+                ),
+                file=sys.stderr,
+            )
     return False
 
 
 def provision(name: str, url: str) -> int:
-    remote_command = "cd /workspace && curl -fsSL {} | bash".format(shlex.quote(url))
+    remote_command = "cd /root && curl -fsSL {} | bash".format(shlex.quote(url))
     info("running provisioning script on {} ...".format(name))
     return run_streaming(
         [
@@ -326,9 +426,21 @@ def provision(name: str, url: str) -> int:
 
 def command_launch(args: argparse.Namespace) -> int:
     name = validate_name(args.name)
+    if args.verify_attempts < 1:
+        die("--verify-attempts must be at least 1.")
+    if args.timeout < 1 or args.timeout > 86400:
+        die("--timeout must be between 1 and 86400 seconds for a Modal function.")
     modal = find_modal(args.modal)
     pubkey = Path(args.pubkey).expanduser()
     preflight(modal, pubkey)
+
+    volume_name = args.volume or "{}-ws".format(name)
+    if args.existing_volume and volume_name not in volume_names(modal):
+        die(
+            "existing Modal volume {!r} was not found; no volume was created.".format(
+                volume_name
+            )
+        )
 
     running = [rec for rec in matching_apps(modal, name) if not is_stopped(rec)]
     if running:
@@ -348,6 +460,7 @@ def command_launch(args: argparse.Namespace) -> int:
     env["MODAL_SSH_GPU"] = args.gpu or ""
     env["MODAL_SSH_TIMEOUT"] = str(args.timeout)
     env["MODAL_SSH_VOLUME"] = args.volume or "{}-ws".format(name)
+    env["MODAL_SSH_CREATE_VOLUME"] = "false" if args.existing_volume else "true"
     env["MODAL_SSH_PUBKEY1"] = pubkey.read_text().strip()
     second = Path(args.pubkey2).expanduser() if args.pubkey2 else None
     env["MODAL_SSH_PUBKEY2"] = second.read_text().strip() if second and second.exists() else ""
@@ -367,7 +480,7 @@ def command_launch(args: argparse.Namespace) -> int:
     match = re.search(r"SSH_READY host=(\S+) port=(\d+)", output)
     if not match:
         die(
-            "the sandbox started but no SSH_READY line was found. Check the "
+            "the Modal app started but no SSH_READY line was found. Check the "
             "launch output above and `modal app list`; then run `status "
             "--name {}`.".format(name)
         )
@@ -376,14 +489,11 @@ def command_launch(args: argparse.Namespace) -> int:
     identity = Path(str(pubkey)[:-4]) if str(pubkey).endswith(".pub") else pubkey
     upsert_ssh_config(name, host, port, str(identity))
 
-    if not verify_ssh(name):
+    if not verify_ssh(name, attempts=args.verify_attempts):
         print(
             "[modal-deploy-ssh] SSH verification failed, though the config was "
-            "written. Inspect with:\n"
-            "  ssh -v {name}\n"
-            "  modal app list\n"
-            "The relay address may still be warming up; retry `ssh {name}` "
-            "in a few seconds.".format(name=name),
+            "written. The launch is stopping without further retries. Inspect "
+            "with `ssh -vvv {name}` and `modal app list`.".format(name=name),
             file=sys.stderr,
         )
         return 1
@@ -392,6 +502,8 @@ def command_launch(args: argparse.Namespace) -> int:
     print("Session ready: {}".format(name))
     print("  SSH:      ssh {}".format(name))
     print("  Endpoint: {}:{}".format(host, port))
+    print("  CPU:      {}".format(args.cpu))
+    print("  Memory:   {} MiB".format(args.memory))
     print("  GPU:      {}".format(args.gpu or "none (CPU-only)"))
     print("  Stop:     python3 {} stop --name {}".format(Path(__file__).name, name))
     print("  VS Code:  Remote-SSH -> {}".format(name))
@@ -490,7 +602,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     launch = subparsers.add_parser(
         "launch",
-        help="start a detached Modal sandbox and configure SSH",
+        help="start a persistent Modal SSH function and configure SSH",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     launch.add_argument("--name", required=True, help="session/app name")
@@ -502,6 +614,11 @@ def build_parser() -> argparse.ArgumentParser:
     launch.add_argument("--timeout", type=int, default=86400, help="lifetime in seconds")
     launch.add_argument(
         "--volume", default="", help="persistent volume name (default: <name>-ws)"
+    )
+    launch.add_argument(
+        "--existing-volume",
+        action="store_true",
+        help="require --volume (or <name>-ws) to exist; do not create it",
     )
     launch.add_argument(
         "--pubkey",
@@ -523,6 +640,12 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     launch.add_argument("--modal", default=None, help="path to the modal CLI")
+    launch.add_argument(
+        "--verify-attempts",
+        type=int,
+        default=1,
+        help="SSH verification attempts; defaults to one and stops on failure",
+    )
     launch.set_defaults(func=command_launch)
 
     stop = subparsers.add_parser(

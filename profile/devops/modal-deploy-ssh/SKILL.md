@@ -1,55 +1,40 @@
 ---
 name: modal-deploy-ssh
-description: Launch, reconnect to, and tear down named Modal cloud sessions with direct SSH access, then wire them into VS Code Remote-SSH automatically. Use when the user asks to create, start, relaunch, or destroy a Modal VM/session (often named g-* like g-data-linkup), to connect VS Code or another editor to a Modal instance, to SSH into a Modal container, or to run a CPU or GPU session on Modal. Also use when a Modal session's SSH connection stopped working after a restart, or when the user wants a persistent cloud dev box with a volume. The skill rewrites ~/.ssh/config on every respawn, so the SSH alias and VS Code connection name never change.
+description: Use when the user wants a named Modal CPU or GPU session reachable by SSH or VS Code Remote-SSH, including launch, reconnect, provisioning, status, or stop. The session uses a long-running Modal function, a raw TCP SSH tunnel, and a persistent volume mounted at /workspace.
 license: Apache-2.0
-compatibility: Requires Python 3.9+, an authenticated Modal CLI (modal profile list succeeds), an SSH keypair in ~/.ssh, and macOS or Linux with network access to modal.com. The remote container runs Debian 12 (bookworm).
+compatibility: Requires Python 3.9+, Modal CLI 1.6.3+ (or uvx to supply it), an SSH keypair, and macOS or Linux with network access to modal.com. The remote image is Debian 12 (bookworm).
 metadata:
   author: rajivmehtaflex
-  version: "0.1.0"
+  version: "0.2.0"
 allowed-tools: Bash Read Write Edit
 ---
 
 # Modal Deploy SSH
 
-Create named Modal cloud sessions that you can reach with plain `ssh`, VS Code
-Remote-SSH, or any SSH-based tool. Modal containers have no public IP; this
-skill opens a raw TCP relay to an in-container sshd (`unencrypted_ports=[22]`)
-and authorizes your key. SSH encrypts the connection end to end and password
-auth is disabled, so only key holders get in.
+Create named Modal sessions reachable through plain SSH and VS Code Remote-SSH. A long-running Modal function starts sshd and holds a raw TCP tunnel open with `modal.forward(port=22, unencrypted=True)`. SSH encrypts the connection end to end; password authentication is disabled.
 
-Everything lives in two scripts next to this file. Resolve paths relative to
-this skill directory (not the user's working directory):
+The lifecycle manager and app definition live in `scripts/` beside this file. Resolve those paths relative to the skill directory.
 
-- `scripts/modal_ssh_session.py` — lifecycle manager (launch / stop / status)
-- `scripts/session_app.py` — the Modal app the manager launches
+## Use this skill when
 
-## When to use this skill
+- The user wants a named Modal session they can SSH into.
+- A Modal SSH endpoint needs to be launched or reconnected after a stop or timeout.
+- The user wants VS Code Remote-SSH wired to the same stable host alias.
+- The user wants a persistent Modal volume mounted at `/workspace`.
 
-Use it when the user wants:
+Use a browser-terminal workflow instead when the user has no SSH key or needs a browser-only terminal.
 
-- a named Modal session/VM they can SSH into (names like `g-data-linkup`)
-- to connect VS Code to a Modal instance over SSH
-- to relaunch or resize a session after it stopped
-- a persistent cloud dev box backed by a Modal volume
+## Preflight
 
-Do **not** use it when the user needs a browser-only terminal with no SSH key
-on the device, or is behind a firewall that blocks arbitrary TCP ports. The
-web-terminal + `code tunnel` flow from the `modal-deploy` skill covers those
-cases; read `modal-deploy` instead if it is installed.
-
-## Pre-flight
-
-Run these checks before launching. If any fails, stop and report the fix.
+Before launching, check Modal authentication, the selected public key, and Python 3.9+:
 
 ```sh
-modal profile list          # must list a profile/workspace
-ls ~/.ssh/id_ed25519.pub    # or pass --pubkey with another key
-python3 --version           # 3.9 or newer
+modal profile list
+ls ~/.ssh/id_ed25519.pub
+python3 --version
 ```
 
-If `modal` is not on `PATH`, the manager searches common install locations
-(`~/Library/Python/3.*/bin/modal`, `~/.local/bin/modal`, Homebrew). Point it
-explicitly with `--modal /path/to/modal` if needed.
+The manager requires Modal CLI 1.6.3 or newer for the long-running function and endpoint handoff. It automatically uses `uvx --python 3.14 --from modal modal` when it finds an older CLI and `uvx` is installed. An explicit `--modal` path must also be current; the manager does not upgrade the global CLI.
 
 ## Launch
 
@@ -57,94 +42,66 @@ explicitly with `--modal /path/to/modal` if needed.
 python3 scripts/modal_ssh_session.py launch --name <session-name>
 ```
 
-The manager:
+The launch flow:
 
-1. verifies Modal auth, the public key, and the CLI;
-2. runs `modal run --detach scripts/session_app.py` (the sandbox survives the
-   local process exiting);
-3. parses `SSH_READY host=... port=...` from the launch output;
-4. writes or replaces the managed block in `~/.ssh/config`;
-5. verifies with a real `ssh` login and prints the endpoint.
+1. Checks Modal authentication, the SSH public key, and any required existing volume.
+2. Runs a short local entrypoint that spawns a long-running SSH function.
+3. The function starts sshd, opens the TCP tunnel, mounts the volume at `/workspace`, and waits until its timeout.
+4. The launcher writes or refreshes the managed SSH block in `~/.ssh/config`.
+5. The manager verifies one real SSH login by default, then reports the endpoint.
 
-Default resources: 8 CPU, 32 GB RAM, no GPU, 24 h timeout, volume
-`<name>-ws` mounted at `/workspace`. Override per session:
+The image uses `python:3.12-slim-bookworm`. It installs gcc in the base setup layer because legacy Modal image builders can bootstrap a pinned aiohttp release that needs to compile on Python 3.12. Keep the base on Debian 12 (bookworm); Debian 11 (bullseye) package mirrors return 404s.
 
-| Flag | Default | Notes |
+Default resources are 8 CPU cores, 32768 MiB memory, no GPU, and a 24-hour timeout. The default volume name is `<session-name>-ws`; it is created if missing.
+
+| Flag | Default | Description |
 |---|---|---|
-| `--cpu` | `8` | float allowed |
-| `--memory` | `32768` | MiB |
-| `--gpu` | none | `L4`, `A10`, `H100`, `H100:2`, ... |
-| `--timeout` | `86400` | seconds; the sandbox stops at expiry |
-| `--volume` | `<name>-ws` | created if missing; never auto-deleted |
-| `--pubkey` | `~/.ssh/id_ed25519.pub` | key authorized in the container |
-| `--pubkey2` | none | optional second key |
-| `--provision` | off | run a setup script after launch (see below) |
-| `--modal` | auto | explicit modal CLI path |
+| `--name` | required | Modal app and SSH alias |
+| `--cpu` | `8` | CPU cores; fractional values are allowed |
+| `--memory` | `32768` | Memory in MiB |
+| `--gpu` | none | GPU spec such as `L4` or `H100:2` |
+| `--timeout` | `86400` | Function lifetime in seconds; maximum 86400 |
+| `--volume` | `<name>-ws` | Persistent volume name |
+| `--existing-volume` | off | Require the selected volume to exist; never create it |
+| `--pubkey` | `~/.ssh/id_ed25519.pub` | Public key to authorize |
+| `--pubkey2` | none | Optional second public key |
+| `--verify-attempts` | `1` | SSH checks before stopping on an error |
+| `--provision` | off | Run a setup script after SSH verification |
+| `--modal` | auto | Explicit current Modal CLI path |
 
-GPU examples:
+When the user says the volume already exists and must not be created, pass both `--volume <name> --existing-volume`. The manager checks the volume list, and the app uses `Volume.from_name(..., create_if_missing=False)`.
+
+Example with an existing volume:
 
 ```sh
-# Cost-optimised CPU box
-python3 scripts/modal_ssh_session.py launch --name g-data-linkup
-
-# L4 for a 24 GB workload
-python3 scripts/modal_ssh_session.py launch --name g-train --gpu L4
-
-# Two GPUs, longer lifetime, larger disk-backed volume
-python3 scripts/modal_ssh_session.py launch --name g-big --gpu H100:2 \
-  --cpu 32 --memory 65536 --timeout 172800 --volume g-big-ws
+python3 scripts/modal_ssh_session.py launch \
+  --name g-time-exp --cpu 2 --memory 4096 \
+  --volume terminal-data --existing-volume
 ```
 
-Scarce GPUs (H100, H200, B200) can queue for several minutes; a failed
-allocation returns a non-zero exit with the Modal log tail. Try `L4`/`A10`
-first when the user has no hard requirement.
+## Startup time
+
+With an already cached image and available CPU capacity, allocation plus SSH verification targets three minutes. Cold image builds can take longer. Provisioning scripts run after allocation and may download large packages or install many tools, so the complete task cannot be guaranteed within three minutes. Do not promise that duration for a cold image or arbitrary installer.
 
 ## Connect from VS Code
 
-After launch, the host alias is already in `~/.ssh/config`:
-
-1. VS Code → Remote-SSH: Connect to Host → pick the session name.
-2. No password prompt: the key is authorized and `IdentityFile` is set.
-3. The remote workspace root is `/workspace` (persistent volume).
-
-The same alias works for the CLI: `ssh <session-name>`.
-
-## Provisioning (optional)
-
-`--provision` runs a shell script on the VM after SSH verification:
+After a successful launch, use VS Code → Remote-SSH: Connect to Host → the session name. The same alias works from a terminal:
 
 ```sh
-# With the maintainer's default script (installs VS Code CLI, Ollama, dev tools)
+ssh <session-name>
+```
+
+The login shell starts in `/workspace`.
+
+## Provisioning
+
+`--provision` runs the script from `/root` so installers that write to their current directory do not write into the mounted volume. Provisioning output streams live; the script's exit code becomes the launch command's exit code.
+
+```sh
 python3 scripts/modal_ssh_session.py launch --name g-data-linkup --provision
-
-# With a custom script
-python3 scripts/modal_ssh_session.py launch --name g-data-linkup \
-  --provision https://example.com/setup.sh
 ```
 
-The command executed remotely is `cd /workspace && curl -fsSL <url> | bash`.
-Provisioning output streams live and its exit code becomes the command's exit
-code. **Installed system packages live in the container's ephemeral rootfs** —
-they are gone on the next respawn. Only `/workspace` (the volume) persists.
-Re-run `--provision` after every relaunch.
-
-## Respawn and lifecycle
-
-A Modal sandbox gets a new relay host and port every time it starts. The
-manager rewrites the block between
-
-```text
-# BEGIN modal-deploy-ssh: <name>
-...
-# END modal-deploy-ssh: <name>
-```
-
-so the SSH alias, VS Code connection name, and commands stay the same. A
-relaunch with the same `--name` therefore needs no manual config edits:
-launch again, reconnect in VS Code.
-
-The sandbox also stops at `--timeout` (default 24 h) or when the Modal app is
-stopped. Data in the volume survives; processes and installed packages do not.
+Only `/workspace` persists across a respawn. Packages installed into the root filesystem are lost when the function ends. A provisioning script may still modify `/workspace` explicitly; inspect it first and honor any instruction to preserve volume data.
 
 ## Status and stop
 
@@ -153,46 +110,28 @@ python3 scripts/modal_ssh_session.py status --name <session-name>
 python3 scripts/modal_ssh_session.py stop --name <session-name>
 ```
 
-`stop` resolves the app ID through `modal app list --json` and calls
-`modal app stop <app-id>` for every non-stopped app with that description.
-Stopping by app name alone does not work for detached run-apps. It then
-removes the managed SSH block (`--keep-config` preserves it).
+Stop resolves app IDs and stops every non-stopped app with that description. It removes the managed SSH block unless `--keep-config` is supplied. Stopping never deletes a volume.
 
-`stop` never deletes the volume. Only remove a volume when the user
-explicitly asks, using `modal volume delete <name>`.
+## Failure handling
 
-## Pitfalls
+The default SSH verification makes one attempt. On failure, the manager prints the captured SSH error and exits without provisioning or launching another session. Inspect `ssh -vvv <session-name>` and `modal app list`, report the output, and only retry after identifying a specific cause and making a targeted correction.
 
-- **Stop by app ID.** Detached `modal run` apps are ephemeral; `modal app stop
-  <name>` reports "Could not find a deployed app". Always resolve the ID.
-- **New endpoint every launch.** Expect a new `HostName`/`Port`; the managed
-  config block handles it. Never hand-edit the block.
-- **Ephemeral rootfs, persistent volume.** System packages, Node, Python
-  venvs outside `/workspace`, and running processes vanish on respawn.
-  Re-provision after relaunch.
-- **The endpoint is public but key-only.** `PasswordAuthentication` is off and
-  only the authorized keys can log in. Do not paste private keys into the
-  container.
-- **Image choice.** The app uses Debian 12 (bookworm). Avoid basing new images
-  on Debian 11 (bullseye): its security pool is purged and `apt` 404s.
-- **Cost.** Roughly $0.6/h for 8 CPU + 32 GB, about $1.6/h with an L4. Idle
-  sessions still bill until the timeout. Stop sessions when done.
-- **One session per name.** Launching the same name twice creates a duplicate
-  app. Run `stop --name X` first when relaunching.
+If an image build fails, inspect its Modal build logs before changing the image. If provisioning exits nonzero, report the exact error and leave the session state visible; do not silently relaunch.
 
-More detail and recovery procedures: [references/TROUBLESHOOTING.md](references/TROUBLESHOOTING.md).
+See [references/TROUBLESHOOTING.md](references/TROUBLESHOOTING.md) for detailed recovery steps.
 
 ## Completion report
 
-When the work is done, report in this shape:
+Report all of these fields:
 
 ```text
 Session: <name>
+CPU/Memory: <cpu> CPU / <memory> MiB
 GPU: <none | model>
 Endpoint: <host>:<port>
-SSH: ssh <name>
+SSH: ssh <name> (verified | failed)
 VS Code: Remote-SSH -> <name>
-Volume: <name>-ws (persistent at /workspace)
+Volume: <volume-name> at /workspace (created | existing)
 Provisioning: <skipped | exit 0 | failed>
 Stop: python3 scripts/modal_ssh_session.py stop --name <name>
 ```
