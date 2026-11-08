@@ -105,3 +105,33 @@ Total: 79 skills; 79 spec-compliant; 0 failed (official `skills-ref` validator r
 
 Profile skill `modal-deploy-ssh` v0.2.0: spec-compliant; `npx skills-ref validate profile/devops/modal-deploy-ssh` PASS. Switched from detached Modal sandbox to persistent Modal function (`modal.forward(port=22, unencrypted=True)`). Added `MIN_MODAL_VERSION = (1, 6, 3)` check and automatic `uvx --python 3.14 --from modal modal` fallback wrapper. Remote image pre-installs `gcc` in the base setup layer for `python:3.12-slim-bookworm` to ensure `aiohttp` builds succeed cleanly. Ships updated `scripts/modal_ssh_session.py`, `scripts/session_app.py`, `SKILL.md`, and `references/TROUBLESHOOTING.md`. Catalog category `devops`.
 
+
+## 2026-11-08 addendum — zcode-dsh-plugin-creator (DSH plugin authoring)
+
+Total: 80 skills; 80 spec-compliant; 0 failed (official `skills-ref` validator
+run 2026-11-08 on `repo-owned/zcode-dsh-plugin-creator`).
+
+Repo-owned `zcode-dsh-plugin-creator` v0.1.0: spec-compliant. Package ships
+`SKILL.md` (single-line description, MIT, author rajivmehtaflex) and seven
+reference recipes: five plugin types (command, tool, skill, preset, action
+card), bundle anatomy, and a verification ladder. Qualification evidence
+against DSH 0.2.2-rc.1 / Node 24.22.2 / pnpm 12.16.1: five deterministic
+fixture packages built with zero TypeScript errors; each installed into a
+fresh temporary `DSH_HOME` web profile via `dsh plugin add file:`; compose
+rows and config verified in `--dump-config`; `--dump-config-schema` stderr
+diffs show zero new diagnostics for command/tool/skill fixtures and same-class
+additions only for preset (`unrecognized Loader tree carrier`, the baseline
+class) and action-card rows (`Config is not a native Schemastery schema` — the
+official zod-config row); runtime probes qualified command registry + handler
+dispatch, tool structured execution through the tools service, skill registry
+listing + load, preset roster + resolve, and action-card kind registration +
+gating-skill presence; lifecycle exercises (rebuild with a visible behavior
+change, failed install leaving the profile unchanged, clean removal) passed.
+Model-turn checks (tool invoked by the model, preset selection in a session,
+card proposed via `propose_action`) are unqualified in this environment: the
+headless route requires `DEEPSEEK_API_KEY`, which account-based credentials do
+not satisfy. Empirical gotchas discovered during qualification are documented
+in the skill: `dsh plugin add/remove` manage the `dsh.profile.bundles` entry
+automatically; a patch-row `config:` override masks source-default changes;
+the action-cards stack ships outside the web template and needs both packages
+plus profile patch rows.
