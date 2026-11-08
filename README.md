@@ -1,6 +1,6 @@
 # Skill Collections — Cross-Agent Mono-Repo
 
-Spec: https://agentskills.io/specification.md · 79 skills · synced 2026-11-02
+Spec: https://agentskills.io/specification.md · 80 skills · updated 2026-11-08
 
 [![skills.sh](https://skills.sh/b/rajivmehtaflex/power-utility)](https://skills.sh/rajivmehtaflex/power-utility)
 
@@ -14,7 +14,7 @@ The [skills CLI](https://github.com/vercel-labs/skills) auto-detects installed
 agents (Claude Code, Codex, Cursor, Copilot, OpenCode, …) or takes `--agent`:
 
 ```bash
-# Install ALL 79 skills (auto-detect agents, interactive pick)
+# Install ALL 80 skills (auto-detect agents, interactive pick)
 npx skills add rajivmehtaflex/power-utility
 
 # List available skills without installing
@@ -480,6 +480,28 @@ Inspect https://huggingface.co/puwaer/DeepSeek-V4-Flash-0731-reap-150b with hf-m
 
 The agent queries the model in `--json` mode to programmatically extract the MoE expert count, dense layer residency requirements, and expert streaming storage paths to prepare the serving environment.
 
+### Plugin authoring for DeepSeek Harness: `zcode-dsh-plugin-creator`
+
+Use these prompts after installing the skill
+(`npx skills add rajivmehtaflex/power-utility --skill zcode-dsh-plugin-creator`).
+It authors DeepSeek Harness (DSH) 0.2.x plugins end to end — slash commands,
+model tools, skills, agent presets, and action cards — as installable dsh
+bundle packages: an intake interview fills the gaps, the Cordis package is
+scaffolded against the pinned release (`engines.dsh`, typed registration APIs),
+then the plugin is built, installed into a throwaway `DSH_HOME` profile, and
+verified with compose/schema baseline diffs plus a runtime probe overlay.
+Model-turn checks need `DEEPSEEK_API_KEY`; service-level checks do not.
+
+#### 1. Create a slash-command plugin
+
+"Create a dsh plugin named @local/standup that adds the /standup command;
+it should print today's date and a configurable checklist path."
+
+#### 2. Troubleshoot an existing plugin
+
+"The /greetz command from @local/my-greetings is not showing up in my dsh
+web profile — diagnose why using the skill's verification ladder."
+
 ### Re-sync from live sources (maintainer)
 
 
@@ -501,6 +523,7 @@ are never modified — only these copies are normalized.
 | `hf-generative-model-converter` | repo-owned | mlops | yes | Convert pinned Hugging Face models to GGUF, ONNX, or LiteRT-LM, validate by real inference (CPU/CUDA), and publish verified packages with a SHA-256 manifest. |
 | `hf-model-evaluator` | repo-owned | mlops | yes | Evaluate any Hugging Face model or collection against local hardware (RAM, VRAM, Disk) and Colibri/GGUF engines. |
 | `rust-to-python-bridge` | repo-owned | software-development | yes | Assess feasibility, preflight the build environment read-only, then implement Python-callable Rust (FFI) bridges behind a user-approved scope. |
+| `zcode-dsh-plugin-creator` | repo-owned | software-development | yes | Create, build, install, and verify DeepSeek Harness (DSH) plugins — slash commands, model tools, skills, agent presets, and action cards — with an intake interview and an isolated end-to-end verification ladder. |
 | `data-to-okf` | agents-shared | — | yes | Converts any local folder of mixed documents (docx, pdf, xlsx, duckdb, csv, imag |
 | `release-notes` | agents-shared | — | yes | >- |
 | `gemini-api-cli` | dev-workspace | — | yes | Drive the Google Gemini API from a shell: text, image, TTS, music, video, file/YouTube analysis, SRT transcripts, and background managed agents. |

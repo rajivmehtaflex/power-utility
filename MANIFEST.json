@@ -1,5 +1,5 @@
 {
-  "generated": "2026-11-03T14:01:27+00:00",
+  "generated": "2026-11-08T14:17:54+00:00",
   "spec": "https://agentskills.io/specification.md",
   "skills": [
     {
@@ -1282,6 +1282,22 @@
         "compatibility": "Requires a Linux shell for execution; training requires NVIDIA drivers, a visible CUDA GPU, Python 3.12, network access for package/model downloads, and enough disk/VRAM for the selected model. Discuss and dry-run modes are CPU/read-only.",
         "metadata_author": "rajivmehtaflex",
         "metadata_version": "1.1.0"
+      },
+      "spec_compliant": true,
+      "warnings": []
+    },
+    {
+      "name": "zcode-dsh-plugin-creator",
+      "source": "repo-owned",
+      "source_path": "repo-owned/zcode-dsh-plugin-creator",
+      "category": "software-development",
+      "dest": "repo-owned/zcode-dsh-plugin-creator",
+      "description": "Create, build, install, and verify DeepSeek Harness (DSH) 0.2.x plugins \u2014 slash commands, model tools, skills, agent presets, and action cards \u2014 as installable dsh bundles. Covers the intake interview, Cordis package scaffolding (package.json dsh.bundle, cordis.patch.yml, TypeScript source), pinned builds, isolated installation into a dsh profile, and end-to-end runtime verification with a probe overlay. Use when the user asks to create, modify, install, or troubleshoot a DSH plugin, add a slash command or tool to dsh, write a Cordis plugin for dsh, or register a plugin bundle in a dsh profile. Triggers on dsh plugin, DSH plugin, dsh bundle, cordis.patch.yml, /command for dsh, dsh tool, dsh skill, agent preset, action card, dsh profile.",
+      "original_fields": {
+        "license": "MIT",
+        "compatibility": "Requires the dsh CLI 0.2.2-rc.1 on PATH, Node.js >=24.9.0, and pnpm. Verification boots dsh profiles inside a temporary DSH_HOME; model-turn checks additionally require dsh credentials.",
+        "metadata_author": "rajivmehtaflex",
+        "metadata_version": "0.1.0"
       },
       "spec_compliant": true,
       "warnings": []
