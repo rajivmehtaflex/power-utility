@@ -192,6 +192,21 @@ On a disposable profile, prove the loop users will actually run:
 - **Removal** — `dsh plugin --profile <p> remove <pkg>`; the dependency, the
   bundles entry, and the composed row are all gone.
 
+## Worked invocation
+
+User request: *"Create a dsh plugin named `@local/standup` that adds a
+`/standup` command printing today's date and a configurable checklist
+path."*
+
+What the skill does with it: the intake interview only fills real gaps —
+package identity and behavior are already fixed, so Round 1 collapses to one
+question (target profile, temp recommended). It then scaffolds the bundle
+(`@local/standup`, row id `command-standup`), pins `engines.dsh` to the
+installed release, builds, installs into a fresh temporary `DSH_HOME`,
+verifies compose/schema/runtime (dispatching `/standup` and asserting the
+date line), and reports. The user's persistent profiles are touched only if
+they name one afterward.
+
 ## Reporting
 
 End with a table: package identity and path, profile used (temp or named),

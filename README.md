@@ -492,15 +492,41 @@ then the plugin is built, installed into a throwaway `DSH_HOME` profile, and
 verified with compose/schema baseline diffs plus a runtime probe overlay.
 Model-turn checks need `DEEPSEEK_API_KEY`; service-level checks do not.
 
-#### 1. Create a slash-command plugin
+#### 1. Create a slash-command plugin (no model turn; renders in the chat UI)
 
 "Create a dsh plugin named @local/standup that adds the /standup command;
-it should print today's date and a configurable checklist path."
+it should print today's date and read a checklist path from config."
 
-#### 2. Troubleshoot an existing plugin
+#### 2. Create a model-facing tool (called by the model during turns)
+
+"Build a dsh tool plugin @local/wordcount exposing a word_count tool that
+returns word and character counts for text the model passes in."
+
+#### 3. Ship an agent skill through a plugin (model-invocable instructions)
+
+"Author a dsh plugin @local/review-style that registers a review-style skill
+with my PR review checklist; make it model-invocable only."
+
+#### 4. Declare an agent preset (declarative, no code)
+
+"Add a dsh preset bundle @local/preset-reviewer with a reviewer preset that
+enables the todo tool and the feedback command over the standard agent."
+
+#### 5. Add an interactive action card (model proposes, user acts)
+
+"Create a dsh plugin @local/rename-card with a confirm-rename action card
+(approve/dismiss verbs) and its gating skill; verify it in a web profile."
+
+#### 6. Troubleshoot an installed plugin (inspect before proposing)
 
 "The /greetz command from @local/my-greetings is not showing up in my dsh
 web profile — diagnose why using the skill's verification ladder."
+
+#### 7. Iterate and roll back safely
+
+"Change the standup command's date format to ISO week, prove the change
+reaches runtime in a throwaway profile, then update my dev profile — and if
+anything fails, leave it unchanged and tell me how to recover."
 
 ### Re-sync from live sources (maintainer)
 
